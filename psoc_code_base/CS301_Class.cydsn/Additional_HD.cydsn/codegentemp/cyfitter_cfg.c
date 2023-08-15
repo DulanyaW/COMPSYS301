@@ -161,11 +161,11 @@ CYPACKED typedef struct
 /* IOPINS0_0 Address: CYREG_PRT0_DM0 Size (bytes): 8 */
 #define BS_IOPINS0_0_VAL ((const uint8 CYFAR *)0x480000ACu)
 
-/* IOPINS0_1 Address: CYREG_PRT1_DM0 Size (bytes): 8 */
-#define BS_IOPINS0_1_VAL ((const uint8 CYFAR *)0x480000B4u)
+/* IOPINS0_8 Address: CYREG_PRT15_DM0 Size (bytes): 8 */
+#define BS_IOPINS0_8_VAL ((const uint8 CYFAR *)0x480000B4u)
 
-/* IOPINS0_3 Address: CYREG_PRT3_DM0 Size (bytes): 8 */
-#define BS_IOPINS0_3_VAL ((const uint8 CYFAR *)0x480000BCu)
+/* IOPINS0_1 Address: CYREG_PRT1_DM0 Size (bytes): 8 */
+#define BS_IOPINS0_1_VAL ((const uint8 CYFAR *)0x480000BCu)
 
 /* CYDEV_CLKDIST_ACFG0_CFG0 Address: CYREG_CLKDIST_ACFG0_CFG0 Size (bytes): 4 */
 #define BS_CYDEV_CLKDIST_ACFG0_CFG0_VAL ((const uint8 CYFAR *)0x480000C4u)
@@ -297,22 +297,13 @@ static void AnalogSetDefault(void);
 static void AnalogSetDefault(void)
 {
 	uint8 bg_xover_inl_trim = CY_GET_XTND_REG8((void CYFAR *)(CYREG_FLSHID_MFG_CFG_BG_XOVER_INL_TRIM + 1u));
-	uint8 cr4 = CY_GET_XTND_REG8((void CYFAR *)(CYREG_RESET_CR4));
-	uint8 cr5 = CY_GET_XTND_REG8((void CYFAR *)(CYREG_RESET_CR5));
 	CY_SET_XTND_REG8((void CYFAR *)(CYREG_BG_DFT0), (bg_xover_inl_trim & 0x07u));
 	CY_SET_XTND_REG8((void CYFAR *)(CYREG_BG_DFT1), ((bg_xover_inl_trim >> 4) & 0x0Fu));
-	/* Disable PRES while setting up SAR voltage reference */
-	CY_SET_XTND_REG8((void CYFAR *)(CYREG_RESET_CR4), (cr4 | 0x03u));
-	CY_SET_XTND_REG8((void CYFAR *)(CYREG_RESET_CR5), (cr5 | 0x03u));
-	CY_SET_XTND_REG8((void CYFAR *)CYREG_PRT0_AG, 0x10u);
-	CY_SET_XTND_REG8((void CYFAR *)CYREG_PRT3_AG, 0x80u);
-	CY_SET_XTND_REG8((void CYFAR *)CYREG_SAR1_CSR1, 0x80u);
-	CY_SET_XTND_REG8((void CYFAR *)CYREG_DAC2_SW0, 0x10u);
+	CY_SET_XTND_REG8((void CYFAR *)CYREG_PRT1_AMUX, 0x40u);
+	CY_SET_XTND_REG8((void CYFAR *)CYREG_PRT15_AG, 0x08u);
+	CY_SET_XTND_REG8((void CYFAR *)CYREG_DAC1_SW3, 0x01u);
 	CY_SET_XTND_REG8((void CYFAR *)CYREG_SAR1_SW0, 0x80u);
 	CY_SET_XTND_REG8((void CYFAR *)CYREG_SAR1_SW3, 0x20u);
-	CyDelayUs(10u); /* Allow vref to settle before re-enabling PRES */
-	CY_SET_XTND_REG8((void CYFAR *)(CYREG_RESET_CR5), (cr5));
-	CY_SET_XTND_REG8((void CYFAR *)(CYREG_RESET_CR4), (cr4));
 	CY_SET_XTND_REG8((void CYFAR *)CYREG_PUMP_CR0, 0x44u);
 }
 
@@ -339,11 +330,11 @@ void SetAnalogRoutingPumps(uint8 enabled)
 	uint8 regValue = CY_GET_XTND_REG8((void CYFAR *)CYREG_PUMP_CR0);
 	if (enabled != 0u)
 	{
-		regValue |= 0x22u;
+		regValue |= 0x00u;
 	}
 	else
 	{
-		regValue &= (uint8)~0x22u;
+		regValue &= (uint8)~0x00u;
 	}
 	CY_SET_XTND_REG8((void CYFAR *)CYREG_PUMP_CR0, regValue);
 }
@@ -388,10 +379,8 @@ void cyfitter_cfg(void)
 		static const cfg_memset_t CYCODE cfg_memset_list[] = {
 			/* address, size */
 			{(void CYFAR *)(CYREG_TMR0_CFG0), 12u},
-			{(void CYFAR *)(CYREG_PRT2_DR), 16u},
-			{(void CYFAR *)(CYREG_PRT4_DR), 48u},
+			{(void CYFAR *)(CYREG_PRT2_DR), 80u},
 			{(void CYFAR *)(CYREG_PRT12_DR), 16u},
-			{(void CYFAR *)(CYREG_PRT15_DR), 16u},
 			{(void CYFAR *)(CYDEV_UCFG_B0_P0_U0_BASE), 4096u},
 			{(void CYFAR *)(CYDEV_UCFG_B1_P2_U0_BASE), 2048u},
 			{(void CYFAR *)(CYDEV_UCFG_DSI0_BASE), 2560u},
@@ -422,8 +411,8 @@ void cyfitter_cfg(void)
 
 	/* Perform second pass device configuration. These items must be configured in specific order after the regular configuration is done. */
 	CYCONFIGCPY((void CYFAR *)(CYREG_PRT0_DM0), (const void CYFAR *)(BS_IOPINS0_0_VAL), 8u);
+	CYCONFIGCPY((void CYFAR *)(CYREG_PRT15_DM0), (const void CYFAR *)(BS_IOPINS0_8_VAL), 8u);
 	CYCONFIGCPY((void CYFAR *)(CYREG_PRT1_DM0), (const void CYFAR *)(BS_IOPINS0_1_VAL), 8u);
-	CYCONFIGCPY((void CYFAR *)(CYREG_PRT3_DM0), (const void CYFAR *)(BS_IOPINS0_3_VAL), 8u);
 	/* Switch Boost to the precision bandgap reference from its internal reference */
 	CY_SET_REG8((void CYXDATA *)CYREG_BOOST_CR2, (CY_GET_REG8((void CYXDATA *)CYREG_BOOST_CR2) | 0x08u));
 
