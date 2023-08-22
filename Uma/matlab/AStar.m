@@ -61,7 +61,7 @@ function [map, completePath] = AStar(mapfile, start, target)
                     estimatedWeight(neighbor(1), neighbor(2)) = wStartToEnd(neighbor(1), neighbor(2)) + heuristic(neighbor, target);  % Update the estimatedWeight for the neighbor
                     
                     if ~containsPosition(openSet, neighbor)  % If the neighbor is not in the open set
-                        openSet{end + 1} = neighbor;  % Add the neighbor to the open set 
+                        openSet{end + 1} = neighbor; % Add the neighbor to the open set ( index of the last element in an array+1) 
                     end
                 end
             end
