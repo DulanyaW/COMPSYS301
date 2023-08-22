@@ -36,11 +36,12 @@
 CY_ISR(isr_3_interrupt) {
 //    if(Comp_1_GetCompare()==1){
 //        LED_Write(1);
-//    }
+//    }rrff 
 //    else{
 //        LED_Write(0);
 //    }
     Comp_1_Init();
+    Comp_2_Init();
 
 }
 
@@ -53,6 +54,7 @@ int main(void)
     Timer_2_SetInterruptMode(0x02);
     isr_3_Start();
     Comp_1_Start();
+    Comp_2_Start();
     
     for(;;)
     {
