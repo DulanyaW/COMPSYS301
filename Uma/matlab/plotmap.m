@@ -37,7 +37,7 @@ if nargin == 2 && ~isempty(steps)
             x = steps(i + 1);
             placestep([maprows - y + 1, x], labelCounter);
             labelCounter = labelCounter + 1;
-            pause(0.5);  % Adjust the duration as needed
+            pause(0.1);  % Adjust the duration as needed
         end
     end  
     hold off
@@ -57,7 +57,7 @@ end
 
 function placestep(position,i)
 position=[position(2)+0.1 position(1)+0.1];
-rectangle('Position',[position,0.8,0.8],'FaceColor','y');
+rectangle('Position',[position,0.8,0.8],'FaceColor','g');
 c=sprintf('%d',i);
 text(position(1)+0.2,position(2)+0.2,c,'FontSize',10);
 end

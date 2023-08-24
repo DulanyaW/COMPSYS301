@@ -76,8 +76,8 @@ end
 %*********************************************************
 %*********************calculate hypotenuse(Heuristic)******************
 
-function hypotenuse = heuristic(pos, target)
-    hypotenuse = norm(pos - target);  % hypotenuse 
+function h = heuristic(pos, target)
+    h = norm(pos - target);  % hypotenuse 
 end
 
 
