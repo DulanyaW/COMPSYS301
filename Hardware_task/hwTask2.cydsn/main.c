@@ -23,7 +23,7 @@ uint8 counter = 1;
 
 uint16 speed = 0;
 uint8 ready_to_send = 0;
-char buffer[20];
+char buffer[64];
 
 CY_ISR(isr_TC_handler){
     if (counter != 10){
@@ -33,11 +33,11 @@ CY_ISR(isr_TC_handler){
         ci = QuadDec_M1_GetCounter();
         speed = ci * 8.13;
         counter = 1;
-        sprintf(buffer, "%d", speed);
+        
         ready_to_send = 1;
         QuadDec_M1_SetCounter(0);
     }
-    
+    Timer_1_ReadStatusRegister();
     
 }
  
@@ -57,6 +57,8 @@ int main(void)
     //Start UART for operation
     USBUART_1_Start(0, USBUART_1_5V_OPERATION);
     while (USBUART_1_GetConfiguration()==0){};
+    sprintf(buffer, "Hello\n");
+    usbPutString(buffer);
     QuadDec_M1_Start();
     Timer_1_Start();
     isr_1_StartEx(isr_TC_handler);
@@ -69,10 +71,11 @@ int main(void)
     for(;;)
     {
         if (ready_to_send == 1){
+            sprintf(buffer, "Val: %d\n", speed);
             usbPutString(buffer);
             //USBUART_1_PutString(buffer);
             ready_to_send = 0;
-            printf("%d", speed);
+            //printf("%d", speed);
         }
         
         /* Place your application code here. */
