@@ -29,7 +29,7 @@
     #error Component QuadDec_v3_0 requires cy_boot v3.0 or later
 #endif /* (CY_PSOC5LP) */
 
-#define QuadDec_M2_COUNTER_SIZE               (16u)
+#define QuadDec_M2_COUNTER_SIZE               (32u)
 #define QuadDec_M2_COUNTER_SIZE_8_BIT         (8u)
 #define QuadDec_M2_COUNTER_SIZE_16_BIT        (16u)
 #define QuadDec_M2_COUNTER_SIZE_32_BIT        (32u)
@@ -75,8 +75,8 @@ void  QuadDec_M2_Enable(void) ;
 uint8 QuadDec_M2_GetEvents(void) ;
 void  QuadDec_M2_SetInterruptMask(uint8 mask) ;
 uint8 QuadDec_M2_GetInterruptMask(void) ;
-int16 QuadDec_M2_GetCounter(void) ;
-void  QuadDec_M2_SetCounter(int16 value)
+int32 QuadDec_M2_GetCounter(void) ;
+void  QuadDec_M2_SetCounter(int32 value)
 ;
 void  QuadDec_M2_Sleep(void) ;
 void  QuadDec_M2_Wakeup(void) ;

@@ -199,9 +199,9 @@ void QuadDec_M2_Stop(void)
 *  of the 32-bit counter, when Counter size equal 32-bit.
 *
 *******************************************************************************/
-int16 QuadDec_M2_GetCounter(void) 
+int32 QuadDec_M2_GetCounter(void) 
 {
-    int16 count;
+    int32 count;
     uint16 tmpCnt;
 
     #if (QuadDec_M2_COUNTER_SIZE == QuadDec_M2_COUNTER_SIZE_32_BIT)
@@ -224,7 +224,7 @@ int16 QuadDec_M2_GetCounter(void)
             tmpCnt = QuadDec_M2_Cnt16_ReadCounter();
         #endif  /* QuadDec_M2_COUNTER_SIZE == QuadDec_M2_COUNTER_SIZE_8_BIT */
 
-        count = (int16) ((int32) tmpCnt -
+        count = (int32) ((int32) tmpCnt -
                 (int32) QuadDec_M2_COUNTER_INIT_VALUE);
 
     #endif /* QuadDec_M2_COUNTER_SIZE == QuadDec_M2_COUNTER_SIZE_32_BIT */ 
@@ -255,7 +255,7 @@ int16 QuadDec_M2_GetCounter(void)
 *  No.
 *
 *******************************************************************************/
-void QuadDec_M2_SetCounter(int16 value) 
+void QuadDec_M2_SetCounter(int32 value) 
 {
     #if ((QuadDec_M2_COUNTER_SIZE == QuadDec_M2_COUNTER_SIZE_8_BIT) || \
          (QuadDec_M2_COUNTER_SIZE == QuadDec_M2_COUNTER_SIZE_16_BIT))

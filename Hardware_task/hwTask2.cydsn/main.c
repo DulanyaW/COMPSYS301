@@ -17,23 +17,26 @@
 #include "defines.h"
 
 void usbPutString(char *s);
-uint8 ci = 0;
-uint8 i = 0;
+int32 ci = 0;
+int32 cj = 0;
+
 uint8 counter = 1;
 
-uint16 speed = 0;
+uint32 speedi = 0;
+uint32 speedj = 0;
 uint8 ready_to_send = 0;
 char buffer[64];
 
 CY_ISR(isr_TC_handler){
-    if (counter != 10){
+    if (counter != 4){
      counter++;
     }else{
-        // 2.731ms *10
+        // 2.731ms *4 ~=11 ms
         ci = QuadDec_M1_GetCounter();
-        speed = ci * 8.13;
+        cj = QuadDec_M2_GetCounter();
+        speedi = (uint32)(-ci * 8.13/4);
+        speedj = (uint32)(-cj * 8.13/4);
         counter = 1;
-        
         ready_to_send = 1;
         QuadDec_M1_SetCounter(0);
     }
@@ -50,16 +53,17 @@ int main(void)
     PWM_1_Start();
     PWM_2_Start();
     // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
-    PWM_2_WriteCompare(50);
-    PWM_1_WriteCompare(50);
+    PWM_2_WriteCompare(60);
+    PWM_1_WriteCompare(60);
     PWM_1_WritePeriod(100);
     PWM_2_WritePeriod(100);
     //Start UART for operation
     USBUART_1_Start(0, USBUART_1_5V_OPERATION);
     while (USBUART_1_GetConfiguration()==0){};
-    sprintf(buffer, "Hello\n");
-    usbPutString(buffer);
+    //sprintf(buffer, "Hello\n");
+    //usbPutString(buffer);
     QuadDec_M1_Start();
+    QuadDec_M2_Start();
     Timer_1_Start();
     isr_1_StartEx(isr_TC_handler);
     
@@ -71,9 +75,11 @@ int main(void)
     for(;;)
     {
         if (ready_to_send == 1){
-            sprintf(buffer, "Val: %d\n", speed);
+            sprintf(buffer, "speed: %ld\r\n", speedi);
             usbPutString(buffer);
             //USBUART_1_PutString(buffer);
+            //sprintf(buffer, "speed: %ld\r\n", speedj);
+            //usbPutString(buffer);
             ready_to_send = 0;
             //printf("%d", speed);
         }
