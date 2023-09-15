@@ -29,10 +29,6 @@ char bufferi[64];
 char bufferj[64];
 
 CY_ISR(isr_TC_handler){
-    /*if ( counter == 20){
-        PWM_1_WriteCompare(0);
-        PWM_2_WriteCompare(0);
-    }*/
     
     if (counter % 4 != 0){
      counter++;
