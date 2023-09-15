@@ -25,10 +25,16 @@ uint8 counter = 1;
 uint32 speedi = 0;
 uint32 speedj = 0;
 uint8 ready_to_send = 0;
-char buffer[64];
+char bufferi[64];
+char bufferj[64];
 
 CY_ISR(isr_TC_handler){
-    if (counter != 4){
+    /*if ( counter == 20){
+        PWM_1_WriteCompare(0);
+        PWM_2_WriteCompare(0);
+    }*/
+    
+    if (counter % 4 != 0){
      counter++;
     }else{
         // 2.731ms *4 ~=11 ms
@@ -39,6 +45,7 @@ CY_ISR(isr_TC_handler){
         counter = 1;
         ready_to_send = 1;
         QuadDec_M1_SetCounter(0);
+        QuadDec_M2_SetCounter(0);
     }
     Timer_1_ReadStatusRegister();
     
@@ -75,13 +82,13 @@ int main(void)
     for(;;)
     {
         if (ready_to_send == 1){
-            sprintf(buffer, "speed: %ld\r\n", speedi);
-            usbPutString(buffer);
-            //USBUART_1_PutString(buffer);
-            //sprintf(buffer, "speed: %ld\r\n", speedj);
-            //usbPutString(buffer);
+            sprintf(bufferi, "speed_M1: %ld\r\n", speedi);
+            usbPutString(bufferi);
+            
+            sprintf(bufferj, "speed_M2: %ld\r\n", speedj);
+            usbPutString(bufferj);
             ready_to_send = 0;
-            //printf("%d", speed);
+            
         }
         
         /* Place your application code here. */
