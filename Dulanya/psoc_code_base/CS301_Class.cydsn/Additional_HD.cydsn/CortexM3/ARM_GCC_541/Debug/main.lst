@@ -1,0 +1,705 @@
+ARM GAS  C:\Users\dwit264\AppData\Local\Temp\ccfaPwFj.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"main.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.eoc,"ax",%progbits
+  20              		.align	2
+  21              		.global	eoc
+  22              		.thumb
+  23              		.thumb_func
+  24              		.type	eoc, %function
+  25              	eoc:
+  26              	.LFB64:
+  27              		.file 1 "main.c"
+   1:main.c        **** /* ========================================
+   2:main.c        ****  *
+   3:main.c        ****  * Copyright YOUR COMPANY, THE YEAR
+   4:main.c        ****  * All Rights Reserved
+   5:main.c        ****  * UNPUBLISHED, LICENSED SOFTWARE.
+   6:main.c        ****  *
+   7:main.c        ****  * CONFIDENTIAL AND PROPRIETARY INFORMATION
+   8:main.c        ****  * WHICH IS THE PROPERTY OF your company.
+   9:main.c        ****  *
+  10:main.c        ****  * ========================================
+  11:main.c        **** */
+  12:main.c        **** /* ========================================
+  13:main.c        ****  * Fully working code: 
+  14:main.c        ****  * PWM      : 
+  15:main.c        ****  * Encoder  : 
+  16:main.c        ****  * ADC      :
+  17:main.c        ****  * USB      : port displays speed and position.
+  18:main.c        ****  * CMD: "PW xx"
+  19:main.c        ****  * Copyright Univ of Auckland, 2016
+  20:main.c        ****  * All Rights Reserved
+  21:main.c        ****  * UNPUBLISHED, LICENSED SOFTWARE.
+  22:main.c        ****  *
+  23:main.c        ****  * CONFIDENTIAL AND PROPRIETARY INFORMATION
+  24:main.c        ****  * WHICH IS THE PROPERTY OF Univ of Auckland.
+  25:main.c        ****  *
+  26:main.c        ****  * ========================================
+  27:main.c        **** */
+  28:main.c        **** #include <stdio.h>
+  29:main.c        **** #include <string.h>
+  30:main.c        **** #include <stdlib.h>
+ARM GAS  C:\Users\dwit264\AppData\Local\Temp\ccfaPwFj.s 			page 2
+
+
+  31:main.c        **** #include <project.h>
+  32:main.c        **** 
+  33:main.c        **** 
+  34:main.c        **** #include "project.h"
+  35:main.c        **** 
+  36:main.c        **** CY_ISR(eoc) {
+  28              		.loc 1 36 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 08B5     		push	{r3, lr}
+  33              		.cfi_def_cfa_offset 8
+  34              		.cfi_offset 3, -8
+  35              		.cfi_offset 14, -4
+  37:main.c        ****     VDAC8_1_SetValue(ADC_SAR_1_GetResult16() >> 4);
+  36              		.loc 1 37 0
+  37 0002 FFF7FEFF 		bl	ADC_SAR_1_GetResult16
+  38              	.LVL0:
+  39 0006 C0F30710 		ubfx	r0, r0, #4, #8
+  40 000a FFF7FEFF 		bl	VDAC8_1_SetValue
+  41              	.LVL1:
+  42 000e 08BD     		pop	{r3, pc}
+  43              		.cfi_endproc
+  44              	.LFE64:
+  45              		.size	eoc, .-eoc
+  46              		.section	.text.main,"ax",%progbits
+  47              		.align	2
+  48              		.global	main
+  49              		.thumb
+  50              		.thumb_func
+  51              		.type	main, %function
+  52              	main:
+  53              	.LFB65:
+  38:main.c        **** }
+  39:main.c        **** 
+  40:main.c        **** int main(void)
+  41:main.c        **** {
+  54              		.loc 1 41 0
+  55              		.cfi_startproc
+  56              		@ Volatile: function does not return.
+  57              		@ args = 0, pretend = 0, frame = 0
+  58              		@ frame_needed = 0, uses_anonymous_args = 0
+  59 0000 08B5     		push	{r3, lr}
+  60              		.cfi_def_cfa_offset 8
+  61              		.cfi_offset 3, -8
+  62              		.cfi_offset 14, -4
+  42:main.c        ****     CyGlobalIntEnable; /* Enable global interrupts. */
+  63              		.loc 1 42 0
+  64              		.syntax unified
+  65              	@ 42 "main.c" 1
+  66 0002 62B6     		CPSIE   i
+  67              	@ 0 "" 2
+  43:main.c        **** 
+  44:main.c        ****     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
+  45:main.c        ****     Timer_1_Start();
+  68              		.loc 1 45 0
+  69              		.thumb
+ARM GAS  C:\Users\dwit264\AppData\Local\Temp\ccfaPwFj.s 			page 3
+
+
+  70              		.syntax unified
+  71 0004 FFF7FEFF 		bl	Timer_1_Start
+  72              	.LVL2:
+  46:main.c        ****     ADC_SAR_1_Start();
+  73              		.loc 1 46 0
+  74 0008 FFF7FEFF 		bl	ADC_SAR_1_Start
+  75              	.LVL3:
+  47:main.c        ****     VDAC8_1_Start();
+  76              		.loc 1 47 0
+  77 000c FFF7FEFF 		bl	VDAC8_1_Start
+  78              	.LVL4:
+  48:main.c        ****     isr_1_StartEx(eoc);
+  79              		.loc 1 48 0
+  80 0010 0148     		ldr	r0, .L6
+  81 0012 FFF7FEFF 		bl	isr_1_StartEx
+  82              	.LVL5:
+  83              	.L4:
+  84 0016 FEE7     		b	.L4
+  85              	.L7:
+  86              		.align	2
+  87              	.L6:
+  88 0018 00000000 		.word	eoc
+  89              		.cfi_endproc
+  90              	.LFE65:
+  91              		.size	main, .-main
+  92              		.text
+  93              	.Letext0:
+  94              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+  95              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+  96              		.file 4 "Generated_Source\\PSoC5/ADC_SAR_1.h"
+  97              		.file 5 "Generated_Source\\PSoC5/VDAC8_1.h"
+  98              		.file 6 "Generated_Source\\PSoC5/Timer_1.h"
+  99              		.file 7 "Generated_Source\\PSoC5/isr_1.h"
+ 100              		.file 8 "Generated_Source\\PSoC5/core_cm3.h"
+ 101              		.section	.debug_info,"",%progbits
+ 102              	.Ldebug_info0:
+ 103 0000 64010000 		.4byte	0x164
+ 104 0004 0400     		.2byte	0x4
+ 105 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 106 000a 04       		.byte	0x4
+ 107 000b 01       		.uleb128 0x1
+ 108 000c 47000000 		.4byte	.LASF22
+ 109 0010 0C       		.byte	0xc
+ 110 0011 3B000000 		.4byte	.LASF23
+ 111 0015 94010000 		.4byte	.LASF24
+ 112 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 113 001d 00000000 		.4byte	0
+ 114 0021 00000000 		.4byte	.Ldebug_line0
+ 115 0025 02       		.uleb128 0x2
+ 116 0026 01       		.byte	0x1
+ 117 0027 06       		.byte	0x6
+ 118 0028 72010000 		.4byte	.LASF0
+ 119 002c 02       		.uleb128 0x2
+ 120 002d 01       		.byte	0x1
+ 121 002e 08       		.byte	0x8
+ 122 002f 1A010000 		.4byte	.LASF1
+ 123 0033 02       		.uleb128 0x2
+ARM GAS  C:\Users\dwit264\AppData\Local\Temp\ccfaPwFj.s 			page 4
+
+
+ 124 0034 02       		.byte	0x2
+ 125 0035 05       		.byte	0x5
+ 126 0036 22020000 		.4byte	.LASF2
+ 127 003a 02       		.uleb128 0x2
+ 128 003b 02       		.byte	0x2
+ 129 003c 07       		.byte	0x7
+ 130 003d 0E000000 		.4byte	.LASF3
+ 131 0041 03       		.uleb128 0x3
+ 132 0042 8A010000 		.4byte	.LASF12
+ 133 0046 02       		.byte	0x2
+ 134 0047 3F       		.byte	0x3f
+ 135 0048 4C000000 		.4byte	0x4c
+ 136 004c 02       		.uleb128 0x2
+ 137 004d 04       		.byte	0x4
+ 138 004e 05       		.byte	0x5
+ 139 004f 53010000 		.4byte	.LASF4
+ 140 0053 02       		.uleb128 0x2
+ 141 0054 04       		.byte	0x4
+ 142 0055 07       		.byte	0x7
+ 143 0056 D5000000 		.4byte	.LASF5
+ 144 005a 02       		.uleb128 0x2
+ 145 005b 08       		.byte	0x8
+ 146 005c 05       		.byte	0x5
+ 147 005d 00000000 		.4byte	.LASF6
+ 148 0061 02       		.uleb128 0x2
+ 149 0062 08       		.byte	0x8
+ 150 0063 07       		.byte	0x7
+ 151 0064 E7000000 		.4byte	.LASF7
+ 152 0068 04       		.uleb128 0x4
+ 153 0069 04       		.byte	0x4
+ 154 006a 05       		.byte	0x5
+ 155 006b 696E7400 		.ascii	"int\000"
+ 156 006f 02       		.uleb128 0x2
+ 157 0070 04       		.byte	0x4
+ 158 0071 07       		.byte	0x7
+ 159 0072 2E000000 		.4byte	.LASF8
+ 160 0076 02       		.uleb128 0x2
+ 161 0077 08       		.byte	0x8
+ 162 0078 04       		.byte	0x4
+ 163 0079 7E010000 		.4byte	.LASF9
+ 164 007d 02       		.uleb128 0x2
+ 165 007e 04       		.byte	0x4
+ 166 007f 07       		.byte	0x7
+ 167 0080 44020000 		.4byte	.LASF10
+ 168 0084 02       		.uleb128 0x2
+ 169 0085 01       		.byte	0x1
+ 170 0086 08       		.byte	0x8
+ 171 0087 28010000 		.4byte	.LASF11
+ 172 008b 03       		.uleb128 0x3
+ 173 008c 2C020000 		.4byte	.LASF13
+ 174 0090 03       		.byte	0x3
+ 175 0091 2C       		.byte	0x2c
+ 176 0092 41000000 		.4byte	0x41
+ 177 0096 02       		.uleb128 0x2
+ 178 0097 04       		.byte	0x4
+ 179 0098 04       		.byte	0x4
+ 180 0099 1C020000 		.4byte	.LASF14
+ARM GAS  C:\Users\dwit264\AppData\Local\Temp\ccfaPwFj.s 			page 5
+
+
+ 181 009d 02       		.uleb128 0x2
+ 182 009e 08       		.byte	0x8
+ 183 009f 04       		.byte	0x4
+ 184 00a0 4C010000 		.4byte	.LASF15
+ 185 00a4 05       		.uleb128 0x5
+ 186 00a5 656F6300 		.ascii	"eoc\000"
+ 187 00a9 01       		.byte	0x1
+ 188 00aa 24       		.byte	0x24
+ 189 00ab 00000000 		.4byte	.LFB64
+ 190 00af 10000000 		.4byte	.LFE64-.LFB64
+ 191 00b3 01       		.uleb128 0x1
+ 192 00b4 9C       		.byte	0x9c
+ 193 00b5 CC000000 		.4byte	0xcc
+ 194 00b9 06       		.uleb128 0x6
+ 195 00ba 06000000 		.4byte	.LVL0
+ 196 00be 25010000 		.4byte	0x125
+ 197 00c2 06       		.uleb128 0x6
+ 198 00c3 0E000000 		.4byte	.LVL1
+ 199 00c7 30010000 		.4byte	0x130
+ 200 00cb 00       		.byte	0
+ 201 00cc 07       		.uleb128 0x7
+ 202 00cd 42000000 		.4byte	.LASF25
+ 203 00d1 01       		.byte	0x1
+ 204 00d2 28       		.byte	0x28
+ 205 00d3 68000000 		.4byte	0x68
+ 206 00d7 00000000 		.4byte	.LFB65
+ 207 00db 1C000000 		.4byte	.LFE65-.LFB65
+ 208 00df 01       		.uleb128 0x1
+ 209 00e0 9C       		.byte	0x9c
+ 210 00e1 14010000 		.4byte	0x114
+ 211 00e5 06       		.uleb128 0x6
+ 212 00e6 08000000 		.4byte	.LVL2
+ 213 00ea 3B010000 		.4byte	0x13b
+ 214 00ee 06       		.uleb128 0x6
+ 215 00ef 0C000000 		.4byte	.LVL3
+ 216 00f3 46010000 		.4byte	0x146
+ 217 00f7 06       		.uleb128 0x6
+ 218 00f8 10000000 		.4byte	.LVL4
+ 219 00fc 51010000 		.4byte	0x151
+ 220 0100 08       		.uleb128 0x8
+ 221 0101 16000000 		.4byte	.LVL5
+ 222 0105 5C010000 		.4byte	0x15c
+ 223 0109 09       		.uleb128 0x9
+ 224 010a 01       		.uleb128 0x1
+ 225 010b 50       		.byte	0x50
+ 226 010c 05       		.uleb128 0x5
+ 227 010d 03       		.byte	0x3
+ 228 010e 00000000 		.4byte	eoc
+ 229 0112 00       		.byte	0
+ 230 0113 00       		.byte	0
+ 231 0114 0A       		.uleb128 0xa
+ 232 0115 21000000 		.4byte	.LASF26
+ 233 0119 08       		.byte	0x8
+ 234 011a 1207     		.2byte	0x712
+ 235 011c 20010000 		.4byte	0x120
+ 236 0120 0B       		.uleb128 0xb
+ 237 0121 8B000000 		.4byte	0x8b
+ARM GAS  C:\Users\dwit264\AppData\Local\Temp\ccfaPwFj.s 			page 6
+
+
+ 238 0125 0C       		.uleb128 0xc
+ 239 0126 5C010000 		.4byte	.LASF16
+ 240 012a 5C010000 		.4byte	.LASF16
+ 241 012e 04       		.byte	0x4
+ 242 012f 3B       		.byte	0x3b
+ 243 0130 0C       		.uleb128 0xc
+ 244 0131 3B010000 		.4byte	.LASF17
+ 245 0135 3B010000 		.4byte	.LASF17
+ 246 0139 05       		.byte	0x5
+ 247 013a 37       		.byte	0x37
+ 248 013b 0C       		.uleb128 0xc
+ 249 013c 0C010000 		.4byte	.LASF18
+ 250 0140 0C010000 		.4byte	.LASF18
+ 251 0144 06       		.byte	0x6
+ 252 0145 5A       		.byte	0x5a
+ 253 0146 0C       		.uleb128 0xc
+ 254 0147 34020000 		.4byte	.LASF19
+ 255 014b 34020000 		.4byte	.LASF19
+ 256 014f 04       		.byte	0x4
+ 257 0150 34       		.byte	0x34
+ 258 0151 0C       		.uleb128 0xc
+ 259 0152 FE000000 		.4byte	.LASF20
+ 260 0156 FE000000 		.4byte	.LASF20
+ 261 015a 05       		.byte	0x5
+ 262 015b 33       		.byte	0x33
+ 263 015c 0C       		.uleb128 0xc
+ 264 015d 2D010000 		.4byte	.LASF21
+ 265 0161 2D010000 		.4byte	.LASF21
+ 266 0165 07       		.byte	0x7
+ 267 0166 18       		.byte	0x18
+ 268 0167 00       		.byte	0
+ 269              		.section	.debug_abbrev,"",%progbits
+ 270              	.Ldebug_abbrev0:
+ 271 0000 01       		.uleb128 0x1
+ 272 0001 11       		.uleb128 0x11
+ 273 0002 01       		.byte	0x1
+ 274 0003 25       		.uleb128 0x25
+ 275 0004 0E       		.uleb128 0xe
+ 276 0005 13       		.uleb128 0x13
+ 277 0006 0B       		.uleb128 0xb
+ 278 0007 03       		.uleb128 0x3
+ 279 0008 0E       		.uleb128 0xe
+ 280 0009 1B       		.uleb128 0x1b
+ 281 000a 0E       		.uleb128 0xe
+ 282 000b 55       		.uleb128 0x55
+ 283 000c 17       		.uleb128 0x17
+ 284 000d 11       		.uleb128 0x11
+ 285 000e 01       		.uleb128 0x1
+ 286 000f 10       		.uleb128 0x10
+ 287 0010 17       		.uleb128 0x17
+ 288 0011 00       		.byte	0
+ 289 0012 00       		.byte	0
+ 290 0013 02       		.uleb128 0x2
+ 291 0014 24       		.uleb128 0x24
+ 292 0015 00       		.byte	0
+ 293 0016 0B       		.uleb128 0xb
+ 294 0017 0B       		.uleb128 0xb
+ARM GAS  C:\Users\dwit264\AppData\Local\Temp\ccfaPwFj.s 			page 7
+
+
+ 295 0018 3E       		.uleb128 0x3e
+ 296 0019 0B       		.uleb128 0xb
+ 297 001a 03       		.uleb128 0x3
+ 298 001b 0E       		.uleb128 0xe
+ 299 001c 00       		.byte	0
+ 300 001d 00       		.byte	0
+ 301 001e 03       		.uleb128 0x3
+ 302 001f 16       		.uleb128 0x16
+ 303 0020 00       		.byte	0
+ 304 0021 03       		.uleb128 0x3
+ 305 0022 0E       		.uleb128 0xe
+ 306 0023 3A       		.uleb128 0x3a
+ 307 0024 0B       		.uleb128 0xb
+ 308 0025 3B       		.uleb128 0x3b
+ 309 0026 0B       		.uleb128 0xb
+ 310 0027 49       		.uleb128 0x49
+ 311 0028 13       		.uleb128 0x13
+ 312 0029 00       		.byte	0
+ 313 002a 00       		.byte	0
+ 314 002b 04       		.uleb128 0x4
+ 315 002c 24       		.uleb128 0x24
+ 316 002d 00       		.byte	0
+ 317 002e 0B       		.uleb128 0xb
+ 318 002f 0B       		.uleb128 0xb
+ 319 0030 3E       		.uleb128 0x3e
+ 320 0031 0B       		.uleb128 0xb
+ 321 0032 03       		.uleb128 0x3
+ 322 0033 08       		.uleb128 0x8
+ 323 0034 00       		.byte	0
+ 324 0035 00       		.byte	0
+ 325 0036 05       		.uleb128 0x5
+ 326 0037 2E       		.uleb128 0x2e
+ 327 0038 01       		.byte	0x1
+ 328 0039 3F       		.uleb128 0x3f
+ 329 003a 19       		.uleb128 0x19
+ 330 003b 03       		.uleb128 0x3
+ 331 003c 08       		.uleb128 0x8
+ 332 003d 3A       		.uleb128 0x3a
+ 333 003e 0B       		.uleb128 0xb
+ 334 003f 3B       		.uleb128 0x3b
+ 335 0040 0B       		.uleb128 0xb
+ 336 0041 27       		.uleb128 0x27
+ 337 0042 19       		.uleb128 0x19
+ 338 0043 11       		.uleb128 0x11
+ 339 0044 01       		.uleb128 0x1
+ 340 0045 12       		.uleb128 0x12
+ 341 0046 06       		.uleb128 0x6
+ 342 0047 40       		.uleb128 0x40
+ 343 0048 18       		.uleb128 0x18
+ 344 0049 9742     		.uleb128 0x2117
+ 345 004b 19       		.uleb128 0x19
+ 346 004c 01       		.uleb128 0x1
+ 347 004d 13       		.uleb128 0x13
+ 348 004e 00       		.byte	0
+ 349 004f 00       		.byte	0
+ 350 0050 06       		.uleb128 0x6
+ 351 0051 898201   		.uleb128 0x4109
+ARM GAS  C:\Users\dwit264\AppData\Local\Temp\ccfaPwFj.s 			page 8
+
+
+ 352 0054 00       		.byte	0
+ 353 0055 11       		.uleb128 0x11
+ 354 0056 01       		.uleb128 0x1
+ 355 0057 31       		.uleb128 0x31
+ 356 0058 13       		.uleb128 0x13
+ 357 0059 00       		.byte	0
+ 358 005a 00       		.byte	0
+ 359 005b 07       		.uleb128 0x7
+ 360 005c 2E       		.uleb128 0x2e
+ 361 005d 01       		.byte	0x1
+ 362 005e 3F       		.uleb128 0x3f
+ 363 005f 19       		.uleb128 0x19
+ 364 0060 03       		.uleb128 0x3
+ 365 0061 0E       		.uleb128 0xe
+ 366 0062 3A       		.uleb128 0x3a
+ 367 0063 0B       		.uleb128 0xb
+ 368 0064 3B       		.uleb128 0x3b
+ 369 0065 0B       		.uleb128 0xb
+ 370 0066 27       		.uleb128 0x27
+ 371 0067 19       		.uleb128 0x19
+ 372 0068 49       		.uleb128 0x49
+ 373 0069 13       		.uleb128 0x13
+ 374 006a 8701     		.uleb128 0x87
+ 375 006c 19       		.uleb128 0x19
+ 376 006d 11       		.uleb128 0x11
+ 377 006e 01       		.uleb128 0x1
+ 378 006f 12       		.uleb128 0x12
+ 379 0070 06       		.uleb128 0x6
+ 380 0071 40       		.uleb128 0x40
+ 381 0072 18       		.uleb128 0x18
+ 382 0073 9742     		.uleb128 0x2117
+ 383 0075 19       		.uleb128 0x19
+ 384 0076 01       		.uleb128 0x1
+ 385 0077 13       		.uleb128 0x13
+ 386 0078 00       		.byte	0
+ 387 0079 00       		.byte	0
+ 388 007a 08       		.uleb128 0x8
+ 389 007b 898201   		.uleb128 0x4109
+ 390 007e 01       		.byte	0x1
+ 391 007f 11       		.uleb128 0x11
+ 392 0080 01       		.uleb128 0x1
+ 393 0081 31       		.uleb128 0x31
+ 394 0082 13       		.uleb128 0x13
+ 395 0083 00       		.byte	0
+ 396 0084 00       		.byte	0
+ 397 0085 09       		.uleb128 0x9
+ 398 0086 8A8201   		.uleb128 0x410a
+ 399 0089 00       		.byte	0
+ 400 008a 02       		.uleb128 0x2
+ 401 008b 18       		.uleb128 0x18
+ 402 008c 9142     		.uleb128 0x2111
+ 403 008e 18       		.uleb128 0x18
+ 404 008f 00       		.byte	0
+ 405 0090 00       		.byte	0
+ 406 0091 0A       		.uleb128 0xa
+ 407 0092 34       		.uleb128 0x34
+ 408 0093 00       		.byte	0
+ARM GAS  C:\Users\dwit264\AppData\Local\Temp\ccfaPwFj.s 			page 9
+
+
+ 409 0094 03       		.uleb128 0x3
+ 410 0095 0E       		.uleb128 0xe
+ 411 0096 3A       		.uleb128 0x3a
+ 412 0097 0B       		.uleb128 0xb
+ 413 0098 3B       		.uleb128 0x3b
+ 414 0099 05       		.uleb128 0x5
+ 415 009a 49       		.uleb128 0x49
+ 416 009b 13       		.uleb128 0x13
+ 417 009c 3F       		.uleb128 0x3f
+ 418 009d 19       		.uleb128 0x19
+ 419 009e 3C       		.uleb128 0x3c
+ 420 009f 19       		.uleb128 0x19
+ 421 00a0 00       		.byte	0
+ 422 00a1 00       		.byte	0
+ 423 00a2 0B       		.uleb128 0xb
+ 424 00a3 35       		.uleb128 0x35
+ 425 00a4 00       		.byte	0
+ 426 00a5 49       		.uleb128 0x49
+ 427 00a6 13       		.uleb128 0x13
+ 428 00a7 00       		.byte	0
+ 429 00a8 00       		.byte	0
+ 430 00a9 0C       		.uleb128 0xc
+ 431 00aa 2E       		.uleb128 0x2e
+ 432 00ab 00       		.byte	0
+ 433 00ac 3F       		.uleb128 0x3f
+ 434 00ad 19       		.uleb128 0x19
+ 435 00ae 3C       		.uleb128 0x3c
+ 436 00af 19       		.uleb128 0x19
+ 437 00b0 6E       		.uleb128 0x6e
+ 438 00b1 0E       		.uleb128 0xe
+ 439 00b2 03       		.uleb128 0x3
+ 440 00b3 0E       		.uleb128 0xe
+ 441 00b4 3A       		.uleb128 0x3a
+ 442 00b5 0B       		.uleb128 0xb
+ 443 00b6 3B       		.uleb128 0x3b
+ 444 00b7 0B       		.uleb128 0xb
+ 445 00b8 00       		.byte	0
+ 446 00b9 00       		.byte	0
+ 447 00ba 00       		.byte	0
+ 448              		.section	.debug_aranges,"",%progbits
+ 449 0000 24000000 		.4byte	0x24
+ 450 0004 0200     		.2byte	0x2
+ 451 0006 00000000 		.4byte	.Ldebug_info0
+ 452 000a 04       		.byte	0x4
+ 453 000b 00       		.byte	0
+ 454 000c 0000     		.2byte	0
+ 455 000e 0000     		.2byte	0
+ 456 0010 00000000 		.4byte	.LFB64
+ 457 0014 10000000 		.4byte	.LFE64-.LFB64
+ 458 0018 00000000 		.4byte	.LFB65
+ 459 001c 1C000000 		.4byte	.LFE65-.LFB65
+ 460 0020 00000000 		.4byte	0
+ 461 0024 00000000 		.4byte	0
+ 462              		.section	.debug_ranges,"",%progbits
+ 463              	.Ldebug_ranges0:
+ 464 0000 00000000 		.4byte	.LFB64
+ 465 0004 10000000 		.4byte	.LFE64
+ARM GAS  C:\Users\dwit264\AppData\Local\Temp\ccfaPwFj.s 			page 10
+
+
+ 466 0008 00000000 		.4byte	.LFB65
+ 467 000c 1C000000 		.4byte	.LFE65
+ 468 0010 00000000 		.4byte	0
+ 469 0014 00000000 		.4byte	0
+ 470              		.section	.debug_line,"",%progbits
+ 471              	.Ldebug_line0:
+ 472 0000 9D010000 		.section	.debug_str,"MS",%progbits,1
+ 472      02007301 
+ 472      00000201 
+ 472      FB0E0D00 
+ 472      01010101 
+ 473              	.LASF6:
+ 474 0000 6C6F6E67 		.ascii	"long long int\000"
+ 474      206C6F6E 
+ 474      6720696E 
+ 474      7400
+ 475              	.LASF3:
+ 476 000e 73686F72 		.ascii	"short unsigned int\000"
+ 476      7420756E 
+ 476      7369676E 
+ 476      65642069 
+ 476      6E7400
+ 477              	.LASF26:
+ 478 0021 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 478      52784275 
+ 478      66666572 
+ 478      00
+ 479              	.LASF8:
+ 480 002e 756E7369 		.ascii	"unsigned int\000"
+ 480      676E6564 
+ 480      20696E74 
+ 480      00
+ 481              	.LASF23:
+ 482 003b 6D61696E 		.ascii	"main.c\000"
+ 482      2E6300
+ 483              	.LASF25:
+ 484 0042 6D61696E 		.ascii	"main\000"
+ 484      00
+ 485              	.LASF22:
+ 486 0047 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 486      43313120 
+ 486      352E342E 
+ 486      31203230 
+ 486      31363036 
+ 487 007a 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m3 -mthumb -g -O"
+ 487      20726576 
+ 487      6973696F 
+ 487      6E203233 
+ 487      37373135 
+ 488 00ad 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 488      66756E63 
+ 488      74696F6E 
+ 488      2D736563 
+ 488      74696F6E 
+ 489              	.LASF5:
+ 490 00d5 6C6F6E67 		.ascii	"long unsigned int\000"
+ 490      20756E73 
+ARM GAS  C:\Users\dwit264\AppData\Local\Temp\ccfaPwFj.s 			page 11
+
+
+ 490      69676E65 
+ 490      6420696E 
+ 490      7400
+ 491              	.LASF7:
+ 492 00e7 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 492      206C6F6E 
+ 492      6720756E 
+ 492      7369676E 
+ 492      65642069 
+ 493              	.LASF20:
+ 494 00fe 56444143 		.ascii	"VDAC8_1_Start\000"
+ 494      385F315F 
+ 494      53746172 
+ 494      7400
+ 495              	.LASF18:
+ 496 010c 54696D65 		.ascii	"Timer_1_Start\000"
+ 496      725F315F 
+ 496      53746172 
+ 496      7400
+ 497              	.LASF1:
+ 498 011a 756E7369 		.ascii	"unsigned char\000"
+ 498      676E6564 
+ 498      20636861 
+ 498      7200
+ 499              	.LASF11:
+ 500 0128 63686172 		.ascii	"char\000"
+ 500      00
+ 501              	.LASF21:
+ 502 012d 6973725F 		.ascii	"isr_1_StartEx\000"
+ 502      315F5374 
+ 502      61727445 
+ 502      7800
+ 503              	.LASF17:
+ 504 013b 56444143 		.ascii	"VDAC8_1_SetValue\000"
+ 504      385F315F 
+ 504      53657456 
+ 504      616C7565 
+ 504      00
+ 505              	.LASF15:
+ 506 014c 646F7562 		.ascii	"double\000"
+ 506      6C6500
+ 507              	.LASF4:
+ 508 0153 6C6F6E67 		.ascii	"long int\000"
+ 508      20696E74 
+ 508      00
+ 509              	.LASF16:
+ 510 015c 4144435F 		.ascii	"ADC_SAR_1_GetResult16\000"
+ 510      5341525F 
+ 510      315F4765 
+ 510      74526573 
+ 510      756C7431 
+ 511              	.LASF0:
+ 512 0172 7369676E 		.ascii	"signed char\000"
+ 512      65642063 
+ 512      68617200 
+ 513              	.LASF9:
+ 514 017e 6C6F6E67 		.ascii	"long double\000"
+ARM GAS  C:\Users\dwit264\AppData\Local\Temp\ccfaPwFj.s 			page 12
+
+
+ 514      20646F75 
+ 514      626C6500 
+ 515              	.LASF12:
+ 516 018a 5F5F696E 		.ascii	"__int32_t\000"
+ 516      7433325F 
+ 516      7400
+ 517              	.LASF24:
+ 518 0194 433A5C55 		.ascii	"C:\\Users\\dwit264\\OneDrive - The University of Au"
+ 518      73657273 
+ 518      5C647769 
+ 518      74323634 
+ 518      5C4F6E65 
+ 519 01c4 636B6C61 		.ascii	"ckland\\Documents\\301ADC\\COMPSYS301\\psoc_code_ba"
+ 519      6E645C44 
+ 519      6F63756D 
+ 519      656E7473 
+ 519      5C333031 
+ 520 01f3 73655C43 		.ascii	"se\\CS301_Class.cydsn\\Additional_HD.cydsn\000"
+ 520      53333031 
+ 520      5F436C61 
+ 520      73732E63 
+ 520      7964736E 
+ 521              	.LASF14:
+ 522 021c 666C6F61 		.ascii	"float\000"
+ 522      7400
+ 523              	.LASF2:
+ 524 0222 73686F72 		.ascii	"short int\000"
+ 524      7420696E 
+ 524      7400
+ 525              	.LASF13:
+ 526 022c 696E7433 		.ascii	"int32_t\000"
+ 526      325F7400 
+ 527              	.LASF19:
+ 528 0234 4144435F 		.ascii	"ADC_SAR_1_Start\000"
+ 528      5341525F 
+ 528      315F5374 
+ 528      61727400 
+ 529              	.LASF10:
+ 530 0244 73697A65 		.ascii	"sizetype\000"
+ 530      74797065 
+ 530      00
+ 531              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran
