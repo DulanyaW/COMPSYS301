@@ -53,7 +53,7 @@
 #include "Clock_QENC.h"
 #include "ENCD_A_2_aliases.h"
 #include "ENCD_A_2.h"
-#include "isr_1.h"
+#include "timer_1_isr.h"
 #include "ENCD_A_1_aliases.h"
 #include "ENCD_A_1.h"
 #include "QuadDec_M1.h"

@@ -392,34 +392,6 @@
 #define PWM_2_PWMHW__RT1 CYREG_TMR1_RT1
 #define PWM_2_PWMHW__SR0 CYREG_TMR1_SR0
 
-/* isr_1 */
-#define isr_1__INTC_CLR_EN_REG CYREG_NVIC_CLRENA0
-#define isr_1__INTC_CLR_PD_REG CYREG_NVIC_CLRPEND0
-#define isr_1__INTC_MASK 0x80000u
-#define isr_1__INTC_NUMBER 19u
-#define isr_1__INTC_PRIOR_NUM 7u
-#define isr_1__INTC_PRIOR_REG CYREG_NVIC_PRI_19
-#define isr_1__INTC_SET_EN_REG CYREG_NVIC_SETENA0
-#define isr_1__INTC_SET_PD_REG CYREG_NVIC_SETPEND0
-
-/* Timer_1 */
-#define Timer_1_TimerHW__CAP0 CYREG_TMR2_CAP0
-#define Timer_1_TimerHW__CAP1 CYREG_TMR2_CAP1
-#define Timer_1_TimerHW__CFG0 CYREG_TMR2_CFG0
-#define Timer_1_TimerHW__CFG1 CYREG_TMR2_CFG1
-#define Timer_1_TimerHW__CFG2 CYREG_TMR2_CFG2
-#define Timer_1_TimerHW__CNT_CMP0 CYREG_TMR2_CNT_CMP0
-#define Timer_1_TimerHW__CNT_CMP1 CYREG_TMR2_CNT_CMP1
-#define Timer_1_TimerHW__PER0 CYREG_TMR2_PER0
-#define Timer_1_TimerHW__PER1 CYREG_TMR2_PER1
-#define Timer_1_TimerHW__PM_ACT_CFG CYREG_PM_ACT_CFG3
-#define Timer_1_TimerHW__PM_ACT_MSK 0x04u
-#define Timer_1_TimerHW__PM_STBY_CFG CYREG_PM_STBY_CFG3
-#define Timer_1_TimerHW__PM_STBY_MSK 0x04u
-#define Timer_1_TimerHW__RT0 CYREG_TMR2_RT0
-#define Timer_1_TimerHW__RT1 CYREG_TMR2_RT1
-#define Timer_1_TimerHW__SR0 CYREG_TMR2_SR0
-
 /* ENCD_A_1 */
 #define ENCD_A_1__0__INTTYPE CYREG_PICU12_INTTYPE5
 #define ENCD_A_1__0__MASK 0x20u
@@ -1029,6 +1001,34 @@
 #define QuadDec_M2_isr__INTC_PRIOR_REG CYREG_NVIC_PRI_1
 #define QuadDec_M2_isr__INTC_SET_EN_REG CYREG_NVIC_SETENA0
 #define QuadDec_M2_isr__INTC_SET_PD_REG CYREG_NVIC_SETPEND0
+
+/* timer_1_isr */
+#define timer_1_isr__INTC_CLR_EN_REG CYREG_NVIC_CLRENA0
+#define timer_1_isr__INTC_CLR_PD_REG CYREG_NVIC_CLRPEND0
+#define timer_1_isr__INTC_MASK 0x80000u
+#define timer_1_isr__INTC_NUMBER 19u
+#define timer_1_isr__INTC_PRIOR_NUM 7u
+#define timer_1_isr__INTC_PRIOR_REG CYREG_NVIC_PRI_19
+#define timer_1_isr__INTC_SET_EN_REG CYREG_NVIC_SETENA0
+#define timer_1_isr__INTC_SET_PD_REG CYREG_NVIC_SETPEND0
+
+/* Timer_1_TimerHW */
+#define Timer_1_TimerHW__CAP0 CYREG_TMR2_CAP0
+#define Timer_1_TimerHW__CAP1 CYREG_TMR2_CAP1
+#define Timer_1_TimerHW__CFG0 CYREG_TMR2_CFG0
+#define Timer_1_TimerHW__CFG1 CYREG_TMR2_CFG1
+#define Timer_1_TimerHW__CFG2 CYREG_TMR2_CFG2
+#define Timer_1_TimerHW__CNT_CMP0 CYREG_TMR2_CNT_CMP0
+#define Timer_1_TimerHW__CNT_CMP1 CYREG_TMR2_CNT_CMP1
+#define Timer_1_TimerHW__PER0 CYREG_TMR2_PER0
+#define Timer_1_TimerHW__PER1 CYREG_TMR2_PER1
+#define Timer_1_TimerHW__PM_ACT_CFG CYREG_PM_ACT_CFG3
+#define Timer_1_TimerHW__PM_ACT_MSK 0x04u
+#define Timer_1_TimerHW__PM_STBY_CFG CYREG_PM_STBY_CFG3
+#define Timer_1_TimerHW__PM_STBY_MSK 0x04u
+#define Timer_1_TimerHW__RT0 CYREG_TMR2_RT0
+#define Timer_1_TimerHW__RT1 CYREG_TMR2_RT1
+#define Timer_1_TimerHW__SR0 CYREG_TMR2_SR0
 
 /* CONTROL_ENABLE_0 */
 #define CONTROL_ENABLE_0_Sync_ctrl_reg__0__MASK 0x01u

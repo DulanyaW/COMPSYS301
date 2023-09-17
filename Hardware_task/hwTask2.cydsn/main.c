@@ -68,7 +68,7 @@ int main(void)
     QuadDec_M1_Start();
     QuadDec_M2_Start();
     Timer_1_Start();
-    isr_1_StartEx(isr_TC_handler);
+    timer_1_isr_StartEx(isr_TC_handler);
     
 //    usbPutString(itoa(ci,buffer,10));
     

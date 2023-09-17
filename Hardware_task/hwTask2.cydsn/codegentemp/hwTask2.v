@@ -1,6 +1,6 @@
 // ======================================================================
 // hwTask2.v generated from TopDesign.cysch
-// 09/15/2023 at 15:51
+// 09/17/2023 at 14:53
 // This file is auto generated. ANY EDITS YOU MAKE MAY BE LOST WHEN THIS FILE IS REGENERATED!!!
 // ======================================================================
 
@@ -1259,14 +1259,14 @@ endmodule
 module top ;
 
           wire  CLK24M;
-          wire  Net_1691;
-          wire  Net_1690;
-          wire  Net_1689;
-          wire  Net_1688;
-          wire  Net_1687;
-          wire  Net_1686;
-          wire  Net_1685;
-          wire  Net_1684;
+          wire  Net_3045;
+          wire  Net_3044;
+          wire  Net_3043;
+          wire  Net_3042;
+          wire  Net_3041;
+          wire  Net_3040;
+          wire  Net_3039;
+          wire  Net_3038;
           wire  Net_1699;
           wire  Net_1698;
           wire  Net_1697;
@@ -1319,18 +1319,18 @@ module top ;
           wire  Net_2190;
           wire  Net_2189;
           wire  Net_507;
+          wire  Net_1645;
+          wire  Net_1644;
+          wire  Net_3236;
+          wire  Net_1832;
           wire  Net_2860;
           wire  Net_2404;
           wire  Net_1072;
           wire  Net_1076;
           wire  Net_2986;
           wire  Net_509;
-          wire  Net_1645;
-          wire  Net_1644;
           wire  Net_1610;
           wire  Net_1611;
-          wire  Net_1832;
-          wire  Net_3236;
           wire  Net_724;
           wire  Net_725;
           wire  Net_730;
@@ -2148,7 +2148,7 @@ module top ;
 
 	cy_isr_v1_0
 		#(.int_type(2'b10))
-		isr_1
+		timer_1_isr
 		 (.int_signal(Net_1076));
 
 
@@ -2417,12 +2417,12 @@ module top ;
         .clock(1'b0),
         .control_0(Net_1832),
         .control_1(Net_3236),
-        .control_2(Net_1685),
-        .control_3(Net_1686),
-        .control_4(Net_1687),
-        .control_5(Net_1688),
-        .control_6(Net_1689),
-        .control_7(Net_1690),
+        .control_2(Net_3039),
+        .control_3(Net_3040),
+        .control_4(Net_3041),
+        .control_5(Net_3042),
+        .control_6(Net_3043),
+        .control_7(Net_3044),
         .reset(1'b0));
     defparam CONTROL_DISABLE_1.Bit0Mode = 0;
     defparam CONTROL_DISABLE_1.Bit1Mode = 0;

@@ -392,34 +392,6 @@
 .set PWM_2_PWMHW__RT1, CYREG_TMR1_RT1
 .set PWM_2_PWMHW__SR0, CYREG_TMR1_SR0
 
-/* isr_1 */
-.set isr_1__INTC_CLR_EN_REG, CYREG_NVIC_CLRENA0
-.set isr_1__INTC_CLR_PD_REG, CYREG_NVIC_CLRPEND0
-.set isr_1__INTC_MASK, 0x80000
-.set isr_1__INTC_NUMBER, 19
-.set isr_1__INTC_PRIOR_NUM, 7
-.set isr_1__INTC_PRIOR_REG, CYREG_NVIC_PRI_19
-.set isr_1__INTC_SET_EN_REG, CYREG_NVIC_SETENA0
-.set isr_1__INTC_SET_PD_REG, CYREG_NVIC_SETPEND0
-
-/* Timer_1 */
-.set Timer_1_TimerHW__CAP0, CYREG_TMR2_CAP0
-.set Timer_1_TimerHW__CAP1, CYREG_TMR2_CAP1
-.set Timer_1_TimerHW__CFG0, CYREG_TMR2_CFG0
-.set Timer_1_TimerHW__CFG1, CYREG_TMR2_CFG1
-.set Timer_1_TimerHW__CFG2, CYREG_TMR2_CFG2
-.set Timer_1_TimerHW__CNT_CMP0, CYREG_TMR2_CNT_CMP0
-.set Timer_1_TimerHW__CNT_CMP1, CYREG_TMR2_CNT_CMP1
-.set Timer_1_TimerHW__PER0, CYREG_TMR2_PER0
-.set Timer_1_TimerHW__PER1, CYREG_TMR2_PER1
-.set Timer_1_TimerHW__PM_ACT_CFG, CYREG_PM_ACT_CFG3
-.set Timer_1_TimerHW__PM_ACT_MSK, 0x04
-.set Timer_1_TimerHW__PM_STBY_CFG, CYREG_PM_STBY_CFG3
-.set Timer_1_TimerHW__PM_STBY_MSK, 0x04
-.set Timer_1_TimerHW__RT0, CYREG_TMR2_RT0
-.set Timer_1_TimerHW__RT1, CYREG_TMR2_RT1
-.set Timer_1_TimerHW__SR0, CYREG_TMR2_SR0
-
 /* ENCD_A_1 */
 .set ENCD_A_1__0__INTTYPE, CYREG_PICU12_INTTYPE5
 .set ENCD_A_1__0__MASK, 0x20
@@ -1029,6 +1001,34 @@
 .set QuadDec_M2_isr__INTC_PRIOR_REG, CYREG_NVIC_PRI_1
 .set QuadDec_M2_isr__INTC_SET_EN_REG, CYREG_NVIC_SETENA0
 .set QuadDec_M2_isr__INTC_SET_PD_REG, CYREG_NVIC_SETPEND0
+
+/* timer_1_isr */
+.set timer_1_isr__INTC_CLR_EN_REG, CYREG_NVIC_CLRENA0
+.set timer_1_isr__INTC_CLR_PD_REG, CYREG_NVIC_CLRPEND0
+.set timer_1_isr__INTC_MASK, 0x80000
+.set timer_1_isr__INTC_NUMBER, 19
+.set timer_1_isr__INTC_PRIOR_NUM, 7
+.set timer_1_isr__INTC_PRIOR_REG, CYREG_NVIC_PRI_19
+.set timer_1_isr__INTC_SET_EN_REG, CYREG_NVIC_SETENA0
+.set timer_1_isr__INTC_SET_PD_REG, CYREG_NVIC_SETPEND0
+
+/* Timer_1_TimerHW */
+.set Timer_1_TimerHW__CAP0, CYREG_TMR2_CAP0
+.set Timer_1_TimerHW__CAP1, CYREG_TMR2_CAP1
+.set Timer_1_TimerHW__CFG0, CYREG_TMR2_CFG0
+.set Timer_1_TimerHW__CFG1, CYREG_TMR2_CFG1
+.set Timer_1_TimerHW__CFG2, CYREG_TMR2_CFG2
+.set Timer_1_TimerHW__CNT_CMP0, CYREG_TMR2_CNT_CMP0
+.set Timer_1_TimerHW__CNT_CMP1, CYREG_TMR2_CNT_CMP1
+.set Timer_1_TimerHW__PER0, CYREG_TMR2_PER0
+.set Timer_1_TimerHW__PER1, CYREG_TMR2_PER1
+.set Timer_1_TimerHW__PM_ACT_CFG, CYREG_PM_ACT_CFG3
+.set Timer_1_TimerHW__PM_ACT_MSK, 0x04
+.set Timer_1_TimerHW__PM_STBY_CFG, CYREG_PM_STBY_CFG3
+.set Timer_1_TimerHW__PM_STBY_MSK, 0x04
+.set Timer_1_TimerHW__RT0, CYREG_TMR2_RT0
+.set Timer_1_TimerHW__RT1, CYREG_TMR2_RT1
+.set Timer_1_TimerHW__SR0, CYREG_TMR2_SR0
 
 /* CONTROL_ENABLE_0 */
 .set CONTROL_ENABLE_0_Sync_ctrl_reg__0__MASK, 0x01
