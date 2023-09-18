@@ -1,0 +1,743 @@
+ARM GAS  C:\Users\npat025\AppData\Local\Temp\ccyheZQc.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"tacho.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.get_position,"ax",%progbits
+  20              		.align	2
+  21              		.global	get_position
+  22              		.thumb
+  23              		.thumb_func
+  24              		.type	get_position, %function
+  25              	get_position:
+  26              	.LFB63:
+  27              		.file 1 "tacho.c"
+   1:tacho.c       **** /* ========================================
+   2:tacho.c       ****  *
+   3:tacho.c       ****  * Copyright YOUR COMPANY, THE YEAR
+   4:tacho.c       ****  * All Rights Reserved
+   5:tacho.c       ****  * UNPUBLISHED, LICENSED SOFTWARE.
+   6:tacho.c       ****  *
+   7:tacho.c       ****  * CONFIDENTIAL AND PROPRIETARY INFORMATION
+   8:tacho.c       ****  * WHICH IS THE PROPERTY OF your company.
+   9:tacho.c       ****  *
+  10:tacho.c       ****  * ========================================
+  11:tacho.c       **** */
+  12:tacho.c       **** 
+  13:tacho.c       **** #include <project.h>
+  14:tacho.c       **** #include "defines.h"
+  15:tacho.c       **** 
+  16:tacho.c       **** extern int16 speedL, speedR;
+  17:tacho.c       **** extern int16 posL, posR;
+  18:tacho.c       **** 
+  19:tacho.c       **** 
+  20:tacho.c       **** void get_position(void);
+  21:tacho.c       **** void get_speed(void);
+  22:tacho.c       **** 
+  23:tacho.c       **** //------------------------------------------------------
+  24:tacho.c       **** void get_position()
+  25:tacho.c       **** {
+  28              		.loc 1 25 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 8
+  31              		@ frame_needed = 1, uses_anonymous_args = 0
+  32 0000 80B5     		push	{r7, lr}
+ARM GAS  C:\Users\npat025\AppData\Local\Temp\ccyheZQc.s 			page 2
+
+
+  33              		.cfi_def_cfa_offset 8
+  34              		.cfi_offset 7, -8
+  35              		.cfi_offset 14, -4
+  36 0002 82B0     		sub	sp, sp, #8
+  37              		.cfi_def_cfa_offset 16
+  38 0004 00AF     		add	r7, sp, #0
+  39              		.cfi_def_cfa_register 7
+  26:tacho.c       ****     int pl, pr;
+  27:tacho.c       **** 
+  28:tacho.c       ****     pl = QuadDec_M1_GetCounter();
+  40              		.loc 1 28 0
+  41 0006 FFF7FEFF 		bl	QuadDec_M1_GetCounter
+  42 000a 0346     		mov	r3, r0
+  43 000c 7B60     		str	r3, [r7, #4]
+  29:tacho.c       ****     pr = QuadDec_M2_GetCounter();
+  44              		.loc 1 29 0
+  45 000e FFF7FEFF 		bl	QuadDec_M2_GetCounter
+  46 0012 0346     		mov	r3, r0
+  47 0014 3B60     		str	r3, [r7]
+  30:tacho.c       **** 
+  31:tacho.c       ****     posL = pl;
+  48              		.loc 1 31 0
+  49 0016 7B68     		ldr	r3, [r7, #4]
+  50 0018 1AB2     		sxth	r2, r3
+  51 001a 054B     		ldr	r3, .L2
+  52 001c 1A80     		strh	r2, [r3]	@ movhi
+  32:tacho.c       ****     posR = pr;
+  53              		.loc 1 32 0
+  54 001e 3B68     		ldr	r3, [r7]
+  55 0020 1AB2     		sxth	r2, r3
+  56 0022 044B     		ldr	r3, .L2+4
+  57 0024 1A80     		strh	r2, [r3]	@ movhi
+  33:tacho.c       **** }
+  58              		.loc 1 33 0
+  59 0026 00BF     		nop
+  60 0028 0837     		adds	r7, r7, #8
+  61              		.cfi_def_cfa_offset 8
+  62 002a BD46     		mov	sp, r7
+  63              		.cfi_def_cfa_register 13
+  64              		@ sp needed
+  65 002c 80BD     		pop	{r7, pc}
+  66              	.L3:
+  67 002e 00BF     		.align	2
+  68              	.L2:
+  69 0030 00000000 		.word	posL
+  70 0034 00000000 		.word	posR
+  71              		.cfi_endproc
+  72              	.LFE63:
+  73              		.size	get_position, .-get_position
+  74              		.section	.text.get_speed,"ax",%progbits
+  75              		.align	2
+  76              		.global	get_speed
+  77              		.thumb
+  78              		.thumb_func
+  79              		.type	get_speed, %function
+  80              	get_speed:
+  81              	.LFB64:
+ARM GAS  C:\Users\npat025\AppData\Local\Temp\ccyheZQc.s 			page 3
+
+
+  34:tacho.c       **** //------------------------------------------------------
+  35:tacho.c       **** void get_speed()
+  36:tacho.c       **** {
+  82              		.loc 1 36 0
+  83              		.cfi_startproc
+  84              		@ args = 0, pretend = 0, frame = 8
+  85              		@ frame_needed = 1, uses_anonymous_args = 0
+  86 0000 80B5     		push	{r7, lr}
+  87              		.cfi_def_cfa_offset 8
+  88              		.cfi_offset 7, -8
+  89              		.cfi_offset 14, -4
+  90 0002 82B0     		sub	sp, sp, #8
+  91              		.cfi_def_cfa_offset 16
+  92 0004 00AF     		add	r7, sp, #0
+  93              		.cfi_def_cfa_register 7
+  37:tacho.c       ****     int16 pl, pr;
+  38:tacho.c       ****     
+  39:tacho.c       ****     // get current position.
+  40:tacho.c       ****     pl = QuadDec_M1_GetCounter();
+  94              		.loc 1 40 0
+  95 0006 FFF7FEFF 		bl	QuadDec_M1_GetCounter
+  96 000a 0346     		mov	r3, r0
+  97 000c FB80     		strh	r3, [r7, #6]	@ movhi
+  41:tacho.c       ****     pr = QuadDec_M2_GetCounter();
+  98              		.loc 1 41 0
+  99 000e FFF7FEFF 		bl	QuadDec_M2_GetCounter
+ 100 0012 0346     		mov	r3, r0
+ 101 0014 BB80     		strh	r3, [r7, #4]	@ movhi
+  42:tacho.c       ****     
+  43:tacho.c       ****     speedL = pl - posL;
+ 102              		.loc 1 43 0
+ 103 0016 FA88     		ldrh	r2, [r7, #6]
+ 104 0018 0E4B     		ldr	r3, .L5
+ 105 001a B3F90030 		ldrsh	r3, [r3]
+ 106 001e 9BB2     		uxth	r3, r3
+ 107 0020 D31A     		subs	r3, r2, r3
+ 108 0022 9BB2     		uxth	r3, r3
+ 109 0024 1AB2     		sxth	r2, r3
+ 110 0026 0C4B     		ldr	r3, .L5+4
+ 111 0028 1A80     		strh	r2, [r3]	@ movhi
+  44:tacho.c       ****     speedR = pr - posR;
+ 112              		.loc 1 44 0
+ 113 002a BA88     		ldrh	r2, [r7, #4]
+ 114 002c 0B4B     		ldr	r3, .L5+8
+ 115 002e B3F90030 		ldrsh	r3, [r3]
+ 116 0032 9BB2     		uxth	r3, r3
+ 117 0034 D31A     		subs	r3, r2, r3
+ 118 0036 9BB2     		uxth	r3, r3
+ 119 0038 1AB2     		sxth	r2, r3
+ 120 003a 094B     		ldr	r3, .L5+12
+ 121 003c 1A80     		strh	r2, [r3]	@ movhi
+  45:tacho.c       ****     posL = pl;
+ 122              		.loc 1 45 0
+ 123 003e 054A     		ldr	r2, .L5
+ 124 0040 FB88     		ldrh	r3, [r7, #6]	@ movhi
+ 125 0042 1380     		strh	r3, [r2]	@ movhi
+  46:tacho.c       ****     posR = pr;
+ARM GAS  C:\Users\npat025\AppData\Local\Temp\ccyheZQc.s 			page 4
+
+
+ 126              		.loc 1 46 0
+ 127 0044 054A     		ldr	r2, .L5+8
+ 128 0046 BB88     		ldrh	r3, [r7, #4]	@ movhi
+ 129 0048 1380     		strh	r3, [r2]	@ movhi
+  47:tacho.c       ****     
+  48:tacho.c       ****     
+  49:tacho.c       **** //    // Speed of Motor 1
+  50:tacho.c       **** //    state = QuadDec_M1_GetEvents();
+  51:tacho.c       **** //    speed = pl - posL;
+  52:tacho.c       **** //    if ((state & QuadDec_M1_COUNTER_OVERFLOW) != 0x00)
+  53:tacho.c       **** //        speed += 32767;
+  54:tacho.c       **** //    
+  55:tacho.c       **** //    if ((state & QuadDec_M1_COUNTER_UNDERFLOW) != 0x00)
+  56:tacho.c       **** //        speed += -32768;
+  57:tacho.c       **** //    speedL = speed;
+  58:tacho.c       **** //    posL = pl;
+  59:tacho.c       **** //    
+  60:tacho.c       **** //    // Speed of Motor 2
+  61:tacho.c       **** //    state = QuadDec_M2_GetEvents();
+  62:tacho.c       **** //    speed = pr - posR;
+  63:tacho.c       **** //    if ((state & QuadDec_M2_COUNTER_OVERFLOW) != 0x00)
+  64:tacho.c       **** //        speed += 32767;
+  65:tacho.c       **** //    
+  66:tacho.c       **** //    if ((state & QuadDec_M2_COUNTER_UNDERFLOW) != 0x00)
+  67:tacho.c       **** //        speed += -32768;
+  68:tacho.c       **** //    speedR = speed;    
+  69:tacho.c       **** //    posR = pr;
+  70:tacho.c       **** }
+ 130              		.loc 1 70 0
+ 131 004a 00BF     		nop
+ 132 004c 0837     		adds	r7, r7, #8
+ 133              		.cfi_def_cfa_offset 8
+ 134 004e BD46     		mov	sp, r7
+ 135              		.cfi_def_cfa_register 13
+ 136              		@ sp needed
+ 137 0050 80BD     		pop	{r7, pc}
+ 138              	.L6:
+ 139 0052 00BF     		.align	2
+ 140              	.L5:
+ 141 0054 00000000 		.word	posL
+ 142 0058 00000000 		.word	speedL
+ 143 005c 00000000 		.word	posR
+ 144 0060 00000000 		.word	speedR
+ 145              		.cfi_endproc
+ 146              	.LFE64:
+ 147              		.size	get_speed, .-get_speed
+ 148              		.text
+ 149              	.Letext0:
+ 150              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 151              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 152              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+ 153              		.file 5 "Generated_Source\\PSoC5/core_cm3.h"
+ 154              		.section	.debug_info,"",%progbits
+ 155              	.Ldebug_info0:
+ 156 0000 4A010000 		.4byte	0x14a
+ 157 0004 0400     		.2byte	0x4
+ 158 0006 00000000 		.4byte	.Ldebug_abbrev0
+ARM GAS  C:\Users\npat025\AppData\Local\Temp\ccyheZQc.s 			page 5
+
+
+ 159 000a 04       		.byte	0x4
+ 160 000b 01       		.uleb128 0x1
+ 161 000c E5000000 		.4byte	.LASF24
+ 162 0010 0C       		.byte	0xc
+ 163 0011 73010000 		.4byte	.LASF25
+ 164 0015 0E000000 		.4byte	.LASF26
+ 165 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 166 001d 00000000 		.4byte	0
+ 167 0021 00000000 		.4byte	.Ldebug_line0
+ 168 0025 02       		.uleb128 0x2
+ 169 0026 01       		.byte	0x1
+ 170 0027 06       		.byte	0x6
+ 171 0028 B0010000 		.4byte	.LASF0
+ 172 002c 02       		.uleb128 0x2
+ 173 002d 01       		.byte	0x1
+ 174 002e 08       		.byte	0x8
+ 175 002f 7B010000 		.4byte	.LASF1
+ 176 0033 02       		.uleb128 0x2
+ 177 0034 02       		.byte	0x2
+ 178 0035 05       		.byte	0x5
+ 179 0036 DD010000 		.4byte	.LASF2
+ 180 003a 02       		.uleb128 0x2
+ 181 003b 02       		.byte	0x2
+ 182 003c 07       		.byte	0x7
+ 183 003d CB000000 		.4byte	.LASF3
+ 184 0041 03       		.uleb128 0x3
+ 185 0042 C8010000 		.4byte	.LASF9
+ 186 0046 02       		.byte	0x2
+ 187 0047 3F       		.byte	0x3f
+ 188 0048 4C000000 		.4byte	0x4c
+ 189 004c 02       		.uleb128 0x2
+ 190 004d 04       		.byte	0x4
+ 191 004e 05       		.byte	0x5
+ 192 004f 8E010000 		.4byte	.LASF4
+ 193 0053 02       		.uleb128 0x2
+ 194 0054 04       		.byte	0x4
+ 195 0055 07       		.byte	0x7
+ 196 0056 98000000 		.4byte	.LASF5
+ 197 005a 02       		.uleb128 0x2
+ 198 005b 08       		.byte	0x8
+ 199 005c 05       		.byte	0x5
+ 200 005d 00000000 		.4byte	.LASF6
+ 201 0061 02       		.uleb128 0x2
+ 202 0062 08       		.byte	0x8
+ 203 0063 07       		.byte	0x7
+ 204 0064 AA000000 		.4byte	.LASF7
+ 205 0068 04       		.uleb128 0x4
+ 206 0069 04       		.byte	0x4
+ 207 006a 05       		.byte	0x5
+ 208 006b 696E7400 		.ascii	"int\000"
+ 209 006f 02       		.uleb128 0x2
+ 210 0070 04       		.byte	0x4
+ 211 0071 07       		.byte	0x7
+ 212 0072 77000000 		.4byte	.LASF8
+ 213 0076 03       		.uleb128 0x3
+ 214 0077 ED010000 		.4byte	.LASF10
+ 215 007b 03       		.byte	0x3
+ARM GAS  C:\Users\npat025\AppData\Local\Temp\ccyheZQc.s 			page 6
+
+
+ 216 007c 2C       		.byte	0x2c
+ 217 007d 41000000 		.4byte	0x41
+ 218 0081 05       		.uleb128 0x5
+ 219 0082 E7010000 		.4byte	.LASF11
+ 220 0086 04       		.byte	0x4
+ 221 0087 EB01     		.2byte	0x1eb
+ 222 0089 33000000 		.4byte	0x33
+ 223 008d 02       		.uleb128 0x2
+ 224 008e 04       		.byte	0x4
+ 225 008f 04       		.byte	0x4
+ 226 0090 D7010000 		.4byte	.LASF12
+ 227 0094 02       		.uleb128 0x2
+ 228 0095 08       		.byte	0x8
+ 229 0096 04       		.byte	0x4
+ 230 0097 97010000 		.4byte	.LASF13
+ 231 009b 02       		.uleb128 0x2
+ 232 009c 01       		.byte	0x1
+ 233 009d 08       		.byte	0x8
+ 234 009e 89010000 		.4byte	.LASF14
+ 235 00a2 02       		.uleb128 0x2
+ 236 00a3 08       		.byte	0x8
+ 237 00a4 04       		.byte	0x4
+ 238 00a5 BC010000 		.4byte	.LASF15
+ 239 00a9 02       		.uleb128 0x2
+ 240 00aa 04       		.byte	0x4
+ 241 00ab 07       		.byte	0x7
+ 242 00ac F5010000 		.4byte	.LASF16
+ 243 00b0 06       		.uleb128 0x6
+ 244 00b1 84000000 		.4byte	.LASF17
+ 245 00b5 01       		.byte	0x1
+ 246 00b6 18       		.byte	0x18
+ 247 00b7 00000000 		.4byte	.LFB63
+ 248 00bb 38000000 		.4byte	.LFE63-.LFB63
+ 249 00bf 01       		.uleb128 0x1
+ 250 00c0 9C       		.byte	0x9c
+ 251 00c1 E0000000 		.4byte	0xe0
+ 252 00c5 07       		.uleb128 0x7
+ 253 00c6 706C00   		.ascii	"pl\000"
+ 254 00c9 01       		.byte	0x1
+ 255 00ca 1A       		.byte	0x1a
+ 256 00cb 68000000 		.4byte	0x68
+ 257 00cf 02       		.uleb128 0x2
+ 258 00d0 91       		.byte	0x91
+ 259 00d1 74       		.sleb128 -12
+ 260 00d2 07       		.uleb128 0x7
+ 261 00d3 707200   		.ascii	"pr\000"
+ 262 00d6 01       		.byte	0x1
+ 263 00d7 1A       		.byte	0x1a
+ 264 00d8 68000000 		.4byte	0x68
+ 265 00dc 02       		.uleb128 0x2
+ 266 00dd 91       		.byte	0x91
+ 267 00de 70       		.sleb128 -16
+ 268 00df 00       		.byte	0
+ 269 00e0 06       		.uleb128 0x6
+ 270 00e1 C1000000 		.4byte	.LASF18
+ 271 00e5 01       		.byte	0x1
+ 272 00e6 23       		.byte	0x23
+ARM GAS  C:\Users\npat025\AppData\Local\Temp\ccyheZQc.s 			page 7
+
+
+ 273 00e7 00000000 		.4byte	.LFB64
+ 274 00eb 64000000 		.4byte	.LFE64-.LFB64
+ 275 00ef 01       		.uleb128 0x1
+ 276 00f0 9C       		.byte	0x9c
+ 277 00f1 10010000 		.4byte	0x110
+ 278 00f5 07       		.uleb128 0x7
+ 279 00f6 706C00   		.ascii	"pl\000"
+ 280 00f9 01       		.byte	0x1
+ 281 00fa 25       		.byte	0x25
+ 282 00fb 81000000 		.4byte	0x81
+ 283 00ff 02       		.uleb128 0x2
+ 284 0100 91       		.byte	0x91
+ 285 0101 76       		.sleb128 -10
+ 286 0102 07       		.uleb128 0x7
+ 287 0103 707200   		.ascii	"pr\000"
+ 288 0106 01       		.byte	0x1
+ 289 0107 25       		.byte	0x25
+ 290 0108 81000000 		.4byte	0x81
+ 291 010c 02       		.uleb128 0x2
+ 292 010d 91       		.byte	0x91
+ 293 010e 74       		.sleb128 -12
+ 294 010f 00       		.byte	0
+ 295 0110 08       		.uleb128 0x8
+ 296 0111 A3010000 		.4byte	.LASF19
+ 297 0115 05       		.byte	0x5
+ 298 0116 1207     		.2byte	0x712
+ 299 0118 1C010000 		.4byte	0x11c
+ 300 011c 09       		.uleb128 0x9
+ 301 011d 76000000 		.4byte	0x76
+ 302 0121 0A       		.uleb128 0xa
+ 303 0122 91000000 		.4byte	.LASF20
+ 304 0126 01       		.byte	0x1
+ 305 0127 10       		.byte	0x10
+ 306 0128 81000000 		.4byte	0x81
+ 307 012c 0A       		.uleb128 0xa
+ 308 012d DE000000 		.4byte	.LASF21
+ 309 0131 01       		.byte	0x1
+ 310 0132 10       		.byte	0x10
+ 311 0133 81000000 		.4byte	0x81
+ 312 0137 0A       		.uleb128 0xa
+ 313 0138 D2010000 		.4byte	.LASF22
+ 314 013c 01       		.byte	0x1
+ 315 013d 11       		.byte	0x11
+ 316 013e 81000000 		.4byte	0x81
+ 317 0142 0A       		.uleb128 0xa
+ 318 0143 9E010000 		.4byte	.LASF23
+ 319 0147 01       		.byte	0x1
+ 320 0148 11       		.byte	0x11
+ 321 0149 81000000 		.4byte	0x81
+ 322 014d 00       		.byte	0
+ 323              		.section	.debug_abbrev,"",%progbits
+ 324              	.Ldebug_abbrev0:
+ 325 0000 01       		.uleb128 0x1
+ 326 0001 11       		.uleb128 0x11
+ 327 0002 01       		.byte	0x1
+ 328 0003 25       		.uleb128 0x25
+ 329 0004 0E       		.uleb128 0xe
+ARM GAS  C:\Users\npat025\AppData\Local\Temp\ccyheZQc.s 			page 8
+
+
+ 330 0005 13       		.uleb128 0x13
+ 331 0006 0B       		.uleb128 0xb
+ 332 0007 03       		.uleb128 0x3
+ 333 0008 0E       		.uleb128 0xe
+ 334 0009 1B       		.uleb128 0x1b
+ 335 000a 0E       		.uleb128 0xe
+ 336 000b 55       		.uleb128 0x55
+ 337 000c 17       		.uleb128 0x17
+ 338 000d 11       		.uleb128 0x11
+ 339 000e 01       		.uleb128 0x1
+ 340 000f 10       		.uleb128 0x10
+ 341 0010 17       		.uleb128 0x17
+ 342 0011 00       		.byte	0
+ 343 0012 00       		.byte	0
+ 344 0013 02       		.uleb128 0x2
+ 345 0014 24       		.uleb128 0x24
+ 346 0015 00       		.byte	0
+ 347 0016 0B       		.uleb128 0xb
+ 348 0017 0B       		.uleb128 0xb
+ 349 0018 3E       		.uleb128 0x3e
+ 350 0019 0B       		.uleb128 0xb
+ 351 001a 03       		.uleb128 0x3
+ 352 001b 0E       		.uleb128 0xe
+ 353 001c 00       		.byte	0
+ 354 001d 00       		.byte	0
+ 355 001e 03       		.uleb128 0x3
+ 356 001f 16       		.uleb128 0x16
+ 357 0020 00       		.byte	0
+ 358 0021 03       		.uleb128 0x3
+ 359 0022 0E       		.uleb128 0xe
+ 360 0023 3A       		.uleb128 0x3a
+ 361 0024 0B       		.uleb128 0xb
+ 362 0025 3B       		.uleb128 0x3b
+ 363 0026 0B       		.uleb128 0xb
+ 364 0027 49       		.uleb128 0x49
+ 365 0028 13       		.uleb128 0x13
+ 366 0029 00       		.byte	0
+ 367 002a 00       		.byte	0
+ 368 002b 04       		.uleb128 0x4
+ 369 002c 24       		.uleb128 0x24
+ 370 002d 00       		.byte	0
+ 371 002e 0B       		.uleb128 0xb
+ 372 002f 0B       		.uleb128 0xb
+ 373 0030 3E       		.uleb128 0x3e
+ 374 0031 0B       		.uleb128 0xb
+ 375 0032 03       		.uleb128 0x3
+ 376 0033 08       		.uleb128 0x8
+ 377 0034 00       		.byte	0
+ 378 0035 00       		.byte	0
+ 379 0036 05       		.uleb128 0x5
+ 380 0037 16       		.uleb128 0x16
+ 381 0038 00       		.byte	0
+ 382 0039 03       		.uleb128 0x3
+ 383 003a 0E       		.uleb128 0xe
+ 384 003b 3A       		.uleb128 0x3a
+ 385 003c 0B       		.uleb128 0xb
+ 386 003d 3B       		.uleb128 0x3b
+ARM GAS  C:\Users\npat025\AppData\Local\Temp\ccyheZQc.s 			page 9
+
+
+ 387 003e 05       		.uleb128 0x5
+ 388 003f 49       		.uleb128 0x49
+ 389 0040 13       		.uleb128 0x13
+ 390 0041 00       		.byte	0
+ 391 0042 00       		.byte	0
+ 392 0043 06       		.uleb128 0x6
+ 393 0044 2E       		.uleb128 0x2e
+ 394 0045 01       		.byte	0x1
+ 395 0046 3F       		.uleb128 0x3f
+ 396 0047 19       		.uleb128 0x19
+ 397 0048 03       		.uleb128 0x3
+ 398 0049 0E       		.uleb128 0xe
+ 399 004a 3A       		.uleb128 0x3a
+ 400 004b 0B       		.uleb128 0xb
+ 401 004c 3B       		.uleb128 0x3b
+ 402 004d 0B       		.uleb128 0xb
+ 403 004e 27       		.uleb128 0x27
+ 404 004f 19       		.uleb128 0x19
+ 405 0050 11       		.uleb128 0x11
+ 406 0051 01       		.uleb128 0x1
+ 407 0052 12       		.uleb128 0x12
+ 408 0053 06       		.uleb128 0x6
+ 409 0054 40       		.uleb128 0x40
+ 410 0055 18       		.uleb128 0x18
+ 411 0056 9642     		.uleb128 0x2116
+ 412 0058 19       		.uleb128 0x19
+ 413 0059 01       		.uleb128 0x1
+ 414 005a 13       		.uleb128 0x13
+ 415 005b 00       		.byte	0
+ 416 005c 00       		.byte	0
+ 417 005d 07       		.uleb128 0x7
+ 418 005e 34       		.uleb128 0x34
+ 419 005f 00       		.byte	0
+ 420 0060 03       		.uleb128 0x3
+ 421 0061 08       		.uleb128 0x8
+ 422 0062 3A       		.uleb128 0x3a
+ 423 0063 0B       		.uleb128 0xb
+ 424 0064 3B       		.uleb128 0x3b
+ 425 0065 0B       		.uleb128 0xb
+ 426 0066 49       		.uleb128 0x49
+ 427 0067 13       		.uleb128 0x13
+ 428 0068 02       		.uleb128 0x2
+ 429 0069 18       		.uleb128 0x18
+ 430 006a 00       		.byte	0
+ 431 006b 00       		.byte	0
+ 432 006c 08       		.uleb128 0x8
+ 433 006d 34       		.uleb128 0x34
+ 434 006e 00       		.byte	0
+ 435 006f 03       		.uleb128 0x3
+ 436 0070 0E       		.uleb128 0xe
+ 437 0071 3A       		.uleb128 0x3a
+ 438 0072 0B       		.uleb128 0xb
+ 439 0073 3B       		.uleb128 0x3b
+ 440 0074 05       		.uleb128 0x5
+ 441 0075 49       		.uleb128 0x49
+ 442 0076 13       		.uleb128 0x13
+ 443 0077 3F       		.uleb128 0x3f
+ARM GAS  C:\Users\npat025\AppData\Local\Temp\ccyheZQc.s 			page 10
+
+
+ 444 0078 19       		.uleb128 0x19
+ 445 0079 3C       		.uleb128 0x3c
+ 446 007a 19       		.uleb128 0x19
+ 447 007b 00       		.byte	0
+ 448 007c 00       		.byte	0
+ 449 007d 09       		.uleb128 0x9
+ 450 007e 35       		.uleb128 0x35
+ 451 007f 00       		.byte	0
+ 452 0080 49       		.uleb128 0x49
+ 453 0081 13       		.uleb128 0x13
+ 454 0082 00       		.byte	0
+ 455 0083 00       		.byte	0
+ 456 0084 0A       		.uleb128 0xa
+ 457 0085 34       		.uleb128 0x34
+ 458 0086 00       		.byte	0
+ 459 0087 03       		.uleb128 0x3
+ 460 0088 0E       		.uleb128 0xe
+ 461 0089 3A       		.uleb128 0x3a
+ 462 008a 0B       		.uleb128 0xb
+ 463 008b 3B       		.uleb128 0x3b
+ 464 008c 0B       		.uleb128 0xb
+ 465 008d 49       		.uleb128 0x49
+ 466 008e 13       		.uleb128 0x13
+ 467 008f 3F       		.uleb128 0x3f
+ 468 0090 19       		.uleb128 0x19
+ 469 0091 3C       		.uleb128 0x3c
+ 470 0092 19       		.uleb128 0x19
+ 471 0093 00       		.byte	0
+ 472 0094 00       		.byte	0
+ 473 0095 00       		.byte	0
+ 474              		.section	.debug_aranges,"",%progbits
+ 475 0000 24000000 		.4byte	0x24
+ 476 0004 0200     		.2byte	0x2
+ 477 0006 00000000 		.4byte	.Ldebug_info0
+ 478 000a 04       		.byte	0x4
+ 479 000b 00       		.byte	0
+ 480 000c 0000     		.2byte	0
+ 481 000e 0000     		.2byte	0
+ 482 0010 00000000 		.4byte	.LFB63
+ 483 0014 38000000 		.4byte	.LFE63-.LFB63
+ 484 0018 00000000 		.4byte	.LFB64
+ 485 001c 64000000 		.4byte	.LFE64-.LFB64
+ 486 0020 00000000 		.4byte	0
+ 487 0024 00000000 		.4byte	0
+ 488              		.section	.debug_ranges,"",%progbits
+ 489              	.Ldebug_ranges0:
+ 490 0000 00000000 		.4byte	.LFB63
+ 491 0004 38000000 		.4byte	.LFE63
+ 492 0008 00000000 		.4byte	.LFB64
+ 493 000c 64000000 		.4byte	.LFE64
+ 494 0010 00000000 		.4byte	0
+ 495 0014 00000000 		.4byte	0
+ 496              		.section	.debug_line,"",%progbits
+ 497              	.Ldebug_line0:
+ 498 0000 7F010000 		.section	.debug_str,"MS",%progbits,1
+ 498      02004D01 
+ 498      00000201 
+ARM GAS  C:\Users\npat025\AppData\Local\Temp\ccyheZQc.s 			page 11
+
+
+ 498      FB0E0D00 
+ 498      01010101 
+ 499              	.LASF6:
+ 500 0000 6C6F6E67 		.ascii	"long long int\000"
+ 500      206C6F6E 
+ 500      6720696E 
+ 500      7400
+ 501              	.LASF26:
+ 502 000e 433A5C55 		.ascii	"C:\\Users\\npat025\\Dropbox (Uni of Auckland)\\CS30"
+ 502      73657273 
+ 502      5C6E7061 
+ 502      74303235 
+ 502      5C44726F 
+ 503 003d 315C3230 		.ascii	"1\\2021\\psoc student pack\\psoc_code_base\\CS301_C"
+ 503      32315C70 
+ 503      736F6320 
+ 503      73747564 
+ 503      656E7420 
+ 504 006c 6C617373 		.ascii	"lass.cydsn\000"
+ 504      2E637964 
+ 504      736E00
+ 505              	.LASF8:
+ 506 0077 756E7369 		.ascii	"unsigned int\000"
+ 506      676E6564 
+ 506      20696E74 
+ 506      00
+ 507              	.LASF17:
+ 508 0084 6765745F 		.ascii	"get_position\000"
+ 508      706F7369 
+ 508      74696F6E 
+ 508      00
+ 509              	.LASF20:
+ 510 0091 73706565 		.ascii	"speedL\000"
+ 510      644C00
+ 511              	.LASF5:
+ 512 0098 6C6F6E67 		.ascii	"long unsigned int\000"
+ 512      20756E73 
+ 512      69676E65 
+ 512      6420696E 
+ 512      7400
+ 513              	.LASF7:
+ 514 00aa 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 514      206C6F6E 
+ 514      6720756E 
+ 514      7369676E 
+ 514      65642069 
+ 515              	.LASF18:
+ 516 00c1 6765745F 		.ascii	"get_speed\000"
+ 516      73706565 
+ 516      6400
+ 517              	.LASF3:
+ 518 00cb 73686F72 		.ascii	"short unsigned int\000"
+ 518      7420756E 
+ 518      7369676E 
+ 518      65642069 
+ 518      6E7400
+ 519              	.LASF21:
+ARM GAS  C:\Users\npat025\AppData\Local\Temp\ccyheZQc.s 			page 12
+
+
+ 520 00de 73706565 		.ascii	"speedR\000"
+ 520      645200
+ 521              	.LASF24:
+ 522 00e5 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 522      43313120 
+ 522      352E342E 
+ 522      31203230 
+ 522      31363036 
+ 523 0118 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m3 -mthumb -g -O"
+ 523      20726576 
+ 523      6973696F 
+ 523      6E203233 
+ 523      37373135 
+ 524 014b 30202D66 		.ascii	"0 -ffunction-sections -ffat-lto-objects\000"
+ 524      66756E63 
+ 524      74696F6E 
+ 524      2D736563 
+ 524      74696F6E 
+ 525              	.LASF25:
+ 526 0173 74616368 		.ascii	"tacho.c\000"
+ 526      6F2E6300 
+ 527              	.LASF1:
+ 528 017b 756E7369 		.ascii	"unsigned char\000"
+ 528      676E6564 
+ 528      20636861 
+ 528      7200
+ 529              	.LASF14:
+ 530 0189 63686172 		.ascii	"char\000"
+ 530      00
+ 531              	.LASF4:
+ 532 018e 6C6F6E67 		.ascii	"long int\000"
+ 532      20696E74 
+ 532      00
+ 533              	.LASF13:
+ 534 0197 646F7562 		.ascii	"double\000"
+ 534      6C6500
+ 535              	.LASF23:
+ 536 019e 706F7352 		.ascii	"posR\000"
+ 536      00
+ 537              	.LASF19:
+ 538 01a3 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 538      52784275 
+ 538      66666572 
+ 538      00
+ 539              	.LASF0:
+ 540 01b0 7369676E 		.ascii	"signed char\000"
+ 540      65642063 
+ 540      68617200 
+ 541              	.LASF15:
+ 542 01bc 6C6F6E67 		.ascii	"long double\000"
+ 542      20646F75 
+ 542      626C6500 
+ 543              	.LASF9:
+ 544 01c8 5F5F696E 		.ascii	"__int32_t\000"
+ 544      7433325F 
+ 544      7400
+ 545              	.LASF22:
+ARM GAS  C:\Users\npat025\AppData\Local\Temp\ccyheZQc.s 			page 13
+
+
+ 546 01d2 706F734C 		.ascii	"posL\000"
+ 546      00
+ 547              	.LASF12:
+ 548 01d7 666C6F61 		.ascii	"float\000"
+ 548      7400
+ 549              	.LASF2:
+ 550 01dd 73686F72 		.ascii	"short int\000"
+ 550      7420696E 
+ 550      7400
+ 551              	.LASF11:
+ 552 01e7 696E7431 		.ascii	"int16\000"
+ 552      3600
+ 553              	.LASF10:
+ 554 01ed 696E7433 		.ascii	"int32_t\000"
+ 554      325F7400 
+ 555              	.LASF16:
+ 556 01f5 73697A65 		.ascii	"sizetype\000"
+ 556      74797065 
+ 556      00
+ 557              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran
