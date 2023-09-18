@@ -28,12 +28,26 @@ uint8 ready_to_send = 0;
 char bufferi[64];
 char bufferj[64];
 
+
+
+// distance calcu
+int32 wheel_circumference = 100;
+int32 encoder_count_i = 0;
+int32 encoder_count_j = 0;
+int32 cpr = 0;
+int32 ppr = 0;
+int32 distance_i = 0;
+int32 distance_j = 0;
+int8 target_distance = 0;// need to decide
+int8 current_distance_i = 0;
+int8 current_distance_j = 0;
+int32 prev_encoder_value_i = 0;
+double prev_encoder_value_j = 0;
+double wheel_circumference_mm = 64.46;
+int CPR_value = 228;
+
 CY_ISR(isr_TC_handler){
-    /*if ( counter == 20){
-        PWM_1_WriteCompare(0);
-        PWM_2_WriteCompare(0);
-    }*/
-    //if counter is not divisible by 4, counter is incremented
+    
     if (counter % 4 != 0){
      counter++;
     }else{
@@ -50,7 +64,44 @@ CY_ISR(isr_TC_handler){
     Timer_1_ReadStatusRegister();
     
 }
+//stop motor 1
+void stop_M1(){
+    PWM_1_WriteCompare(0);
+}
+
+//stop motor 2
+void stop_M2(){
+    PWM_2_WriteCompare(0);
+}
  
+void distance_based_Stopping(encoder_count_i,encoder_count_j){  
+    //calculate disances since the last reading
+    distance_i = (encoder_count_i/cpr)*wheel_circumference;
+    distance_j = (encoder_count_j/cpr)*wheel_circumference;
+    //calculate distance and add distance to calculate total distance travel
+    current_distance_i = ((encoder_count_i - prev_encoder_value_i)/cpr)*wheel_circumference;
+    current_distance_j = ((encoder_count_j - prev_encoder_value_j)/cpr)*wheel_circumference;
+    
+    distance_i+=current_distance_i;
+    distance_j+=current_distance_j;
+    
+    if(distance_i >= target_distance){
+        stop_M1();
+    }
+    if(distance_j >= target_distance){
+        stop_M2();
+    }
+    
+}
+
+
+
+
+
+
+
+
+
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
@@ -72,7 +123,7 @@ int main(void)
     QuadDec_M1_Start();
     QuadDec_M2_Start();
     Timer_1_Start();
-    isr_1_StartEx(isr_TC_handler);
+    timer_1_isr_StartEx(isr_TC_handler);
     
 //    usbPutString(itoa(ci,buffer,10));
     
@@ -88,6 +139,8 @@ int main(void)
             sprintf(bufferj, "speed_M2: %ld\r\n", speedj);
             usbPutString(bufferj);
             ready_to_send = 0;
+            
+            distance_based_Stopping(ci,cj);
             
         }
         
@@ -116,49 +169,6 @@ void usbPutChar(char c)
     while (USBUART_1_CDCIsReady() == 0);
     USBUART_1_PutChar(c);
 #endif    
-}
-
-
-
-
-
-
-int32 wheel_circumference = 100;
-int32 encoder_count_M1 = 0;
-int32 encoder_count_M2 = 0;
-int32 cpr = 0;
-int32 ppr = 0;
-int32 distanceM1 = 0;
-int32 distanceM2 = 0;
-void distance_Calculation (encoder_count_M1,encoder_count_M2){
-    //calculate count per reslution
-    cpr = ppr*4;
-    //calculate disance
-    distanceM1 = encoder_count_M1/cpr;
-    distanceM2 = encoder_count_M2/cpr;
-       
-}
-
-
-int8 target_distance = 0;// need to decide
-int8 current_distance = 0;
-int32 prev_encoder_value_M1 = 0;
-int32 prev_encoder_value_M2 = 0;
-void distance_based_Stopping(encoder_count_M1,encoder_count_M2){
-    distanceM1
-    
-    current_distance = 
-    
-    
-}
-
-
-void stop_M1(){
-    PWM_1_WriteCompare(0);
-}
-
-void stop_M2(){
-    PWM_2_WriteCompare(0);
 }
 
 /* [] END OF FILE */
