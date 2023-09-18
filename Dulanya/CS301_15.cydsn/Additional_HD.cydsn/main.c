@@ -38,8 +38,17 @@ bool left_on;
 bool right_on;
 bool middle_on;
 
+CY_ISR(isr_TC_handler){
+    PWM_2_WriteCompare(50);
+    PWM_1_WriteCompare(50);
+   
+    Timer_1_ReadStatusRegister();
+    
+}
+
 
 CY_ISR(isr_3_interrupt) {
+    //every 8.33ms
 //    if(Comp_1_GetCompare()==1){
 //        LED_Write(1);
 //    }rrff 
@@ -57,33 +66,37 @@ CY_ISR(isr_3_interrupt) {
     middle_on=0;
 
 }
-CY_ISR(isr_1_interrupt){
-    
-    if(Sout_M1_Read()!=0 || Sout_M2_Read()!=0){
-        LED_1_Write(1);
-    }
-    if(Comp_2_GetCompare()!=0){
-        LED_1_Write(1);
-    }
-    if(Comp_3_GetCompare()!=0){
-        LED_1_Write(1);
-    }
 
-}
 
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
 
     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
-    Timer_2_Start();
     Timer_1_Start();
+    Timer_3_Start();
+    timer_3_isr_StartEx(isr_TC_handler);
     isr_3_StartEx(isr_3_interrupt);
-    isr_1_StartEx(isr_1_interrupt);
+    
+    //start comparators
     Comp_0_Start();
     Comp_1_Start();
     Comp_2_Start();
     Comp_3_Start();
+    
+    /*Start PWM Clk*/
+    Clock_PWM_Start(); 
+    //Start PWM
+    PWM_1_Start();
+    PWM_2_Start();
+    // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
+    PWM_2_WriteCompare(70);
+    PWM_1_WriteCompare(40);
+    PWM_1_WritePeriod(100);
+    PWM_2_WritePeriod(100);
+    
+    QuadDec_M1_Start();
+    QuadDec_M2_Start();
     
     for(;;)
     {
