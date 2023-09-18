@@ -33,15 +33,17 @@
 
 
 #include "project.h"
-
+uint8 counter = 1;
 bool left_on;
 bool right_on;
 bool middle_on;
 
 CY_ISR(isr_TC_handler){
+    if(counter==200){
     PWM_2_WriteCompare(50);
     PWM_1_WriteCompare(50);
-   
+    }
+   counter++;
     Timer_1_ReadStatusRegister();
     
 }
@@ -90,8 +92,8 @@ int main(void)
     PWM_1_Start();
     PWM_2_Start();
     // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
-    PWM_2_WriteCompare(70);
-    PWM_1_WriteCompare(40);
+    PWM_2_WriteCompare(80);
+    PWM_1_WriteCompare(20);
     PWM_1_WritePeriod(100);
     PWM_2_WritePeriod(100);
     
