@@ -1,6 +1,6 @@
 /***************************************************************************//**
 * \file cyPm.h
-* \version 6.10
+* \version 5.82
 *
 * \brief Provides the function definitions for the power management API.
 *
