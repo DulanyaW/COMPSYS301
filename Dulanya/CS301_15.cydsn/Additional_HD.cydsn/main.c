@@ -33,31 +33,48 @@
 
 
 #include "project.h"
-uint8 counter = 1;
+uint32 counter = 1;
 bool left_on;
 bool right_on;
 bool middle_on;
 
 CY_ISR(isr_TC_handler){
-    if(counter==200){
-    PWM_2_WriteCompare(50);
-    PWM_1_WriteCompare(50);
+    //every 8.33ms
+    if(middle_on){
+        LED_0_Write(1);
+    }else{
+        LED_0_Write(0);
     }
-   counter++;
+    if(right_on){
+        LED_1_Write(1);
+    }else{
+        LED_1_Write(0);
+    }
+    if(left_on){
+        LED_2_Write(1);
+    }else{
+        LED_2_Write(0);
+    }
+    right_on=0;
+    left_on=0;
+    middle_on=0;
+
     Timer_1_ReadStatusRegister();
     
 }
 
 
 CY_ISR(isr_3_interrupt) {
-    //every 8.33ms
-//    if(Comp_1_GetCompare()==1){
-//        LED_Write(1);
-//    }rrff 
-//    else{
-//        LED_Write(0);
-//    }
-    
+    //every 1.388ms
+    if(Comp_0_GetCompare()==1 || Comp_1_GetCompare()==1 ){
+        middle_on=1;
+    }
+    if(Comp_2_GetCompare()==1){
+        left_on=1;
+    }
+    if(Comp_3_GetCompare()==1){
+        right_on=1;        
+    }
     //initialise comp value 
     Comp_0_Init();
     Comp_1_Init();
@@ -92,8 +109,8 @@ int main(void)
     PWM_1_Start();
     PWM_2_Start();
     // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
-    PWM_2_WriteCompare(80);
-    PWM_1_WriteCompare(20);
+    PWM_2_WriteCompare(50);
+    PWM_1_WriteCompare(50);
     PWM_1_WritePeriod(100);
     PWM_2_WritePeriod(100);
     

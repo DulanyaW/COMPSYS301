@@ -1,6 +1,6 @@
 // ======================================================================
 // Additional_HD.v generated from TopDesign.cysch
-// 09/18/2023 at 16:15
+// 09/18/2023 at 16:55
 // This file is auto generated. ANY EDITS YOU MAKE MAY BE LOST WHEN THIS FILE IS REGENERATED!!!
 // ======================================================================
 
@@ -1153,7 +1153,7 @@ module top ;
           wire  Net_2159;
           wire  Net_1374;
           wire  Net_1373;
-          wire  Net_2825;
+          wire  Net_3932;
           wire  Net_1371;
           wire  Net_1370;
           wire  Net_1369;
@@ -1162,30 +1162,30 @@ module top ;
           wire  Net_1366;
           wire  Net_1365;
           wire  Net_2800;
-          wire  Net_2824;
-          wire  Net_2823;
-          wire  Net_2822;
-          wire  Net_2821;
-          wire  Net_2820;
+          wire  Net_3931;
+          wire  Net_3930;
+          wire  Net_3929;
+          wire  Net_3928;
+          wire  Net_3927;
           wire  CLK24M;
-          wire  Net_2819;
-          wire  Net_2818;
-          wire  Net_2817;
-          wire  Net_2816;
-          wire  Net_2815;
-          wire  Net_2814;
-          wire  Net_2813;
-          wire  Net_2812;
-          wire  Net_2811;
-          wire  Net_2810;
-          wire  Net_2809;
-          wire  Net_2808;
-          wire  Net_2807;
-          wire  Net_2806;
-          wire  Net_2805;
-          wire  Net_2804;
-          wire  Net_2803;
-          wire  Net_2802;
+          wire  Net_3926;
+          wire  Net_3925;
+          wire  Net_3924;
+          wire  Net_3923;
+          wire  Net_3922;
+          wire  Net_3921;
+          wire  Net_3920;
+          wire  Net_3919;
+          wire  Net_3918;
+          wire  Net_3917;
+          wire  Net_3916;
+          wire  Net_3915;
+          wire  Net_3914;
+          wire  Net_3913;
+          wire  Net_3912;
+          wire  Net_3911;
+          wire  Net_3910;
+          wire  Net_3909;
     electrical  Net_512;
           wire  Net_2158;
           wire  Net_2157;
@@ -2344,8 +2344,8 @@ module top ;
 
 
 	cy_vref_v1_0
-		#(.guid("4CD2DB22-E42B-4f83-A6F4-FD66E0253DE0"),
-		  .name("0.256V"),
+		#(.guid("89B398AD-36A8-4627-9212-707F2986319E"),
+		  .name("1.024V"),
 		  .autoenable(1))
 		vRef_3
 		 (.vout(Net_1091));
@@ -2518,15 +2518,15 @@ module top ;
         .clock(CLK24M),
         .cmp_sel(1'b0),
         .enable(1'b1),
-        .interrupt(Net_2806),
+        .interrupt(Net_3913),
         .kill(Net_2183),
-        .ph1(Net_2807),
-        .ph2(Net_2808),
+        .ph1(Net_3914),
+        .ph2(Net_3915),
         .pwm(Net_2404),
-        .pwm1(Net_2809),
-        .pwm2(Net_2810),
+        .pwm1(Net_3916),
+        .pwm2(Net_3917),
         .reset(1'b0),
-        .tc(Net_2812),
+        .tc(Net_3919),
         .trigger(1'b0));
     defparam PWM_1.Resolution = 8;
 
@@ -2612,15 +2612,15 @@ module top ;
         .clock(CLK24M),
         .cmp_sel(1'b0),
         .enable(1'b1),
-        .interrupt(Net_2817),
+        .interrupt(Net_3924),
         .kill(Net_2183),
-        .ph1(Net_2818),
-        .ph2(Net_2819),
+        .ph1(Net_3925),
+        .ph2(Net_3926),
         .pwm(Net_509),
-        .pwm1(Net_2820),
-        .pwm2(Net_2821),
+        .pwm1(Net_3927),
+        .pwm2(Net_3928),
         .reset(1'b0),
-        .tc(Net_2823),
+        .tc(Net_3930),
         .trigger(1'b0));
     defparam PWM_2.Resolution = 8;
 
