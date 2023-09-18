@@ -1,0 +1,1834 @@
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"main.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.global	__aeabi_i2d
+  20              		.global	__aeabi_dmul
+  21              		.global	__aeabi_d2uiz
+  22              		.section	.text.isr_TC_handler,"ax",%progbits
+  23              		.align	2
+  24              		.global	isr_TC_handler
+  25              		.thumb
+  26              		.thumb_func
+  27              		.type	isr_TC_handler, %function
+  28              	isr_TC_handler:
+  29              	.LFB64:
+  30              		.file 1 "main.c"
+   1:main.c        **** /* ========================================
+   2:main.c        ****  *
+   3:main.c        ****  * Copyright YOUR COMPANY, THE YEAR
+   4:main.c        ****  * All Rights Reserved
+   5:main.c        ****  * UNPUBLISHED, LICENSED SOFTWARE.
+   6:main.c        ****  *
+   7:main.c        ****  * CONFIDENTIAL AND PROPRIETARY INFORMATION
+   8:main.c        ****  * WHICH IS THE PROPERTY OF your company.
+   9:main.c        ****  *
+  10:main.c        ****  * ========================================
+  11:main.c        **** */
+  12:main.c        **** #include <stdio.h> 
+  13:main.c        **** #include <stdlib.h>
+  14:main.c        **** #include <math.h>
+  15:main.c        **** 
+  16:main.c        **** #include "project.h"
+  17:main.c        **** #include "defines.h"
+  18:main.c        **** 
+  19:main.c        **** void usbPutString(char *s);
+  20:main.c        **** int32 ci = 0;
+  21:main.c        **** int32 cj = 0;
+  22:main.c        **** 
+  23:main.c        **** uint8 counter = 1;
+  24:main.c        **** 
+  25:main.c        **** uint32 speedi = 0;
+  26:main.c        **** uint32 speedj = 0;
+  27:main.c        **** uint8 ready_to_send = 0;
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 2
+
+
+  28:main.c        **** char bufferi[64];
+  29:main.c        **** char bufferj[64];
+  30:main.c        **** 
+  31:main.c        **** CY_ISR(isr_TC_handler){
+  31              		.loc 1 31 0
+  32              		.cfi_startproc
+  33              		@ args = 0, pretend = 0, frame = 0
+  34              		@ frame_needed = 0, uses_anonymous_args = 0
+  35 0000 38B5     		push	{r3, r4, r5, lr}
+  36              		.cfi_def_cfa_offset 16
+  37              		.cfi_offset 3, -16
+  38              		.cfi_offset 4, -12
+  39              		.cfi_offset 5, -8
+  40              		.cfi_offset 14, -4
+  32:main.c        ****     /*if ( counter == 20){
+  33:main.c        ****         PWM_1_WriteCompare(0);
+  34:main.c        ****         PWM_2_WriteCompare(0);
+  35:main.c        ****     }*/
+  36:main.c        ****     
+  37:main.c        ****     if (counter % 4 != 0){
+  41              		.loc 1 37 0
+  42 0002 214B     		ldr	r3, .L5+8
+  43 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  44 0006 13F0030F 		tst	r3, #3
+  45 000a 03D0     		beq	.L2
+  38:main.c        ****      counter++;
+  46              		.loc 1 38 0
+  47 000c 0133     		adds	r3, r3, #1
+  48 000e 1E4A     		ldr	r2, .L5+8
+  49 0010 1370     		strb	r3, [r2]
+  50 0012 30E0     		b	.L3
+  51              	.L2:
+  39:main.c        ****     }else{
+  40:main.c        ****         // 2.731ms *4 ~=11 ms
+  41:main.c        ****         ci = QuadDec_M1_GetCounter();
+  52              		.loc 1 41 0
+  53 0014 FFF7FEFF 		bl	QuadDec_M1_GetCounter
+  54              	.LVL0:
+  55 0018 1C4C     		ldr	r4, .L5+12
+  56 001a 2060     		str	r0, [r4]
+  42:main.c        ****         cj = QuadDec_M2_GetCounter();
+  57              		.loc 1 42 0
+  58 001c FFF7FEFF 		bl	QuadDec_M2_GetCounter
+  59              	.LVL1:
+  60 0020 0546     		mov	r5, r0
+  61 0022 6060     		str	r0, [r4, #4]
+  43:main.c        ****         speedi = (uint32)(-ci * 8.13/4);
+  62              		.loc 1 43 0
+  63 0024 2068     		ldr	r0, [r4]
+  64 0026 4042     		negs	r0, r0
+  65 0028 FFF7FEFF 		bl	__aeabi_i2d
+  66              	.LVL2:
+  67 002c 14A3     		adr	r3, .L5
+  68 002e D3E90023 		ldrd	r2, [r3]
+  69 0032 FFF7FEFF 		bl	__aeabi_dmul
+  70              	.LVL3:
+  71 0036 0022     		movs	r2, #0
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 3
+
+
+  72 0038 154B     		ldr	r3, .L5+16
+  73 003a FFF7FEFF 		bl	__aeabi_dmul
+  74              	.LVL4:
+  75 003e FFF7FEFF 		bl	__aeabi_d2uiz
+  76              	.LVL5:
+  77 0042 A060     		str	r0, [r4, #8]
+  44:main.c        ****         speedj = (uint32)(-cj * 8.13/4);
+  78              		.loc 1 44 0
+  79 0044 6842     		negs	r0, r5
+  80 0046 FFF7FEFF 		bl	__aeabi_i2d
+  81              	.LVL6:
+  82 004a 0DA3     		adr	r3, .L5
+  83 004c D3E90023 		ldrd	r2, [r3]
+  84 0050 FFF7FEFF 		bl	__aeabi_dmul
+  85              	.LVL7:
+  86 0054 0022     		movs	r2, #0
+  87 0056 0E4B     		ldr	r3, .L5+16
+  88 0058 FFF7FEFF 		bl	__aeabi_dmul
+  89              	.LVL8:
+  90 005c FFF7FEFF 		bl	__aeabi_d2uiz
+  91              	.LVL9:
+  92 0060 E060     		str	r0, [r4, #12]
+  45:main.c        ****         counter = 1;
+  93              		.loc 1 45 0
+  94 0062 0123     		movs	r3, #1
+  95 0064 084A     		ldr	r2, .L5+8
+  96 0066 1370     		strb	r3, [r2]
+  46:main.c        ****         ready_to_send = 1;
+  97              		.loc 1 46 0
+  98 0068 2374     		strb	r3, [r4, #16]
+  47:main.c        ****         QuadDec_M1_SetCounter(0);
+  99              		.loc 1 47 0
+ 100 006a 0020     		movs	r0, #0
+ 101 006c FFF7FEFF 		bl	QuadDec_M1_SetCounter
+ 102              	.LVL10:
+  48:main.c        ****         QuadDec_M2_SetCounter(0);
+ 103              		.loc 1 48 0
+ 104 0070 0020     		movs	r0, #0
+ 105 0072 FFF7FEFF 		bl	QuadDec_M2_SetCounter
+ 106              	.LVL11:
+ 107              	.L3:
+  49:main.c        ****     }
+  50:main.c        ****     Timer_1_ReadStatusRegister();
+ 108              		.loc 1 50 0
+ 109 0076 FFF7FEFF 		bl	Timer_1_ReadStatusRegister
+ 110              	.LVL12:
+ 111 007a 38BD     		pop	{r3, r4, r5, pc}
+ 112              	.L6:
+ 113 007c AFF30080 		.align	3
+ 114              	.L5:
+ 115 0080 C3F5285C 		.word	1546188227
+ 116 0084 8F422040 		.word	1075856015
+ 117 0088 00000000 		.word	.LANCHOR0
+ 118 008c 00000000 		.word	.LANCHOR1
+ 119 0090 0000D03F 		.word	1070596096
+ 120              		.cfi_endproc
+ 121              	.LFE64:
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 4
+
+
+ 122              		.size	isr_TC_handler, .-isr_TC_handler
+ 123              		.section	.text.usbPutString,"ax",%progbits
+ 124              		.align	2
+ 125              		.global	usbPutString
+ 126              		.thumb
+ 127              		.thumb_func
+ 128              		.type	usbPutString, %function
+ 129              	usbPutString:
+ 130              	.LFB66:
+  51:main.c        ****     
+  52:main.c        **** }
+  53:main.c        ****  
+  54:main.c        **** int main(void)
+  55:main.c        **** {
+  56:main.c        ****     CyGlobalIntEnable; /* Enable global interrupts. */
+  57:main.c        ****     /*Start PWM Clk*/
+  58:main.c        ****     Clock_PWM_Start(); 
+  59:main.c        ****     //Start PWM
+  60:main.c        ****     PWM_1_Start();
+  61:main.c        ****     PWM_2_Start();
+  62:main.c        ****     // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
+  63:main.c        ****     PWM_2_WriteCompare(60);
+  64:main.c        ****     PWM_1_WriteCompare(60);
+  65:main.c        ****     PWM_1_WritePeriod(100);
+  66:main.c        ****     PWM_2_WritePeriod(100);
+  67:main.c        ****     //Start UART for operation
+  68:main.c        ****     USBUART_1_Start(0, USBUART_1_5V_OPERATION);
+  69:main.c        ****     while (USBUART_1_GetConfiguration()==0){};
+  70:main.c        ****     //sprintf(buffer, "Hello\n");
+  71:main.c        ****     //usbPutString(buffer);
+  72:main.c        ****     QuadDec_M1_Start();
+  73:main.c        ****     QuadDec_M2_Start();
+  74:main.c        ****     Timer_1_Start();
+  75:main.c        ****     isr_1_StartEx(isr_TC_handler);
+  76:main.c        ****     
+  77:main.c        **** //    usbPutString(itoa(ci,buffer,10));
+  78:main.c        ****     
+  79:main.c        **** 
+  80:main.c        ****     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
+  81:main.c        **** 
+  82:main.c        ****     for(;;)
+  83:main.c        ****     {
+  84:main.c        ****         if (ready_to_send == 1){
+  85:main.c        ****             sprintf(bufferi, "speed_M1: %ld\r\n", speedi);
+  86:main.c        ****             usbPutString(bufferi);
+  87:main.c        ****             
+  88:main.c        ****             sprintf(bufferj, "speed_M2: %ld\r\n", speedj);
+  89:main.c        ****             usbPutString(bufferj);
+  90:main.c        ****             ready_to_send = 0;
+  91:main.c        ****             
+  92:main.c        ****         }
+  93:main.c        ****         
+  94:main.c        ****         /* Place your application code here. */
+  95:main.c        ****     }
+  96:main.c        **** }
+  97:main.c        **** 
+  98:main.c        **** 
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 5
+
+
+  99:main.c        **** void usbPutString(char *s)
+ 100:main.c        **** {
+ 131              		.loc 1 100 0
+ 132              		.cfi_startproc
+ 133              		@ args = 0, pretend = 0, frame = 0
+ 134              		@ frame_needed = 0, uses_anonymous_args = 0
+ 135              	.LVL13:
+ 136 0000 10B5     		push	{r4, lr}
+ 137              		.cfi_def_cfa_offset 8
+ 138              		.cfi_offset 4, -8
+ 139              		.cfi_offset 14, -4
+ 140 0002 0446     		mov	r4, r0
+ 141              	.LVL14:
+ 142              	.L8:
+ 101:main.c        **** // !! Assumes that *s is a string with allocated space >=64 chars     
+ 102:main.c        **** //  Since USB implementation retricts data packets to 64 chars, this function truncates the
+ 103:main.c        **** //  length to 62 char (63rd char is a '!')
+ 104:main.c        **** 
+ 105:main.c        **** #ifdef USE_USB     
+ 106:main.c        ****     while (USBUART_1_CDCIsReady() == 0);
+ 143              		.loc 1 106 0 discriminator 1
+ 144 0004 FFF7FEFF 		bl	USBUART_1_CDCIsReady
+ 145              	.LVL15:
+ 146 0008 0028     		cmp	r0, #0
+ 147 000a FBD0     		beq	.L8
+ 107:main.c        ****     s[63]='\0';
+ 148              		.loc 1 107 0
+ 149 000c 0023     		movs	r3, #0
+ 150 000e 84F83F30 		strb	r3, [r4, #63]
+ 108:main.c        ****     s[62]='!';
+ 151              		.loc 1 108 0
+ 152 0012 2123     		movs	r3, #33
+ 153 0014 84F83E30 		strb	r3, [r4, #62]
+ 109:main.c        ****     USBUART_1_PutData((uint8*)s,strlen(s));
+ 154              		.loc 1 109 0
+ 155 0018 2046     		mov	r0, r4
+ 156 001a FFF7FEFF 		bl	strlen
+ 157              	.LVL16:
+ 158 001e 81B2     		uxth	r1, r0
+ 159 0020 2046     		mov	r0, r4
+ 160 0022 FFF7FEFF 		bl	USBUART_1_PutData
+ 161              	.LVL17:
+ 162 0026 10BD     		pop	{r4, pc}
+ 163              		.cfi_endproc
+ 164              	.LFE66:
+ 165              		.size	usbPutString, .-usbPutString
+ 166              		.section	.text.main,"ax",%progbits
+ 167              		.align	2
+ 168              		.global	main
+ 169              		.thumb
+ 170              		.thumb_func
+ 171              		.type	main, %function
+ 172              	main:
+ 173              	.LFB65:
+  55:main.c        ****     CyGlobalIntEnable; /* Enable global interrupts. */
+ 174              		.loc 1 55 0
+ 175              		.cfi_startproc
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 6
+
+
+ 176              		@ Volatile: function does not return.
+ 177              		@ args = 0, pretend = 0, frame = 0
+ 178              		@ frame_needed = 0, uses_anonymous_args = 0
+ 179 0000 08B5     		push	{r3, lr}
+ 180              		.cfi_def_cfa_offset 8
+ 181              		.cfi_offset 3, -8
+ 182              		.cfi_offset 14, -4
+  56:main.c        ****     /*Start PWM Clk*/
+ 183              		.loc 1 56 0
+ 184              		.syntax unified
+ 185              	@ 56 "main.c" 1
+ 186 0002 62B6     		CPSIE   i
+ 187              	@ 0 "" 2
+  58:main.c        ****     //Start PWM
+ 188              		.loc 1 58 0
+ 189              		.thumb
+ 190              		.syntax unified
+ 191 0004 FFF7FEFF 		bl	Clock_PWM_Start
+ 192              	.LVL18:
+  60:main.c        ****     PWM_2_Start();
+ 193              		.loc 1 60 0
+ 194 0008 FFF7FEFF 		bl	PWM_1_Start
+ 195              	.LVL19:
+  61:main.c        ****     // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
+ 196              		.loc 1 61 0
+ 197 000c FFF7FEFF 		bl	PWM_2_Start
+ 198              	.LVL20:
+  63:main.c        ****     PWM_1_WriteCompare(60);
+ 199              		.loc 1 63 0
+ 200 0010 3C20     		movs	r0, #60
+ 201 0012 FFF7FEFF 		bl	PWM_2_WriteCompare
+ 202              	.LVL21:
+  64:main.c        ****     PWM_1_WritePeriod(100);
+ 203              		.loc 1 64 0
+ 204 0016 3C20     		movs	r0, #60
+ 205 0018 FFF7FEFF 		bl	PWM_1_WriteCompare
+ 206              	.LVL22:
+  65:main.c        ****     PWM_2_WritePeriod(100);
+ 207              		.loc 1 65 0
+ 208 001c 6420     		movs	r0, #100
+ 209 001e FFF7FEFF 		bl	PWM_1_WritePeriod
+ 210              	.LVL23:
+  66:main.c        ****     //Start UART for operation
+ 211              		.loc 1 66 0
+ 212 0022 6420     		movs	r0, #100
+ 213 0024 FFF7FEFF 		bl	PWM_2_WritePeriod
+ 214              	.LVL24:
+  68:main.c        ****     while (USBUART_1_GetConfiguration()==0){};
+ 215              		.loc 1 68 0
+ 216 0028 0121     		movs	r1, #1
+ 217 002a 0020     		movs	r0, #0
+ 218 002c FFF7FEFF 		bl	USBUART_1_Start
+ 219              	.LVL25:
+ 220              	.L11:
+  69:main.c        ****     //sprintf(buffer, "Hello\n");
+ 221              		.loc 1 69 0 discriminator 1
+ 222 0030 FFF7FEFF 		bl	USBUART_1_GetConfiguration
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 7
+
+
+ 223              	.LVL26:
+ 224 0034 0028     		cmp	r0, #0
+ 225 0036 FBD0     		beq	.L11
+  72:main.c        ****     QuadDec_M2_Start();
+ 226              		.loc 1 72 0
+ 227 0038 FFF7FEFF 		bl	QuadDec_M1_Start
+ 228              	.LVL27:
+  73:main.c        ****     Timer_1_Start();
+ 229              		.loc 1 73 0
+ 230 003c FFF7FEFF 		bl	QuadDec_M2_Start
+ 231              	.LVL28:
+  74:main.c        ****     isr_1_StartEx(isr_TC_handler);
+ 232              		.loc 1 74 0
+ 233 0040 FFF7FEFF 		bl	Timer_1_Start
+ 234              	.LVL29:
+  75:main.c        ****     
+ 235              		.loc 1 75 0
+ 236 0044 0E48     		ldr	r0, .L15
+ 237 0046 FFF7FEFF 		bl	isr_1_StartEx
+ 238              	.LVL30:
+ 239              	.L12:
+  84:main.c        ****             sprintf(bufferi, "speed_M1: %ld\r\n", speedi);
+ 240              		.loc 1 84 0
+ 241 004a 0E4B     		ldr	r3, .L15+4
+ 242 004c 1B7C     		ldrb	r3, [r3, #16]	@ zero_extendqisi2
+ 243 004e 012B     		cmp	r3, #1
+ 244 0050 FBD1     		bne	.L12
+  85:main.c        ****             usbPutString(bufferi);
+ 245              		.loc 1 85 0
+ 246 0052 0C4C     		ldr	r4, .L15+4
+ 247 0054 0C4D     		ldr	r5, .L15+8
+ 248 0056 A268     		ldr	r2, [r4, #8]
+ 249 0058 0C49     		ldr	r1, .L15+12
+ 250 005a 2846     		mov	r0, r5
+ 251 005c FFF7FEFF 		bl	sprintf
+ 252              	.LVL31:
+  86:main.c        ****             
+ 253              		.loc 1 86 0
+ 254 0060 2846     		mov	r0, r5
+ 255 0062 FFF7FEFF 		bl	usbPutString
+ 256              	.LVL32:
+  88:main.c        ****             usbPutString(bufferj);
+ 257              		.loc 1 88 0
+ 258 0066 0A4D     		ldr	r5, .L15+16
+ 259 0068 E268     		ldr	r2, [r4, #12]
+ 260 006a 0A49     		ldr	r1, .L15+20
+ 261 006c 2846     		mov	r0, r5
+ 262 006e FFF7FEFF 		bl	sprintf
+ 263              	.LVL33:
+  89:main.c        ****             ready_to_send = 0;
+ 264              		.loc 1 89 0
+ 265 0072 2846     		mov	r0, r5
+ 266 0074 FFF7FEFF 		bl	usbPutString
+ 267              	.LVL34:
+  90:main.c        ****             
+ 268              		.loc 1 90 0
+ 269 0078 0023     		movs	r3, #0
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 8
+
+
+ 270 007a 2374     		strb	r3, [r4, #16]
+ 271 007c E5E7     		b	.L12
+ 272              	.L16:
+ 273 007e 00BF     		.align	2
+ 274              	.L15:
+ 275 0080 00000000 		.word	isr_TC_handler
+ 276 0084 00000000 		.word	.LANCHOR1
+ 277 0088 00000000 		.word	bufferi
+ 278 008c 00000000 		.word	.LC0
+ 279 0090 00000000 		.word	bufferj
+ 280 0094 10000000 		.word	.LC1
+ 281              		.cfi_endproc
+ 282              	.LFE65:
+ 283              		.size	main, .-main
+ 284              		.section	.text.usbPutChar,"ax",%progbits
+ 285              		.align	2
+ 286              		.global	usbPutChar
+ 287              		.thumb
+ 288              		.thumb_func
+ 289              		.type	usbPutChar, %function
+ 290              	usbPutChar:
+ 291              	.LFB67:
+ 110:main.c        **** #endif
+ 111:main.c        **** }
+ 112:main.c        **** //* ========================================
+ 113:main.c        **** void usbPutChar(char c)
+ 114:main.c        **** {
+ 292              		.loc 1 114 0
+ 293              		.cfi_startproc
+ 294              		@ args = 0, pretend = 0, frame = 0
+ 295              		@ frame_needed = 0, uses_anonymous_args = 0
+ 296              	.LVL35:
+ 297 0000 10B5     		push	{r4, lr}
+ 298              		.cfi_def_cfa_offset 8
+ 299              		.cfi_offset 4, -8
+ 300              		.cfi_offset 14, -4
+ 301 0002 0446     		mov	r4, r0
+ 302              	.LVL36:
+ 303              	.L18:
+ 115:main.c        **** #ifdef USE_USB     
+ 116:main.c        ****     while (USBUART_1_CDCIsReady() == 0);
+ 304              		.loc 1 116 0 discriminator 1
+ 305 0004 FFF7FEFF 		bl	USBUART_1_CDCIsReady
+ 306              	.LVL37:
+ 307 0008 0028     		cmp	r0, #0
+ 308 000a FBD0     		beq	.L18
+ 117:main.c        ****     USBUART_1_PutChar(c);
+ 309              		.loc 1 117 0
+ 310 000c 2046     		mov	r0, r4
+ 311 000e FFF7FEFF 		bl	USBUART_1_PutChar
+ 312              	.LVL38:
+ 313 0012 10BD     		pop	{r4, pc}
+ 314              		.cfi_endproc
+ 315              	.LFE67:
+ 316              		.size	usbPutChar, .-usbPutChar
+ 317              		.comm	bufferj,64,4
+ 318              		.comm	bufferi,64,4
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 9
+
+
+ 319              		.global	ready_to_send
+ 320              		.global	speedj
+ 321              		.global	speedi
+ 322              		.global	counter
+ 323              		.global	cj
+ 324              		.global	ci
+ 325              		.data
+ 326              		.set	.LANCHOR0,. + 0
+ 327              		.type	counter, %object
+ 328              		.size	counter, 1
+ 329              	counter:
+ 330 0000 01       		.byte	1
+ 331              		.section	.rodata.str1.4,"aMS",%progbits,1
+ 332              		.align	2
+ 333              	.LC0:
+ 334 0000 73706565 		.ascii	"speed_M1: %ld\015\012\000"
+ 334      645F4D31 
+ 334      3A20256C 
+ 334      640D0A00 
+ 335              	.LC1:
+ 336 0010 73706565 		.ascii	"speed_M2: %ld\015\012\000"
+ 336      645F4D32 
+ 336      3A20256C 
+ 336      640D0A00 
+ 337              		.bss
+ 338              		.align	2
+ 339              		.set	.LANCHOR1,. + 0
+ 340              		.type	ci, %object
+ 341              		.size	ci, 4
+ 342              	ci:
+ 343 0000 00000000 		.space	4
+ 344              		.type	cj, %object
+ 345              		.size	cj, 4
+ 346              	cj:
+ 347 0004 00000000 		.space	4
+ 348              		.type	speedi, %object
+ 349              		.size	speedi, 4
+ 350              	speedi:
+ 351 0008 00000000 		.space	4
+ 352              		.type	speedj, %object
+ 353              		.size	speedj, 4
+ 354              	speedj:
+ 355 000c 00000000 		.space	4
+ 356              		.type	ready_to_send, %object
+ 357              		.size	ready_to_send, 1
+ 358              	ready_to_send:
+ 359 0010 00       		.space	1
+ 360              		.text
+ 361              	.Letext0:
+ 362              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 363              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 364              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+ 365              		.file 5 "Generated_Source\\PSoC5/core_cm3.h"
+ 366              		.file 6 "Generated_Source\\PSoC5/QuadDec_M1.h"
+ 367              		.file 7 "Generated_Source\\PSoC5/QuadDec_M2.h"
+ 368              		.file 8 "Generated_Source\\PSoC5/Timer_1.h"
+ 369              		.file 9 "Generated_Source\\PSoC5/USBUART_1_cdc.h"
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 10
+
+
+ 370              		.file 10 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4
+ 371              		.file 11 "Generated_Source\\PSoC5/Clock_PWM.h"
+ 372              		.file 12 "Generated_Source\\PSoC5/PWM_1.h"
+ 373              		.file 13 "Generated_Source\\PSoC5/PWM_2.h"
+ 374              		.file 14 "Generated_Source\\PSoC5/USBUART_1.h"
+ 375              		.file 15 "Generated_Source\\PSoC5/isr_1.h"
+ 376              		.file 16 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4
+ 377              		.section	.debug_info,"",%progbits
+ 378              	.Ldebug_info0:
+ 379 0000 8A040000 		.4byte	0x48a
+ 380 0004 0400     		.2byte	0x4
+ 381 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 382 000a 04       		.byte	0x4
+ 383 000b 01       		.uleb128 0x1
+ 384 000c F1000000 		.4byte	.LASF52
+ 385 0010 0C       		.byte	0xc
+ 386 0011 D6020000 		.4byte	.LASF53
+ 387 0015 7F010000 		.4byte	.LASF54
+ 388 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 389 001d 00000000 		.4byte	0
+ 390 0021 00000000 		.4byte	.Ldebug_line0
+ 391 0025 02       		.uleb128 0x2
+ 392 0026 01       		.byte	0x1
+ 393 0027 06       		.byte	0x6
+ 394 0028 6B030000 		.4byte	.LASF0
+ 395 002c 02       		.uleb128 0x2
+ 396 002d 01       		.byte	0x1
+ 397 002e 08       		.byte	0x8
+ 398 002f E3000000 		.4byte	.LASF1
+ 399 0033 02       		.uleb128 0x2
+ 400 0034 02       		.byte	0x2
+ 401 0035 05       		.byte	0x5
+ 402 0036 62020000 		.4byte	.LASF2
+ 403 003a 02       		.uleb128 0x2
+ 404 003b 02       		.byte	0x2
+ 405 003c 07       		.byte	0x7
+ 406 003d 7C000000 		.4byte	.LASF3
+ 407 0041 03       		.uleb128 0x3
+ 408 0042 4A000000 		.4byte	.LASF12
+ 409 0046 02       		.byte	0x2
+ 410 0047 3F       		.byte	0x3f
+ 411 0048 4C000000 		.4byte	0x4c
+ 412 004c 02       		.uleb128 0x2
+ 413 004d 04       		.byte	0x4
+ 414 004e 05       		.byte	0x5
+ 415 004f 73000000 		.4byte	.LASF4
+ 416 0053 02       		.uleb128 0x2
+ 417 0054 04       		.byte	0x4
+ 418 0055 07       		.byte	0x7
+ 419 0056 CC010000 		.4byte	.LASF5
+ 420 005a 02       		.uleb128 0x2
+ 421 005b 08       		.byte	0x8
+ 422 005c 05       		.byte	0x5
+ 423 005d C8020000 		.4byte	.LASF6
+ 424 0061 02       		.uleb128 0x2
+ 425 0062 08       		.byte	0x8
+ 426 0063 07       		.byte	0x7
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 11
+
+
+ 427 0064 95020000 		.4byte	.LASF7
+ 428 0068 04       		.uleb128 0x4
+ 429 0069 04       		.byte	0x4
+ 430 006a 05       		.byte	0x5
+ 431 006b 696E7400 		.ascii	"int\000"
+ 432 006f 02       		.uleb128 0x2
+ 433 0070 04       		.byte	0x4
+ 434 0071 07       		.byte	0x7
+ 435 0072 8F000000 		.4byte	.LASF8
+ 436 0076 02       		.uleb128 0x2
+ 437 0077 08       		.byte	0x8
+ 438 0078 04       		.byte	0x4
+ 439 0079 5F030000 		.4byte	.LASF9
+ 440 007d 02       		.uleb128 0x2
+ 441 007e 04       		.byte	0x4
+ 442 007f 07       		.byte	0x7
+ 443 0080 AC020000 		.4byte	.LASF10
+ 444 0084 05       		.uleb128 0x5
+ 445 0085 04       		.byte	0x4
+ 446 0086 8A000000 		.4byte	0x8a
+ 447 008a 02       		.uleb128 0x2
+ 448 008b 01       		.byte	0x1
+ 449 008c 08       		.byte	0x8
+ 450 008d DD020000 		.4byte	.LASF11
+ 451 0091 03       		.uleb128 0x3
+ 452 0092 C5000000 		.4byte	.LASF13
+ 453 0096 03       		.byte	0x3
+ 454 0097 2C       		.byte	0x2c
+ 455 0098 41000000 		.4byte	0x41
+ 456 009c 02       		.uleb128 0x2
+ 457 009d 08       		.byte	0x8
+ 458 009e 04       		.byte	0x4
+ 459 009f 27020000 		.4byte	.LASF14
+ 460 00a3 02       		.uleb128 0x2
+ 461 00a4 04       		.byte	0x4
+ 462 00a5 04       		.byte	0x4
+ 463 00a6 CD000000 		.4byte	.LASF15
+ 464 00aa 06       		.uleb128 0x6
+ 465 00ab 15030000 		.4byte	.LASF16
+ 466 00af 04       		.byte	0x4
+ 467 00b0 E901     		.2byte	0x1e9
+ 468 00b2 2C000000 		.4byte	0x2c
+ 469 00b6 06       		.uleb128 0x6
+ 470 00b7 82020000 		.4byte	.LASF17
+ 471 00bb 04       		.byte	0x4
+ 472 00bc EB01     		.2byte	0x1eb
+ 473 00be 53000000 		.4byte	0x53
+ 474 00c2 06       		.uleb128 0x6
+ 475 00c3 00000000 		.4byte	.LASF18
+ 476 00c7 04       		.byte	0x4
+ 477 00c8 EE01     		.2byte	0x1ee
+ 478 00ca 4C000000 		.4byte	0x4c
+ 479 00ce 07       		.uleb128 0x7
+ 480 00cf DE010000 		.4byte	.LASF19
+ 481 00d3 01       		.byte	0x1
+ 482 00d4 1F       		.byte	0x1f
+ 483 00d5 00000000 		.4byte	.LFB64
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 12
+
+
+ 484 00d9 94000000 		.4byte	.LFE64-.LFB64
+ 485 00dd 01       		.uleb128 0x1
+ 486 00de 9C       		.byte	0x9c
+ 487 00df 25010000 		.4byte	0x125
+ 488 00e3 08       		.uleb128 0x8
+ 489 00e4 18000000 		.4byte	.LVL0
+ 490 00e8 8E030000 		.4byte	0x38e
+ 491 00ec 08       		.uleb128 0x8
+ 492 00ed 20000000 		.4byte	.LVL1
+ 493 00f1 99030000 		.4byte	0x399
+ 494 00f5 09       		.uleb128 0x9
+ 495 00f6 70000000 		.4byte	.LVL10
+ 496 00fa A4030000 		.4byte	0x3a4
+ 497 00fe 08010000 		.4byte	0x108
+ 498 0102 0A       		.uleb128 0xa
+ 499 0103 01       		.uleb128 0x1
+ 500 0104 50       		.byte	0x50
+ 501 0105 01       		.uleb128 0x1
+ 502 0106 30       		.byte	0x30
+ 503 0107 00       		.byte	0
+ 504 0108 09       		.uleb128 0x9
+ 505 0109 76000000 		.4byte	.LVL11
+ 506 010d AF030000 		.4byte	0x3af
+ 507 0111 1B010000 		.4byte	0x11b
+ 508 0115 0A       		.uleb128 0xa
+ 509 0116 01       		.uleb128 0x1
+ 510 0117 50       		.byte	0x50
+ 511 0118 01       		.uleb128 0x1
+ 512 0119 30       		.byte	0x30
+ 513 011a 00       		.byte	0
+ 514 011b 08       		.uleb128 0x8
+ 515 011c 7A000000 		.4byte	.LVL12
+ 516 0120 BA030000 		.4byte	0x3ba
+ 517 0124 00       		.byte	0
+ 518 0125 0B       		.uleb128 0xb
+ 519 0126 66000000 		.4byte	.LASF20
+ 520 012a 01       		.byte	0x1
+ 521 012b 63       		.byte	0x63
+ 522 012c 00000000 		.4byte	.LFB66
+ 523 0130 28000000 		.4byte	.LFE66-.LFB66
+ 524 0134 01       		.uleb128 0x1
+ 525 0135 9C       		.byte	0x9c
+ 526 0136 75010000 		.4byte	0x175
+ 527 013a 0C       		.uleb128 0xc
+ 528 013b 7300     		.ascii	"s\000"
+ 529 013d 01       		.byte	0x1
+ 530 013e 63       		.byte	0x63
+ 531 013f 84000000 		.4byte	0x84
+ 532 0143 00000000 		.4byte	.LLST0
+ 533 0147 08       		.uleb128 0x8
+ 534 0148 08000000 		.4byte	.LVL15
+ 535 014c C5030000 		.4byte	0x3c5
+ 536 0150 09       		.uleb128 0x9
+ 537 0151 1E000000 		.4byte	.LVL16
+ 538 0155 D0030000 		.4byte	0x3d0
+ 539 0159 64010000 		.4byte	0x164
+ 540 015d 0A       		.uleb128 0xa
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 13
+
+
+ 541 015e 01       		.uleb128 0x1
+ 542 015f 50       		.byte	0x50
+ 543 0160 02       		.uleb128 0x2
+ 544 0161 74       		.byte	0x74
+ 545 0162 00       		.sleb128 0
+ 546 0163 00       		.byte	0
+ 547 0164 0D       		.uleb128 0xd
+ 548 0165 26000000 		.4byte	.LVL17
+ 549 0169 DB030000 		.4byte	0x3db
+ 550 016d 0A       		.uleb128 0xa
+ 551 016e 01       		.uleb128 0x1
+ 552 016f 50       		.byte	0x50
+ 553 0170 02       		.uleb128 0x2
+ 554 0171 74       		.byte	0x74
+ 555 0172 00       		.sleb128 0
+ 556 0173 00       		.byte	0
+ 557 0174 00       		.byte	0
+ 558 0175 0E       		.uleb128 0xe
+ 559 0176 89020000 		.4byte	.LASF55
+ 560 017a 01       		.byte	0x1
+ 561 017b 36       		.byte	0x36
+ 562 017c 68000000 		.4byte	0x68
+ 563 0180 00000000 		.4byte	.LFB65
+ 564 0184 98000000 		.4byte	.LFE65-.LFB65
+ 565 0188 01       		.uleb128 0x1
+ 566 0189 9C       		.byte	0x9c
+ 567 018a AB020000 		.4byte	0x2ab
+ 568 018e 08       		.uleb128 0x8
+ 569 018f 08000000 		.4byte	.LVL18
+ 570 0193 E6030000 		.4byte	0x3e6
+ 571 0197 08       		.uleb128 0x8
+ 572 0198 0C000000 		.4byte	.LVL19
+ 573 019c F1030000 		.4byte	0x3f1
+ 574 01a0 08       		.uleb128 0x8
+ 575 01a1 10000000 		.4byte	.LVL20
+ 576 01a5 FC030000 		.4byte	0x3fc
+ 577 01a9 09       		.uleb128 0x9
+ 578 01aa 16000000 		.4byte	.LVL21
+ 579 01ae 07040000 		.4byte	0x407
+ 580 01b2 BD010000 		.4byte	0x1bd
+ 581 01b6 0A       		.uleb128 0xa
+ 582 01b7 01       		.uleb128 0x1
+ 583 01b8 50       		.byte	0x50
+ 584 01b9 02       		.uleb128 0x2
+ 585 01ba 08       		.byte	0x8
+ 586 01bb 3C       		.byte	0x3c
+ 587 01bc 00       		.byte	0
+ 588 01bd 09       		.uleb128 0x9
+ 589 01be 1C000000 		.4byte	.LVL22
+ 590 01c2 12040000 		.4byte	0x412
+ 591 01c6 D1010000 		.4byte	0x1d1
+ 592 01ca 0A       		.uleb128 0xa
+ 593 01cb 01       		.uleb128 0x1
+ 594 01cc 50       		.byte	0x50
+ 595 01cd 02       		.uleb128 0x2
+ 596 01ce 08       		.byte	0x8
+ 597 01cf 3C       		.byte	0x3c
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 14
+
+
+ 598 01d0 00       		.byte	0
+ 599 01d1 09       		.uleb128 0x9
+ 600 01d2 22000000 		.4byte	.LVL23
+ 601 01d6 1D040000 		.4byte	0x41d
+ 602 01da E5010000 		.4byte	0x1e5
+ 603 01de 0A       		.uleb128 0xa
+ 604 01df 01       		.uleb128 0x1
+ 605 01e0 50       		.byte	0x50
+ 606 01e1 02       		.uleb128 0x2
+ 607 01e2 08       		.byte	0x8
+ 608 01e3 64       		.byte	0x64
+ 609 01e4 00       		.byte	0
+ 610 01e5 09       		.uleb128 0x9
+ 611 01e6 28000000 		.4byte	.LVL24
+ 612 01ea 28040000 		.4byte	0x428
+ 613 01ee F9010000 		.4byte	0x1f9
+ 614 01f2 0A       		.uleb128 0xa
+ 615 01f3 01       		.uleb128 0x1
+ 616 01f4 50       		.byte	0x50
+ 617 01f5 02       		.uleb128 0x2
+ 618 01f6 08       		.byte	0x8
+ 619 01f7 64       		.byte	0x64
+ 620 01f8 00       		.byte	0
+ 621 01f9 09       		.uleb128 0x9
+ 622 01fa 30000000 		.4byte	.LVL25
+ 623 01fe 33040000 		.4byte	0x433
+ 624 0202 11020000 		.4byte	0x211
+ 625 0206 0A       		.uleb128 0xa
+ 626 0207 01       		.uleb128 0x1
+ 627 0208 50       		.byte	0x50
+ 628 0209 01       		.uleb128 0x1
+ 629 020a 30       		.byte	0x30
+ 630 020b 0A       		.uleb128 0xa
+ 631 020c 01       		.uleb128 0x1
+ 632 020d 51       		.byte	0x51
+ 633 020e 01       		.uleb128 0x1
+ 634 020f 31       		.byte	0x31
+ 635 0210 00       		.byte	0
+ 636 0211 08       		.uleb128 0x8
+ 637 0212 34000000 		.4byte	.LVL26
+ 638 0216 3F040000 		.4byte	0x43f
+ 639 021a 08       		.uleb128 0x8
+ 640 021b 3C000000 		.4byte	.LVL27
+ 641 021f 4B040000 		.4byte	0x44b
+ 642 0223 08       		.uleb128 0x8
+ 643 0224 40000000 		.4byte	.LVL28
+ 644 0228 56040000 		.4byte	0x456
+ 645 022c 08       		.uleb128 0x8
+ 646 022d 44000000 		.4byte	.LVL29
+ 647 0231 61040000 		.4byte	0x461
+ 648 0235 09       		.uleb128 0x9
+ 649 0236 4A000000 		.4byte	.LVL30
+ 650 023a 6C040000 		.4byte	0x46c
+ 651 023e 4C020000 		.4byte	0x24c
+ 652 0242 0A       		.uleb128 0xa
+ 653 0243 01       		.uleb128 0x1
+ 654 0244 50       		.byte	0x50
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 15
+
+
+ 655 0245 05       		.uleb128 0x5
+ 656 0246 03       		.byte	0x3
+ 657 0247 00000000 		.4byte	isr_TC_handler
+ 658 024b 00       		.byte	0
+ 659 024c 09       		.uleb128 0x9
+ 660 024d 60000000 		.4byte	.LVL31
+ 661 0251 77040000 		.4byte	0x477
+ 662 0255 69020000 		.4byte	0x269
+ 663 0259 0A       		.uleb128 0xa
+ 664 025a 01       		.uleb128 0x1
+ 665 025b 50       		.byte	0x50
+ 666 025c 02       		.uleb128 0x2
+ 667 025d 75       		.byte	0x75
+ 668 025e 00       		.sleb128 0
+ 669 025f 0A       		.uleb128 0xa
+ 670 0260 01       		.uleb128 0x1
+ 671 0261 51       		.byte	0x51
+ 672 0262 05       		.uleb128 0x5
+ 673 0263 03       		.byte	0x3
+ 674 0264 00000000 		.4byte	.LC0
+ 675 0268 00       		.byte	0
+ 676 0269 09       		.uleb128 0x9
+ 677 026a 66000000 		.4byte	.LVL32
+ 678 026e 25010000 		.4byte	0x125
+ 679 0272 7D020000 		.4byte	0x27d
+ 680 0276 0A       		.uleb128 0xa
+ 681 0277 01       		.uleb128 0x1
+ 682 0278 50       		.byte	0x50
+ 683 0279 02       		.uleb128 0x2
+ 684 027a 75       		.byte	0x75
+ 685 027b 00       		.sleb128 0
+ 686 027c 00       		.byte	0
+ 687 027d 09       		.uleb128 0x9
+ 688 027e 72000000 		.4byte	.LVL33
+ 689 0282 77040000 		.4byte	0x477
+ 690 0286 9A020000 		.4byte	0x29a
+ 691 028a 0A       		.uleb128 0xa
+ 692 028b 01       		.uleb128 0x1
+ 693 028c 50       		.byte	0x50
+ 694 028d 02       		.uleb128 0x2
+ 695 028e 75       		.byte	0x75
+ 696 028f 00       		.sleb128 0
+ 697 0290 0A       		.uleb128 0xa
+ 698 0291 01       		.uleb128 0x1
+ 699 0292 51       		.byte	0x51
+ 700 0293 05       		.uleb128 0x5
+ 701 0294 03       		.byte	0x3
+ 702 0295 10000000 		.4byte	.LC1
+ 703 0299 00       		.byte	0
+ 704 029a 0D       		.uleb128 0xd
+ 705 029b 78000000 		.4byte	.LVL34
+ 706 029f 25010000 		.4byte	0x125
+ 707 02a3 0A       		.uleb128 0xa
+ 708 02a4 01       		.uleb128 0x1
+ 709 02a5 50       		.byte	0x50
+ 710 02a6 02       		.uleb128 0x2
+ 711 02a7 75       		.byte	0x75
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 16
+
+
+ 712 02a8 00       		.sleb128 0
+ 713 02a9 00       		.byte	0
+ 714 02aa 00       		.byte	0
+ 715 02ab 0B       		.uleb128 0xb
+ 716 02ac 1C020000 		.4byte	.LASF21
+ 717 02b0 01       		.byte	0x1
+ 718 02b1 71       		.byte	0x71
+ 719 02b2 00000000 		.4byte	.LFB67
+ 720 02b6 14000000 		.4byte	.LFE67-.LFB67
+ 721 02ba 01       		.uleb128 0x1
+ 722 02bb 9C       		.byte	0x9c
+ 723 02bc E7020000 		.4byte	0x2e7
+ 724 02c0 0C       		.uleb128 0xc
+ 725 02c1 6300     		.ascii	"c\000"
+ 726 02c3 01       		.byte	0x1
+ 727 02c4 71       		.byte	0x71
+ 728 02c5 8A000000 		.4byte	0x8a
+ 729 02c9 1E000000 		.4byte	.LLST1
+ 730 02cd 08       		.uleb128 0x8
+ 731 02ce 08000000 		.4byte	.LVL37
+ 732 02d2 C5030000 		.4byte	0x3c5
+ 733 02d6 0D       		.uleb128 0xd
+ 734 02d7 12000000 		.4byte	.LVL38
+ 735 02db 82040000 		.4byte	0x482
+ 736 02df 0A       		.uleb128 0xa
+ 737 02e0 01       		.uleb128 0x1
+ 738 02e1 50       		.byte	0x50
+ 739 02e2 02       		.uleb128 0x2
+ 740 02e3 74       		.byte	0x74
+ 741 02e4 00       		.sleb128 0
+ 742 02e5 00       		.byte	0
+ 743 02e6 00       		.byte	0
+ 744 02e7 0F       		.uleb128 0xf
+ 745 02e8 F9010000 		.4byte	.LASF22
+ 746 02ec 05       		.byte	0x5
+ 747 02ed 1207     		.2byte	0x712
+ 748 02ef F3020000 		.4byte	0x2f3
+ 749 02f3 10       		.uleb128 0x10
+ 750 02f4 91000000 		.4byte	0x91
+ 751 02f8 11       		.uleb128 0x11
+ 752 02f9 636900   		.ascii	"ci\000"
+ 753 02fc 01       		.byte	0x1
+ 754 02fd 14       		.byte	0x14
+ 755 02fe C2000000 		.4byte	0xc2
+ 756 0302 05       		.uleb128 0x5
+ 757 0303 03       		.byte	0x3
+ 758 0304 00000000 		.4byte	ci
+ 759 0308 11       		.uleb128 0x11
+ 760 0309 636A00   		.ascii	"cj\000"
+ 761 030c 01       		.byte	0x1
+ 762 030d 15       		.byte	0x15
+ 763 030e C2000000 		.4byte	0xc2
+ 764 0312 05       		.uleb128 0x5
+ 765 0313 03       		.byte	0x3
+ 766 0314 00000000 		.4byte	cj
+ 767 0318 12       		.uleb128 0x12
+ 768 0319 14020000 		.4byte	.LASF23
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 17
+
+
+ 769 031d 01       		.byte	0x1
+ 770 031e 17       		.byte	0x17
+ 771 031f AA000000 		.4byte	0xaa
+ 772 0323 05       		.uleb128 0x5
+ 773 0324 03       		.byte	0x3
+ 774 0325 00000000 		.4byte	counter
+ 775 0329 12       		.uleb128 0x12
+ 776 032a 1B030000 		.4byte	.LASF24
+ 777 032e 01       		.byte	0x1
+ 778 032f 19       		.byte	0x19
+ 779 0330 B6000000 		.4byte	0xb6
+ 780 0334 05       		.uleb128 0x5
+ 781 0335 03       		.byte	0x3
+ 782 0336 00000000 		.4byte	speedi
+ 783 033a 12       		.uleb128 0x12
+ 784 033b 22030000 		.4byte	.LASF25
+ 785 033f 01       		.byte	0x1
+ 786 0340 1A       		.byte	0x1a
+ 787 0341 B6000000 		.4byte	0xb6
+ 788 0345 05       		.uleb128 0x5
+ 789 0346 03       		.byte	0x3
+ 790 0347 00000000 		.4byte	speedj
+ 791 034b 12       		.uleb128 0x12
+ 792 034c 06020000 		.4byte	.LASF26
+ 793 0350 01       		.byte	0x1
+ 794 0351 1B       		.byte	0x1b
+ 795 0352 AA000000 		.4byte	0xaa
+ 796 0356 05       		.uleb128 0x5
+ 797 0357 03       		.byte	0x3
+ 798 0358 00000000 		.4byte	ready_to_send
+ 799 035c 13       		.uleb128 0x13
+ 800 035d 8A000000 		.4byte	0x8a
+ 801 0361 6C030000 		.4byte	0x36c
+ 802 0365 14       		.uleb128 0x14
+ 803 0366 7D000000 		.4byte	0x7d
+ 804 036a 3F       		.byte	0x3f
+ 805 036b 00       		.byte	0
+ 806 036c 12       		.uleb128 0x12
+ 807 036d D3000000 		.4byte	.LASF27
+ 808 0371 01       		.byte	0x1
+ 809 0372 1C       		.byte	0x1c
+ 810 0373 5C030000 		.4byte	0x35c
+ 811 0377 05       		.uleb128 0x5
+ 812 0378 03       		.byte	0x3
+ 813 0379 00000000 		.4byte	bufferi
+ 814 037d 12       		.uleb128 0x12
+ 815 037e DB000000 		.4byte	.LASF28
+ 816 0382 01       		.byte	0x1
+ 817 0383 1D       		.byte	0x1d
+ 818 0384 5C030000 		.4byte	0x35c
+ 819 0388 05       		.uleb128 0x5
+ 820 0389 03       		.byte	0x3
+ 821 038a 00000000 		.4byte	bufferj
+ 822 038e 15       		.uleb128 0x15
+ 823 038f 9C000000 		.4byte	.LASF29
+ 824 0393 9C000000 		.4byte	.LASF29
+ 825 0397 06       		.byte	0x6
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 18
+
+
+ 826 0398 4E       		.byte	0x4e
+ 827 0399 15       		.uleb128 0x15
+ 828 039a 3A020000 		.4byte	.LASF30
+ 829 039e 3A020000 		.4byte	.LASF30
+ 830 03a2 07       		.byte	0x7
+ 831 03a3 4E       		.byte	0x4e
+ 832 03a4 15       		.uleb128 0x15
+ 833 03a5 6C020000 		.4byte	.LASF31
+ 834 03a9 6C020000 		.4byte	.LASF31
+ 835 03ad 06       		.byte	0x6
+ 836 03ae 4F       		.byte	0x4f
+ 837 03af 15       		.uleb128 0x15
+ 838 03b0 77030000 		.4byte	.LASF32
+ 839 03b4 77030000 		.4byte	.LASF32
+ 840 03b8 07       		.byte	0x7
+ 841 03b9 4F       		.byte	0x4f
+ 842 03ba 15       		.uleb128 0x15
+ 843 03bb 14000000 		.4byte	.LASF33
+ 844 03bf 14000000 		.4byte	.LASF33
+ 845 03c3 08       		.byte	0x8
+ 846 03c4 5E       		.byte	0x5e
+ 847 03c5 15       		.uleb128 0x15
+ 848 03c6 39030000 		.4byte	.LASF34
+ 849 03ca 39030000 		.4byte	.LASF34
+ 850 03ce 09       		.byte	0x9
+ 851 03cf 28       		.byte	0x28
+ 852 03d0 15       		.uleb128 0x15
+ 853 03d1 8E020000 		.4byte	.LASF35
+ 854 03d5 8E020000 		.4byte	.LASF35
+ 855 03d9 0A       		.byte	0xa
+ 856 03da 21       		.byte	0x21
+ 857 03db 15       		.uleb128 0x15
+ 858 03dc 50020000 		.4byte	.LASF36
+ 859 03e0 50020000 		.4byte	.LASF36
+ 860 03e4 09       		.byte	0x9
+ 861 03e5 23       		.byte	0x23
+ 862 03e6 15       		.uleb128 0x15
+ 863 03e7 E2020000 		.4byte	.LASF37
+ 864 03eb E2020000 		.4byte	.LASF37
+ 865 03ef 0B       		.byte	0xb
+ 866 03f0 27       		.byte	0x27
+ 867 03f1 15       		.uleb128 0x15
+ 868 03f2 ED010000 		.4byte	.LASF38
+ 869 03f6 ED010000 		.4byte	.LASF38
+ 870 03fa 0C       		.byte	0xc
+ 871 03fb 92       		.byte	0x92
+ 872 03fc 15       		.uleb128 0x15
+ 873 03fd 2E020000 		.4byte	.LASF39
+ 874 0401 2E020000 		.4byte	.LASF39
+ 875 0405 0D       		.byte	0xd
+ 876 0406 92       		.byte	0x92
+ 877 0407 15       		.uleb128 0x15
+ 878 0408 B2000000 		.4byte	.LASF40
+ 879 040c B2000000 		.4byte	.LASF40
+ 880 0410 0D       		.byte	0xd
+ 881 0411 C3       		.byte	0xc3
+ 882 0412 15       		.uleb128 0x15
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 19
+
+
+ 883 0413 B5020000 		.4byte	.LASF41
+ 884 0417 B5020000 		.4byte	.LASF41
+ 885 041b 0C       		.byte	0xc
+ 886 041c C3       		.byte	0xc3
+ 887 041d 15       		.uleb128 0x15
+ 888 041e A3030000 		.4byte	.LASF42
+ 889 0422 A3030000 		.4byte	.LASF42
+ 890 0426 0C       		.byte	0xc
+ 891 0427 BE       		.byte	0xbe
+ 892 0428 15       		.uleb128 0x15
+ 893 0429 54000000 		.4byte	.LASF43
+ 894 042d 54000000 		.4byte	.LASF43
+ 895 0431 0D       		.byte	0xd
+ 896 0432 BE       		.byte	0xbe
+ 897 0433 16       		.uleb128 0x16
+ 898 0434 29030000 		.4byte	.LASF44
+ 899 0438 29030000 		.4byte	.LASF44
+ 900 043c 0E       		.byte	0xe
+ 901 043d 2A01     		.2byte	0x12a
+ 902 043f 16       		.uleb128 0x16
+ 903 0440 2F000000 		.4byte	.LASF45
+ 904 0444 2F000000 		.4byte	.LASF45
+ 905 0448 0E       		.byte	0xe
+ 906 0449 2D01     		.2byte	0x12d
+ 907 044b 15       		.uleb128 0x15
+ 908 044c F2020000 		.4byte	.LASF46
+ 909 0450 F2020000 		.4byte	.LASF46
+ 910 0454 06       		.byte	0x6
+ 911 0455 48       		.byte	0x48
+ 912 0456 15       		.uleb128 0x15
+ 913 0457 4E030000 		.4byte	.LASF47
+ 914 045b 4E030000 		.4byte	.LASF47
+ 915 045f 07       		.byte	0x7
+ 916 0460 48       		.byte	0x48
+ 917 0461 15       		.uleb128 0x15
+ 918 0462 06000000 		.4byte	.LASF48
+ 919 0466 06000000 		.4byte	.LASF48
+ 920 046a 08       		.byte	0x8
+ 921 046b 5A       		.byte	0x5a
+ 922 046c 15       		.uleb128 0x15
+ 923 046d 8D030000 		.4byte	.LASF49
+ 924 0471 8D030000 		.4byte	.LASF49
+ 925 0475 0F       		.byte	0xf
+ 926 0476 18       		.byte	0x18
+ 927 0477 15       		.uleb128 0x15
+ 928 0478 9B030000 		.4byte	.LASF50
+ 929 047c 9B030000 		.4byte	.LASF50
+ 930 0480 10       		.byte	0x10
+ 931 0481 E7       		.byte	0xe7
+ 932 0482 15       		.uleb128 0x15
+ 933 0483 03030000 		.4byte	.LASF51
+ 934 0487 03030000 		.4byte	.LASF51
+ 935 048b 09       		.byte	0x9
+ 936 048c 25       		.byte	0x25
+ 937 048d 00       		.byte	0
+ 938              		.section	.debug_abbrev,"",%progbits
+ 939              	.Ldebug_abbrev0:
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 20
+
+
+ 940 0000 01       		.uleb128 0x1
+ 941 0001 11       		.uleb128 0x11
+ 942 0002 01       		.byte	0x1
+ 943 0003 25       		.uleb128 0x25
+ 944 0004 0E       		.uleb128 0xe
+ 945 0005 13       		.uleb128 0x13
+ 946 0006 0B       		.uleb128 0xb
+ 947 0007 03       		.uleb128 0x3
+ 948 0008 0E       		.uleb128 0xe
+ 949 0009 1B       		.uleb128 0x1b
+ 950 000a 0E       		.uleb128 0xe
+ 951 000b 55       		.uleb128 0x55
+ 952 000c 17       		.uleb128 0x17
+ 953 000d 11       		.uleb128 0x11
+ 954 000e 01       		.uleb128 0x1
+ 955 000f 10       		.uleb128 0x10
+ 956 0010 17       		.uleb128 0x17
+ 957 0011 00       		.byte	0
+ 958 0012 00       		.byte	0
+ 959 0013 02       		.uleb128 0x2
+ 960 0014 24       		.uleb128 0x24
+ 961 0015 00       		.byte	0
+ 962 0016 0B       		.uleb128 0xb
+ 963 0017 0B       		.uleb128 0xb
+ 964 0018 3E       		.uleb128 0x3e
+ 965 0019 0B       		.uleb128 0xb
+ 966 001a 03       		.uleb128 0x3
+ 967 001b 0E       		.uleb128 0xe
+ 968 001c 00       		.byte	0
+ 969 001d 00       		.byte	0
+ 970 001e 03       		.uleb128 0x3
+ 971 001f 16       		.uleb128 0x16
+ 972 0020 00       		.byte	0
+ 973 0021 03       		.uleb128 0x3
+ 974 0022 0E       		.uleb128 0xe
+ 975 0023 3A       		.uleb128 0x3a
+ 976 0024 0B       		.uleb128 0xb
+ 977 0025 3B       		.uleb128 0x3b
+ 978 0026 0B       		.uleb128 0xb
+ 979 0027 49       		.uleb128 0x49
+ 980 0028 13       		.uleb128 0x13
+ 981 0029 00       		.byte	0
+ 982 002a 00       		.byte	0
+ 983 002b 04       		.uleb128 0x4
+ 984 002c 24       		.uleb128 0x24
+ 985 002d 00       		.byte	0
+ 986 002e 0B       		.uleb128 0xb
+ 987 002f 0B       		.uleb128 0xb
+ 988 0030 3E       		.uleb128 0x3e
+ 989 0031 0B       		.uleb128 0xb
+ 990 0032 03       		.uleb128 0x3
+ 991 0033 08       		.uleb128 0x8
+ 992 0034 00       		.byte	0
+ 993 0035 00       		.byte	0
+ 994 0036 05       		.uleb128 0x5
+ 995 0037 0F       		.uleb128 0xf
+ 996 0038 00       		.byte	0
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 21
+
+
+ 997 0039 0B       		.uleb128 0xb
+ 998 003a 0B       		.uleb128 0xb
+ 999 003b 49       		.uleb128 0x49
+ 1000 003c 13       		.uleb128 0x13
+ 1001 003d 00       		.byte	0
+ 1002 003e 00       		.byte	0
+ 1003 003f 06       		.uleb128 0x6
+ 1004 0040 16       		.uleb128 0x16
+ 1005 0041 00       		.byte	0
+ 1006 0042 03       		.uleb128 0x3
+ 1007 0043 0E       		.uleb128 0xe
+ 1008 0044 3A       		.uleb128 0x3a
+ 1009 0045 0B       		.uleb128 0xb
+ 1010 0046 3B       		.uleb128 0x3b
+ 1011 0047 05       		.uleb128 0x5
+ 1012 0048 49       		.uleb128 0x49
+ 1013 0049 13       		.uleb128 0x13
+ 1014 004a 00       		.byte	0
+ 1015 004b 00       		.byte	0
+ 1016 004c 07       		.uleb128 0x7
+ 1017 004d 2E       		.uleb128 0x2e
+ 1018 004e 01       		.byte	0x1
+ 1019 004f 3F       		.uleb128 0x3f
+ 1020 0050 19       		.uleb128 0x19
+ 1021 0051 03       		.uleb128 0x3
+ 1022 0052 0E       		.uleb128 0xe
+ 1023 0053 3A       		.uleb128 0x3a
+ 1024 0054 0B       		.uleb128 0xb
+ 1025 0055 3B       		.uleb128 0x3b
+ 1026 0056 0B       		.uleb128 0xb
+ 1027 0057 27       		.uleb128 0x27
+ 1028 0058 19       		.uleb128 0x19
+ 1029 0059 11       		.uleb128 0x11
+ 1030 005a 01       		.uleb128 0x1
+ 1031 005b 12       		.uleb128 0x12
+ 1032 005c 06       		.uleb128 0x6
+ 1033 005d 40       		.uleb128 0x40
+ 1034 005e 18       		.uleb128 0x18
+ 1035 005f 9642     		.uleb128 0x2116
+ 1036 0061 19       		.uleb128 0x19
+ 1037 0062 01       		.uleb128 0x1
+ 1038 0063 13       		.uleb128 0x13
+ 1039 0064 00       		.byte	0
+ 1040 0065 00       		.byte	0
+ 1041 0066 08       		.uleb128 0x8
+ 1042 0067 898201   		.uleb128 0x4109
+ 1043 006a 00       		.byte	0
+ 1044 006b 11       		.uleb128 0x11
+ 1045 006c 01       		.uleb128 0x1
+ 1046 006d 31       		.uleb128 0x31
+ 1047 006e 13       		.uleb128 0x13
+ 1048 006f 00       		.byte	0
+ 1049 0070 00       		.byte	0
+ 1050 0071 09       		.uleb128 0x9
+ 1051 0072 898201   		.uleb128 0x4109
+ 1052 0075 01       		.byte	0x1
+ 1053 0076 11       		.uleb128 0x11
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 22
+
+
+ 1054 0077 01       		.uleb128 0x1
+ 1055 0078 31       		.uleb128 0x31
+ 1056 0079 13       		.uleb128 0x13
+ 1057 007a 01       		.uleb128 0x1
+ 1058 007b 13       		.uleb128 0x13
+ 1059 007c 00       		.byte	0
+ 1060 007d 00       		.byte	0
+ 1061 007e 0A       		.uleb128 0xa
+ 1062 007f 8A8201   		.uleb128 0x410a
+ 1063 0082 00       		.byte	0
+ 1064 0083 02       		.uleb128 0x2
+ 1065 0084 18       		.uleb128 0x18
+ 1066 0085 9142     		.uleb128 0x2111
+ 1067 0087 18       		.uleb128 0x18
+ 1068 0088 00       		.byte	0
+ 1069 0089 00       		.byte	0
+ 1070 008a 0B       		.uleb128 0xb
+ 1071 008b 2E       		.uleb128 0x2e
+ 1072 008c 01       		.byte	0x1
+ 1073 008d 3F       		.uleb128 0x3f
+ 1074 008e 19       		.uleb128 0x19
+ 1075 008f 03       		.uleb128 0x3
+ 1076 0090 0E       		.uleb128 0xe
+ 1077 0091 3A       		.uleb128 0x3a
+ 1078 0092 0B       		.uleb128 0xb
+ 1079 0093 3B       		.uleb128 0x3b
+ 1080 0094 0B       		.uleb128 0xb
+ 1081 0095 27       		.uleb128 0x27
+ 1082 0096 19       		.uleb128 0x19
+ 1083 0097 11       		.uleb128 0x11
+ 1084 0098 01       		.uleb128 0x1
+ 1085 0099 12       		.uleb128 0x12
+ 1086 009a 06       		.uleb128 0x6
+ 1087 009b 40       		.uleb128 0x40
+ 1088 009c 18       		.uleb128 0x18
+ 1089 009d 9742     		.uleb128 0x2117
+ 1090 009f 19       		.uleb128 0x19
+ 1091 00a0 01       		.uleb128 0x1
+ 1092 00a1 13       		.uleb128 0x13
+ 1093 00a2 00       		.byte	0
+ 1094 00a3 00       		.byte	0
+ 1095 00a4 0C       		.uleb128 0xc
+ 1096 00a5 05       		.uleb128 0x5
+ 1097 00a6 00       		.byte	0
+ 1098 00a7 03       		.uleb128 0x3
+ 1099 00a8 08       		.uleb128 0x8
+ 1100 00a9 3A       		.uleb128 0x3a
+ 1101 00aa 0B       		.uleb128 0xb
+ 1102 00ab 3B       		.uleb128 0x3b
+ 1103 00ac 0B       		.uleb128 0xb
+ 1104 00ad 49       		.uleb128 0x49
+ 1105 00ae 13       		.uleb128 0x13
+ 1106 00af 02       		.uleb128 0x2
+ 1107 00b0 17       		.uleb128 0x17
+ 1108 00b1 00       		.byte	0
+ 1109 00b2 00       		.byte	0
+ 1110 00b3 0D       		.uleb128 0xd
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 23
+
+
+ 1111 00b4 898201   		.uleb128 0x4109
+ 1112 00b7 01       		.byte	0x1
+ 1113 00b8 11       		.uleb128 0x11
+ 1114 00b9 01       		.uleb128 0x1
+ 1115 00ba 31       		.uleb128 0x31
+ 1116 00bb 13       		.uleb128 0x13
+ 1117 00bc 00       		.byte	0
+ 1118 00bd 00       		.byte	0
+ 1119 00be 0E       		.uleb128 0xe
+ 1120 00bf 2E       		.uleb128 0x2e
+ 1121 00c0 01       		.byte	0x1
+ 1122 00c1 3F       		.uleb128 0x3f
+ 1123 00c2 19       		.uleb128 0x19
+ 1124 00c3 03       		.uleb128 0x3
+ 1125 00c4 0E       		.uleb128 0xe
+ 1126 00c5 3A       		.uleb128 0x3a
+ 1127 00c6 0B       		.uleb128 0xb
+ 1128 00c7 3B       		.uleb128 0x3b
+ 1129 00c8 0B       		.uleb128 0xb
+ 1130 00c9 27       		.uleb128 0x27
+ 1131 00ca 19       		.uleb128 0x19
+ 1132 00cb 49       		.uleb128 0x49
+ 1133 00cc 13       		.uleb128 0x13
+ 1134 00cd 8701     		.uleb128 0x87
+ 1135 00cf 19       		.uleb128 0x19
+ 1136 00d0 11       		.uleb128 0x11
+ 1137 00d1 01       		.uleb128 0x1
+ 1138 00d2 12       		.uleb128 0x12
+ 1139 00d3 06       		.uleb128 0x6
+ 1140 00d4 40       		.uleb128 0x40
+ 1141 00d5 18       		.uleb128 0x18
+ 1142 00d6 9742     		.uleb128 0x2117
+ 1143 00d8 19       		.uleb128 0x19
+ 1144 00d9 01       		.uleb128 0x1
+ 1145 00da 13       		.uleb128 0x13
+ 1146 00db 00       		.byte	0
+ 1147 00dc 00       		.byte	0
+ 1148 00dd 0F       		.uleb128 0xf
+ 1149 00de 34       		.uleb128 0x34
+ 1150 00df 00       		.byte	0
+ 1151 00e0 03       		.uleb128 0x3
+ 1152 00e1 0E       		.uleb128 0xe
+ 1153 00e2 3A       		.uleb128 0x3a
+ 1154 00e3 0B       		.uleb128 0xb
+ 1155 00e4 3B       		.uleb128 0x3b
+ 1156 00e5 05       		.uleb128 0x5
+ 1157 00e6 49       		.uleb128 0x49
+ 1158 00e7 13       		.uleb128 0x13
+ 1159 00e8 3F       		.uleb128 0x3f
+ 1160 00e9 19       		.uleb128 0x19
+ 1161 00ea 3C       		.uleb128 0x3c
+ 1162 00eb 19       		.uleb128 0x19
+ 1163 00ec 00       		.byte	0
+ 1164 00ed 00       		.byte	0
+ 1165 00ee 10       		.uleb128 0x10
+ 1166 00ef 35       		.uleb128 0x35
+ 1167 00f0 00       		.byte	0
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 24
+
+
+ 1168 00f1 49       		.uleb128 0x49
+ 1169 00f2 13       		.uleb128 0x13
+ 1170 00f3 00       		.byte	0
+ 1171 00f4 00       		.byte	0
+ 1172 00f5 11       		.uleb128 0x11
+ 1173 00f6 34       		.uleb128 0x34
+ 1174 00f7 00       		.byte	0
+ 1175 00f8 03       		.uleb128 0x3
+ 1176 00f9 08       		.uleb128 0x8
+ 1177 00fa 3A       		.uleb128 0x3a
+ 1178 00fb 0B       		.uleb128 0xb
+ 1179 00fc 3B       		.uleb128 0x3b
+ 1180 00fd 0B       		.uleb128 0xb
+ 1181 00fe 49       		.uleb128 0x49
+ 1182 00ff 13       		.uleb128 0x13
+ 1183 0100 3F       		.uleb128 0x3f
+ 1184 0101 19       		.uleb128 0x19
+ 1185 0102 02       		.uleb128 0x2
+ 1186 0103 18       		.uleb128 0x18
+ 1187 0104 00       		.byte	0
+ 1188 0105 00       		.byte	0
+ 1189 0106 12       		.uleb128 0x12
+ 1190 0107 34       		.uleb128 0x34
+ 1191 0108 00       		.byte	0
+ 1192 0109 03       		.uleb128 0x3
+ 1193 010a 0E       		.uleb128 0xe
+ 1194 010b 3A       		.uleb128 0x3a
+ 1195 010c 0B       		.uleb128 0xb
+ 1196 010d 3B       		.uleb128 0x3b
+ 1197 010e 0B       		.uleb128 0xb
+ 1198 010f 49       		.uleb128 0x49
+ 1199 0110 13       		.uleb128 0x13
+ 1200 0111 3F       		.uleb128 0x3f
+ 1201 0112 19       		.uleb128 0x19
+ 1202 0113 02       		.uleb128 0x2
+ 1203 0114 18       		.uleb128 0x18
+ 1204 0115 00       		.byte	0
+ 1205 0116 00       		.byte	0
+ 1206 0117 13       		.uleb128 0x13
+ 1207 0118 01       		.uleb128 0x1
+ 1208 0119 01       		.byte	0x1
+ 1209 011a 49       		.uleb128 0x49
+ 1210 011b 13       		.uleb128 0x13
+ 1211 011c 01       		.uleb128 0x1
+ 1212 011d 13       		.uleb128 0x13
+ 1213 011e 00       		.byte	0
+ 1214 011f 00       		.byte	0
+ 1215 0120 14       		.uleb128 0x14
+ 1216 0121 21       		.uleb128 0x21
+ 1217 0122 00       		.byte	0
+ 1218 0123 49       		.uleb128 0x49
+ 1219 0124 13       		.uleb128 0x13
+ 1220 0125 2F       		.uleb128 0x2f
+ 1221 0126 0B       		.uleb128 0xb
+ 1222 0127 00       		.byte	0
+ 1223 0128 00       		.byte	0
+ 1224 0129 15       		.uleb128 0x15
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 25
+
+
+ 1225 012a 2E       		.uleb128 0x2e
+ 1226 012b 00       		.byte	0
+ 1227 012c 3F       		.uleb128 0x3f
+ 1228 012d 19       		.uleb128 0x19
+ 1229 012e 3C       		.uleb128 0x3c
+ 1230 012f 19       		.uleb128 0x19
+ 1231 0130 6E       		.uleb128 0x6e
+ 1232 0131 0E       		.uleb128 0xe
+ 1233 0132 03       		.uleb128 0x3
+ 1234 0133 0E       		.uleb128 0xe
+ 1235 0134 3A       		.uleb128 0x3a
+ 1236 0135 0B       		.uleb128 0xb
+ 1237 0136 3B       		.uleb128 0x3b
+ 1238 0137 0B       		.uleb128 0xb
+ 1239 0138 00       		.byte	0
+ 1240 0139 00       		.byte	0
+ 1241 013a 16       		.uleb128 0x16
+ 1242 013b 2E       		.uleb128 0x2e
+ 1243 013c 00       		.byte	0
+ 1244 013d 3F       		.uleb128 0x3f
+ 1245 013e 19       		.uleb128 0x19
+ 1246 013f 3C       		.uleb128 0x3c
+ 1247 0140 19       		.uleb128 0x19
+ 1248 0141 6E       		.uleb128 0x6e
+ 1249 0142 0E       		.uleb128 0xe
+ 1250 0143 03       		.uleb128 0x3
+ 1251 0144 0E       		.uleb128 0xe
+ 1252 0145 3A       		.uleb128 0x3a
+ 1253 0146 0B       		.uleb128 0xb
+ 1254 0147 3B       		.uleb128 0x3b
+ 1255 0148 05       		.uleb128 0x5
+ 1256 0149 00       		.byte	0
+ 1257 014a 00       		.byte	0
+ 1258 014b 00       		.byte	0
+ 1259              		.section	.debug_loc,"",%progbits
+ 1260              	.Ldebug_loc0:
+ 1261              	.LLST0:
+ 1262 0000 00000000 		.4byte	.LVL13
+ 1263 0004 04000000 		.4byte	.LVL14
+ 1264 0008 0100     		.2byte	0x1
+ 1265 000a 50       		.byte	0x50
+ 1266 000b 04000000 		.4byte	.LVL14
+ 1267 000f 28000000 		.4byte	.LFE66
+ 1268 0013 0100     		.2byte	0x1
+ 1269 0015 54       		.byte	0x54
+ 1270 0016 00000000 		.4byte	0
+ 1271 001a 00000000 		.4byte	0
+ 1272              	.LLST1:
+ 1273 001e 00000000 		.4byte	.LVL35
+ 1274 0022 04000000 		.4byte	.LVL36
+ 1275 0026 0100     		.2byte	0x1
+ 1276 0028 50       		.byte	0x50
+ 1277 0029 04000000 		.4byte	.LVL36
+ 1278 002d 14000000 		.4byte	.LFE67
+ 1279 0031 0400     		.2byte	0x4
+ 1280 0033 F3       		.byte	0xf3
+ 1281 0034 01       		.uleb128 0x1
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 26
+
+
+ 1282 0035 50       		.byte	0x50
+ 1283 0036 9F       		.byte	0x9f
+ 1284 0037 00000000 		.4byte	0
+ 1285 003b 00000000 		.4byte	0
+ 1286              		.section	.debug_aranges,"",%progbits
+ 1287 0000 34000000 		.4byte	0x34
+ 1288 0004 0200     		.2byte	0x2
+ 1289 0006 00000000 		.4byte	.Ldebug_info0
+ 1290 000a 04       		.byte	0x4
+ 1291 000b 00       		.byte	0
+ 1292 000c 0000     		.2byte	0
+ 1293 000e 0000     		.2byte	0
+ 1294 0010 00000000 		.4byte	.LFB64
+ 1295 0014 94000000 		.4byte	.LFE64-.LFB64
+ 1296 0018 00000000 		.4byte	.LFB66
+ 1297 001c 28000000 		.4byte	.LFE66-.LFB66
+ 1298 0020 00000000 		.4byte	.LFB65
+ 1299 0024 98000000 		.4byte	.LFE65-.LFB65
+ 1300 0028 00000000 		.4byte	.LFB67
+ 1301 002c 14000000 		.4byte	.LFE67-.LFB67
+ 1302 0030 00000000 		.4byte	0
+ 1303 0034 00000000 		.4byte	0
+ 1304              		.section	.debug_ranges,"",%progbits
+ 1305              	.Ldebug_ranges0:
+ 1306 0000 00000000 		.4byte	.LFB64
+ 1307 0004 94000000 		.4byte	.LFE64
+ 1308 0008 00000000 		.4byte	.LFB66
+ 1309 000c 28000000 		.4byte	.LFE66
+ 1310 0010 00000000 		.4byte	.LFB65
+ 1311 0014 98000000 		.4byte	.LFE65
+ 1312 0018 00000000 		.4byte	.LFB67
+ 1313 001c 14000000 		.4byte	.LFE67
+ 1314 0020 00000000 		.4byte	0
+ 1315 0024 00000000 		.4byte	0
+ 1316              		.section	.debug_line,"",%progbits
+ 1317              	.Ldebug_line0:
+ 1318 0000 C1020000 		.section	.debug_str,"MS",%progbits,1
+ 1318      02004A02 
+ 1318      00000201 
+ 1318      FB0E0D00 
+ 1318      01010101 
+ 1319              	.LASF18:
+ 1320 0000 696E7433 		.ascii	"int32\000"
+ 1320      3200
+ 1321              	.LASF48:
+ 1322 0006 54696D65 		.ascii	"Timer_1_Start\000"
+ 1322      725F315F 
+ 1322      53746172 
+ 1322      7400
+ 1323              	.LASF33:
+ 1324 0014 54696D65 		.ascii	"Timer_1_ReadStatusRegister\000"
+ 1324      725F315F 
+ 1324      52656164 
+ 1324      53746174 
+ 1324      75735265 
+ 1325              	.LASF45:
+ 1326 002f 55534255 		.ascii	"USBUART_1_GetConfiguration\000"
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 27
+
+
+ 1326      4152545F 
+ 1326      315F4765 
+ 1326      74436F6E 
+ 1326      66696775 
+ 1327              	.LASF12:
+ 1328 004a 5F5F696E 		.ascii	"__int32_t\000"
+ 1328      7433325F 
+ 1328      7400
+ 1329              	.LASF43:
+ 1330 0054 50574D5F 		.ascii	"PWM_2_WritePeriod\000"
+ 1330      325F5772 
+ 1330      69746550 
+ 1330      6572696F 
+ 1330      6400
+ 1331              	.LASF20:
+ 1332 0066 75736250 		.ascii	"usbPutString\000"
+ 1332      75745374 
+ 1332      72696E67 
+ 1332      00
+ 1333              	.LASF4:
+ 1334 0073 6C6F6E67 		.ascii	"long int\000"
+ 1334      20696E74 
+ 1334      00
+ 1335              	.LASF3:
+ 1336 007c 73686F72 		.ascii	"short unsigned int\000"
+ 1336      7420756E 
+ 1336      7369676E 
+ 1336      65642069 
+ 1336      6E7400
+ 1337              	.LASF8:
+ 1338 008f 756E7369 		.ascii	"unsigned int\000"
+ 1338      676E6564 
+ 1338      20696E74 
+ 1338      00
+ 1339              	.LASF29:
+ 1340 009c 51756164 		.ascii	"QuadDec_M1_GetCounter\000"
+ 1340      4465635F 
+ 1340      4D315F47 
+ 1340      6574436F 
+ 1340      756E7465 
+ 1341              	.LASF40:
+ 1342 00b2 50574D5F 		.ascii	"PWM_2_WriteCompare\000"
+ 1342      325F5772 
+ 1342      69746543 
+ 1342      6F6D7061 
+ 1342      726500
+ 1343              	.LASF13:
+ 1344 00c5 696E7433 		.ascii	"int32_t\000"
+ 1344      325F7400 
+ 1345              	.LASF15:
+ 1346 00cd 666C6F61 		.ascii	"float\000"
+ 1346      7400
+ 1347              	.LASF27:
+ 1348 00d3 62756666 		.ascii	"bufferi\000"
+ 1348      65726900 
+ 1349              	.LASF28:
+ 1350 00db 62756666 		.ascii	"bufferj\000"
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 28
+
+
+ 1350      65726A00 
+ 1351              	.LASF1:
+ 1352 00e3 756E7369 		.ascii	"unsigned char\000"
+ 1352      676E6564 
+ 1352      20636861 
+ 1352      7200
+ 1353              	.LASF52:
+ 1354 00f1 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 1354      43313120 
+ 1354      352E342E 
+ 1354      31203230 
+ 1354      31363036 
+ 1355 0124 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m3 -mthumb -g -O"
+ 1355      20726576 
+ 1355      6973696F 
+ 1355      6E203233 
+ 1355      37373135 
+ 1356 0157 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1356      66756E63 
+ 1356      74696F6E 
+ 1356      2D736563 
+ 1356      74696F6E 
+ 1357              	.LASF54:
+ 1358 017f 433A5C55 		.ascii	"C:\\Users\\Caleb Wong\\Documents\\COMPSYS 301\\HWta"
+ 1358      73657273 
+ 1358      5C43616C 
+ 1358      65622057 
+ 1358      6F6E675C 
+ 1359 01ad 736B5C48 		.ascii	"sk\\Hardware_task\\hwTask2.cydsn\000"
+ 1359      61726477 
+ 1359      6172655F 
+ 1359      7461736B 
+ 1359      5C687754 
+ 1360              	.LASF5:
+ 1361 01cc 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1361      20756E73 
+ 1361      69676E65 
+ 1361      6420696E 
+ 1361      7400
+ 1362              	.LASF19:
+ 1363 01de 6973725F 		.ascii	"isr_TC_handler\000"
+ 1363      54435F68 
+ 1363      616E646C 
+ 1363      657200
+ 1364              	.LASF38:
+ 1365 01ed 50574D5F 		.ascii	"PWM_1_Start\000"
+ 1365      315F5374 
+ 1365      61727400 
+ 1366              	.LASF22:
+ 1367 01f9 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 1367      52784275 
+ 1367      66666572 
+ 1367      00
+ 1368              	.LASF26:
+ 1369 0206 72656164 		.ascii	"ready_to_send\000"
+ 1369      795F746F 
+ 1369      5F73656E 
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 29
+
+
+ 1369      6400
+ 1370              	.LASF23:
+ 1371 0214 636F756E 		.ascii	"counter\000"
+ 1371      74657200 
+ 1372              	.LASF21:
+ 1373 021c 75736250 		.ascii	"usbPutChar\000"
+ 1373      75744368 
+ 1373      617200
+ 1374              	.LASF14:
+ 1375 0227 646F7562 		.ascii	"double\000"
+ 1375      6C6500
+ 1376              	.LASF39:
+ 1377 022e 50574D5F 		.ascii	"PWM_2_Start\000"
+ 1377      325F5374 
+ 1377      61727400 
+ 1378              	.LASF30:
+ 1379 023a 51756164 		.ascii	"QuadDec_M2_GetCounter\000"
+ 1379      4465635F 
+ 1379      4D325F47 
+ 1379      6574436F 
+ 1379      756E7465 
+ 1380              	.LASF36:
+ 1381 0250 55534255 		.ascii	"USBUART_1_PutData\000"
+ 1381      4152545F 
+ 1381      315F5075 
+ 1381      74446174 
+ 1381      6100
+ 1382              	.LASF2:
+ 1383 0262 73686F72 		.ascii	"short int\000"
+ 1383      7420696E 
+ 1383      7400
+ 1384              	.LASF31:
+ 1385 026c 51756164 		.ascii	"QuadDec_M1_SetCounter\000"
+ 1385      4465635F 
+ 1385      4D315F53 
+ 1385      6574436F 
+ 1385      756E7465 
+ 1386              	.LASF17:
+ 1387 0282 75696E74 		.ascii	"uint32\000"
+ 1387      333200
+ 1388              	.LASF55:
+ 1389 0289 6D61696E 		.ascii	"main\000"
+ 1389      00
+ 1390              	.LASF35:
+ 1391 028e 7374726C 		.ascii	"strlen\000"
+ 1391      656E00
+ 1392              	.LASF7:
+ 1393 0295 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1393      206C6F6E 
+ 1393      6720756E 
+ 1393      7369676E 
+ 1393      65642069 
+ 1394              	.LASF10:
+ 1395 02ac 73697A65 		.ascii	"sizetype\000"
+ 1395      74797065 
+ 1395      00
+ 1396              	.LASF41:
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 30
+
+
+ 1397 02b5 50574D5F 		.ascii	"PWM_1_WriteCompare\000"
+ 1397      315F5772 
+ 1397      69746543 
+ 1397      6F6D7061 
+ 1397      726500
+ 1398              	.LASF6:
+ 1399 02c8 6C6F6E67 		.ascii	"long long int\000"
+ 1399      206C6F6E 
+ 1399      6720696E 
+ 1399      7400
+ 1400              	.LASF53:
+ 1401 02d6 6D61696E 		.ascii	"main.c\000"
+ 1401      2E6300
+ 1402              	.LASF11:
+ 1403 02dd 63686172 		.ascii	"char\000"
+ 1403      00
+ 1404              	.LASF37:
+ 1405 02e2 436C6F63 		.ascii	"Clock_PWM_Start\000"
+ 1405      6B5F5057 
+ 1405      4D5F5374 
+ 1405      61727400 
+ 1406              	.LASF46:
+ 1407 02f2 51756164 		.ascii	"QuadDec_M1_Start\000"
+ 1407      4465635F 
+ 1407      4D315F53 
+ 1407      74617274 
+ 1407      00
+ 1408              	.LASF51:
+ 1409 0303 55534255 		.ascii	"USBUART_1_PutChar\000"
+ 1409      4152545F 
+ 1409      315F5075 
+ 1409      74436861 
+ 1409      7200
+ 1410              	.LASF16:
+ 1411 0315 75696E74 		.ascii	"uint8\000"
+ 1411      3800
+ 1412              	.LASF24:
+ 1413 031b 73706565 		.ascii	"speedi\000"
+ 1413      646900
+ 1414              	.LASF25:
+ 1415 0322 73706565 		.ascii	"speedj\000"
+ 1415      646A00
+ 1416              	.LASF44:
+ 1417 0329 55534255 		.ascii	"USBUART_1_Start\000"
+ 1417      4152545F 
+ 1417      315F5374 
+ 1417      61727400 
+ 1418              	.LASF34:
+ 1419 0339 55534255 		.ascii	"USBUART_1_CDCIsReady\000"
+ 1419      4152545F 
+ 1419      315F4344 
+ 1419      43497352 
+ 1419      65616479 
+ 1420              	.LASF47:
+ 1421 034e 51756164 		.ascii	"QuadDec_M2_Start\000"
+ 1421      4465635F 
+ 1421      4D325F53 
+ARM GAS  C:\Users\CALEBW~1\AppData\Local\Temp\ccZTHlPy.s 			page 31
+
+
+ 1421      74617274 
+ 1421      00
+ 1422              	.LASF9:
+ 1423 035f 6C6F6E67 		.ascii	"long double\000"
+ 1423      20646F75 
+ 1423      626C6500 
+ 1424              	.LASF0:
+ 1425 036b 7369676E 		.ascii	"signed char\000"
+ 1425      65642063 
+ 1425      68617200 
+ 1426              	.LASF32:
+ 1427 0377 51756164 		.ascii	"QuadDec_M2_SetCounter\000"
+ 1427      4465635F 
+ 1427      4D325F53 
+ 1427      6574436F 
+ 1427      756E7465 
+ 1428              	.LASF49:
+ 1429 038d 6973725F 		.ascii	"isr_1_StartEx\000"
+ 1429      315F5374 
+ 1429      61727445 
+ 1429      7800
+ 1430              	.LASF50:
+ 1431 039b 73707269 		.ascii	"sprintf\000"
+ 1431      6E746600 
+ 1432              	.LASF42:
+ 1433 03a3 50574D5F 		.ascii	"PWM_1_WritePeriod\000"
+ 1433      315F5772 
+ 1433      69746550 
+ 1433      6572696F 
+ 1433      6400
+ 1434              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran
