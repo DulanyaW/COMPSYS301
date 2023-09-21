@@ -33,57 +33,59 @@
 
 
 #include "project.h"
-uint32 counter = 1;
+
+uint32 count = 0;
+uint32 counter = 0;
 bool left_on;
 bool right_on;
 bool middle_on;
 
-CY_ISR(isr_TC_handler){
-    //every 8.33ms
-    if(middle_on){
-        LED_0_Write(1);
-    }else{
-        LED_0_Write(0);
-    }
-    if(right_on){
-        LED_1_Write(1);
-    }else{
-        LED_1_Write(0);
-    }
-    if(left_on){
-        LED_2_Write(1);
-    }else{
-        LED_2_Write(0);
-    }
-    right_on=0;
-    left_on=0;
-    middle_on=0;
+uint8 comp0_sum;
+uint8 comp1_sum;
+uint8 comp2_sum;
+uint8 comp3_sum;
 
-    Timer_1_ReadStatusRegister();
-    
+
+void goStraight(){
+    PWM_2_WriteCompare(80);
+    PWM_1_WriteCompare(20);
+}
+void turnRight(){
+    PWM_2_WriteCompare(70);
+    PWM_1_WriteCompare(70);
+}
+void turnLeft(){
+    PWM_2_WriteCompare(30);
+    PWM_1_WriteCompare(30);
 }
 
 
-CY_ISR(isr_3_interrupt) {
-    //every 1.388ms
-    if(Comp_0_GetCompare()==1 || Comp_1_GetCompare()==1 ){
-        middle_on=1;
-    }
-    if(Comp_2_GetCompare()==1){
-        left_on=1;
-    }
-    if(Comp_3_GetCompare()==1){
-        right_on=1;        
-    }
-    //initialise comp value 
-    Comp_0_Init();
-    Comp_1_Init();
-    Comp_2_Init();
-    Comp_3_Init();
-    left_on=0;
-    right_on=0;
-    middle_on=0;
 
+CY_ISR(isr_1_handler) {
+    //every 1ms 
+    
+    //check comp values every 1ms
+    comp0_sum+=Comp_0_GetCompare();
+    comp1_sum+=Comp_1_GetCompare();
+    comp2_sum+=Comp_2_GetCompare();
+    comp3_sum+=Comp_3_GetCompare();
+    
+    
+    if(count==3){
+        //reset to check again every 4ms
+        comp0_sum=0;
+        comp1_sum=0;
+        comp2_sum=0;
+        comp3_sum=0;
+        count=0;
+    }
+    if(counter==350){
+        PWM_1_WriteCompare(50);
+        PWM_2_WriteCompare(50);
+    }
+    counter++;
+    count++;
+    Timer_1_ReadStatusRegister();
 }
 
 
@@ -93,9 +95,7 @@ int main(void)
 
     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
     Timer_1_Start();
-    Timer_3_Start();
-    timer_3_isr_StartEx(isr_TC_handler);
-    isr_3_StartEx(isr_3_interrupt);
+    isr_1_StartEx(isr_1_handler);
     
     //start comparators
     Comp_0_Start();
@@ -108,9 +108,13 @@ int main(void)
     //Start PWM
     PWM_1_Start();
     PWM_2_Start();
+    
     // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
-    PWM_2_WriteCompare(50);
-    PWM_1_WriteCompare(50);
+    //right wheel
+    PWM_1_WriteCompare(80);
+    //PWM2 corresponds to left wheel
+    PWM_2_WriteCompare(80);
+    
     PWM_1_WritePeriod(100);
     PWM_2_WritePeriod(100);
     
@@ -123,7 +127,10 @@ int main(void)
         //comp2=0 => left
         //comp3=0 => right
         /* Place your application code here. */
+                    
+
     }
 }
+
 
 /* [] END OF FILE */
