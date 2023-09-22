@@ -45,10 +45,12 @@ uint8 comp1_sum;
 uint8 comp2_sum;
 uint8 comp3_sum;
 
+uint8 PWM_R=21;
+uint8 PWM_L=80;
 
 void goStraight(){
-    PWM_2_WriteCompare(80);
-    PWM_1_WriteCompare(20);
+    PWM_2_WriteCompare(65);
+    PWM_1_WriteCompare(35);
 }
 void turnRight(){
     PWM_2_WriteCompare(70);
@@ -79,9 +81,9 @@ CY_ISR(isr_1_handler) {
         comp3_sum=0;
         count=0;
     }
-    if(counter==350){
-        PWM_1_WriteCompare(50);
-        PWM_2_WriteCompare(50);
+    if(counter==4000){
+        PWM_R=50;
+        PWM_L=50;
     }
     counter++;
     count++;
@@ -110,10 +112,7 @@ int main(void)
     PWM_2_Start();
     
     // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
-    //right wheel
-    PWM_1_WriteCompare(80);
-    //PWM2 corresponds to left wheel
-    PWM_2_WriteCompare(80);
+
     
     PWM_1_WritePeriod(100);
     PWM_2_WritePeriod(100);
@@ -123,10 +122,25 @@ int main(void)
     
     for(;;)
     {
-        //comp0 and comp1 =0  => straight
-        //comp2=0 => left
-        //comp3=0 => right
-        /* Place your application code here. */
+        if(comp1_sum>0 || comp2_sum>0){
+            LED_1_Write(0);
+            //right wheel
+           PWM_1_WriteCompare(50);
+            //PWM2 corresponds to left wheel
+           PWM_2_WriteCompare(50);
+           
+        }else{
+            LED_1_Write(1);
+            //right wheel
+           PWM_1_WriteCompare(PWM_R);
+            //PWM2 corresponds to left wheel
+           PWM_2_WriteCompare(PWM_L);
+        }
+            
+           //comp0 and comp1 =0  => straight
+           //comp2=0 => left
+           //comp3=0 => right
+           /* Place your application code here. */
                     
 
     }
