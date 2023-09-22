@@ -1,6 +1,6 @@
 /*******************************************************************************
 * \file core_cm3_psoc5.h
-* \version 5.82
+* \version 6.10
 *
 * \brief Provides important type information for the PSoC5.  This includes types
 * necessary for core_cm3.h.

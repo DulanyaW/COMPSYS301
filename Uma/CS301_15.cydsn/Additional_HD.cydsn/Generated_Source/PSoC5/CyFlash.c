@@ -1,6 +1,6 @@
 /***************************************************************************//**
 * \file CyFlash.c
-* \version 5.82
+* \version 6.10
 *
 * \brief Provides an API for the FLASH/EEPROM.
 *

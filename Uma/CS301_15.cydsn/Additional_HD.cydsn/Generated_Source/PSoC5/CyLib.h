@@ -1,6 +1,6 @@
 /***************************************************************************//**
 * \file CyLib.h
-* \version 5.82
+* \version 6.10
 *
 * \brief Provides the function definitions for the system, clocking, interrupts
 * and watchdog timer API.
