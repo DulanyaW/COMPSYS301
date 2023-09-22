@@ -12,61 +12,85 @@
 #include <stdio.h> 
 #include <stdlib.h>
 #include <math.h>
-
 #include "project.h"
 #include "defines.h"
 
 void usbPutString(char *s);
-int32 ci = 0;
-int32 cj = 0;
-int32 ci_sum = 0;
-int32 cj_sum = 0;
-int32 distance = 0;
-int32 target_diatance = 1000;
 uint8 counter = 1;
-
-uint32 speedi = 0;
-uint32 speedj = 0;
 uint8 ready_to_send = 0;
 char bufferi[64];
 char bufferj[64];
 
+
+//distance calculation paras
+int32 encoderCounts_M1 = 0;  
+int32 encoderCounts_M2 = 0;  
+int CPR = 57;  // Adjusted for 4x resolution(228/4)
+float wheelCircumference_mm = M_PI * 64.46;// wheel circumference wheelDiameter_mm = 64.46)
+float timeInterval_ms = 10.924;  // Effective time interval( (timer period )2.731*4)
+float  distance_M1 = 0;
+float  distance_M2 = 0;
+float  current_distance_M1 = 0;
+float  current_distance_M2 = 0;
+float target_diatance = 500.00;//50cm
+int32 speed_M1 = 0;
+int32 speed_M2 = 0;
+float encoderCounts_M1_sum=0;
+float encoderCounts_M2_sum=0;
+int counterstop = 0;
+
+void stopMotors() {
+    PWM_1_WriteCompare(50);  // Set PWM duty cycle to 50 to stop motor 1
+    PWM_2_WriteCompare(50);  // Set PWM duty cycle to 50 to stop motor 2
+}
+
 CY_ISR(isr_TC_handler){
     
     if (counter % 4 != 0){
+        LED_1_Write(1);
      counter++;
     }else{
+        // Encoder counts (negative due to counterclockwise rotation)
+        encoderCounts_M1 = 100;//QuadDec_M1_GetCounter();
+        encoderCounts_M2 = QuadDec_M2_GetCounter();
+    
+        // Adjust for counterclockwise rotation by multiplying counts by -1
+//        encoderCounts_M1 *= -1;
+//        encoderCounts_M2 *= -1;
         
-        // 2.731ms *4 ~=11 ms
-        ci = QuadDec_M1_GetCounter();
-        cj = QuadDec_M2_GetCounter();
-        ci_sum+=ci;
-        cj_sum+=cj;
-        speedi = (uint32)(-ci * 8.130335909/4);
-        speedj = (uint32)(-cj * 8.130335909/4);
+        //speed calculation
+        speed_M1 = encoderCounts_M1 * 8.13/4;
+        speed_M2 = encoderCounts_M2 * 8.13/4;
         
-        distance = speedi * 2.731 * 4;
+        //distance calculations
+        current_distance_M1 = (encoderCounts_M1/CPR) * wheelCircumference_mm;
+        current_distance_M2 = (encoderCounts_M2/CPR) * wheelCircumference_mm;
+//        distance_M1 = (encoderCounts_M1/228) * 202.74;
+//        distance_M2 = (encoderCounts_M2/228) * 202.74;
+//        
+//        encoderCounts_M1_sum += encoderCounts_M1;
+//        encoderCounts_M2_sum += encoderCounts_M2;
+//    distance_M1 = (encoderCounts_M1_sum/228)*20.25;
+//    distance_M2 = (encoderCounts_M2_sum/228)*20.25;     
         
-        
-        
+        distance_M1 += current_distance_M1;
+        distance_M2 += current_distance_M2;
+       
+   
         counter = 1;
         ready_to_send = 1;
+        
+        //reset the encoder counters 
         QuadDec_M1_SetCounter(0);
-        QuadDec_M2_SetCounter(0);
-        
-        
-//         if (distance >= target_diatance){
-//            PWM_1_WriteCompare(50);
-//            PWM_2_WriteCompare(50);
-//        }
+        QuadDec_M2_SetCounter(0);     
     }
-    distance=(ci_sum/228)*20.2507;
-    Timer_1_ReadStatusRegister();
-    
+        Timer_1_ReadStatusRegister();
+         if(distance_M1 >=target_diatance){
+            LED_1_Write(1);
+            //right wheel
+            stopMotors();            
+        } 
 }
-
-
-
 
 
 
@@ -77,24 +101,29 @@ int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
     /*Start PWM Clk*/
+    Timer_1_Start();
     Clock_PWM_Start(); 
     //Start PWM
     PWM_1_Start();
     PWM_2_Start();
-    // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
-    PWM_1_WriteCompare(20);
-    PWM_2_WriteCompare(80);
-   
     PWM_1_WritePeriod(100);
     PWM_2_WritePeriod(100);
+    
+    // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
+    PWM_1_WriteCompare(20);
+    PWM_2_WriteCompare(20);
+   
+    
     //Start UART for operation
     USBUART_1_Start(0, USBUART_1_5V_OPERATION);
     while (USBUART_1_GetConfiguration()==0){};
     //sprintf(buffer, "Hello\n");
     //usbPutString(buffer);
+    
+    
     QuadDec_M1_Start();
     QuadDec_M2_Start();
-    Timer_1_Start();
+    
     timer_1_isr_StartEx(isr_TC_handler);
     
 //    usbPutString(itoa(ci,buffer,10));
@@ -104,31 +133,27 @@ int main(void)
 
     for(;;)
     {  
-         if (distance >= target_diatance){
-            PWM_1_WriteCompare(50);
-            PWM_2_WriteCompare(50);
+        if(distance_M1>=2000){
+            stopMotors();
         }
-        
-        
-        if (ready_to_send == 1){
-            sprintf(bufferi, "encoder value: %ld\r\n", cj);
-            usbPutString(bufferi);
-            
-            sprintf(bufferi, "speed_M1: %ld\r\n", speedi);
-            usbPutString(bufferi);
-            
-            sprintf(bufferj, "distance: %ld\r\n", distance);
-            usbPutString(bufferi);
-            
-            sprintf(bufferj, "Distance: %ld\r\n", distance);
-            usbPutString(bufferj);
-            
-            ready_to_send = 0;
-            
-            
-        }
-       
-        /* Place your application code here. */
+             
+//        if (ready_to_send == 1){
+//            sprintf(bufferi, "encoder value: %ld\r\n", encoderCounts_M1);
+//            usbPutString(bufferi);
+//            
+//            sprintf(bufferi, "speed_M1: %ld\r\n", encoderCounts_M2);
+//            usbPutString(bufferi);
+////            
+////            sprintf(bufferj, "distance: %ld\r\n", distance_M1);
+////            usbPutString(bufferi);
+////            
+////            sprintf(bufferj, "Distance: %ld\r\n", distance);
+////            usbPutString(bufferj);
+//            
+//            ready_to_send = 0;            
+//        }
+//       
+//        /* Place your application code here. */
     }
 }
 

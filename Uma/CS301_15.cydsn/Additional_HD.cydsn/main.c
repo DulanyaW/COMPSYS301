@@ -30,9 +30,25 @@
 #include <stdlib.h>
 #include <project.h>
 #include <stdbool.h>
-
+#include <math.h>
 
 #include "project.h"
+
+//distance calculation paras
+int32 encoderCounts_M1 = 0;  
+int32 encoderCounts_M2 = 0;  
+int CPR = 57;  // Adjusted for 4x resolution(228/4)
+float wheelCircumference_mm = M_PI * 64.46;// wheel circumference wheelDiameter_mm = 64.46)
+float timeInterval_ms = 10.924;  // Effective time interval( (timer period )2.731*4)
+float  distance_M1 = 0;
+float  distance_M2 = 0;
+float target_diatance = 500;
+int32 speed_M1 = 0;
+int32 speed_M2 = 0;
+float encoderCounts_M1_sum=0;
+float encoderCounts_M2_sum=0;
+
+
 
 uint32 count = 0;
 uint32 counter = 0;
@@ -65,28 +81,37 @@ void turnLeft(){
 
 CY_ISR(isr_1_handler) {
     //every 1ms 
+    encoderCounts_M1 = QuadDec_M1_GetCounter();
+    encoderCounts_M2 = QuadDec_M2_GetCounter();
+    encoderCounts_M1 *= -1;
+    encoderCounts_M2 *= -1;
+        
+    distance_M1 = (encoderCounts_M1/CPR) * wheelCircumference_mm;
+    distance_M2 = (encoderCounts_M2/CPR) * wheelCircumference_mm;
     
-    //check comp values every 1ms
-    comp0_sum+=Comp_0_GetCompare();
-    comp1_sum+=Comp_1_GetCompare();
-    comp2_sum+=Comp_2_GetCompare();
-    comp3_sum+=Comp_3_GetCompare();
     
     
-    if(count==3){
-        //reset to check again every 4ms
-        comp0_sum=0;
-        comp1_sum=0;
-        comp2_sum=0;
-        comp3_sum=0;
-        count=0;
-    }
-    if(counter==4000){
-        PWM_R=50;
-        PWM_L=50;
-    }
-    counter++;
-    count++;
+//    //check comp values every 1ms
+//    comp0_sum+=Comp_0_GetCompare();
+//    comp1_sum+=Comp_1_GetCompare();
+//    comp2_sum+=Comp_2_GetCompare();
+//    comp3_sum+=Comp_3_GetCompare();
+//    
+//    
+//    if(count==3){
+//        //reset to check again every 4ms
+//        comp0_sum=0;
+//        comp1_sum=0;
+//        comp2_sum=0;
+//        comp3_sum=0;
+//        count=0;
+//    }
+//    if(counter==4000){
+//        PWM_R=50;
+//        PWM_L=50;
+//    }
+//    counter++;
+//    count++;
     Timer_1_ReadStatusRegister();
 }
 
@@ -122,7 +147,7 @@ int main(void)
     
     for(;;)
     {
-        if(comp1_sum>0 || comp2_sum>0){
+        if(distance_M1>=10){
             LED_1_Write(0);
             //right wheel
            PWM_1_WriteCompare(50);

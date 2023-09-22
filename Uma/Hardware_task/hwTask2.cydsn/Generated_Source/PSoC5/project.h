@@ -68,6 +68,8 @@
 #include "D1_B.h"
 #include "D1_A_aliases.h"
 #include "D1_A.h"
+#include "LED_1_aliases.h"
+#include "LED_1.h"
 #include "USBUART_1_Dm_aliases.h"
 #include "USBUART_1_Dm.h"
 #include "USBUART_1_Dp_aliases.h"
