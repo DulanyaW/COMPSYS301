@@ -82,6 +82,7 @@
 #include "EN_B_aliases.h"
 #include "EN_B.h"
 #include "CONTROL_ENABLE_0.h"
+#include "isr_2.h"
 #include "QuadDec_M1_isr.h"
 #include "QuadDec_M1_Cnt16.h"
 #include "QuadDec_M2_isr.h"

@@ -35,32 +35,36 @@
 #include "project.h"
 
 uint32 count = 0;
-uint32 counter = 0;
-bool left_on;
+uint32 turn_counter = 0;
+bool left_on=0;
 bool right_on;
 bool middle_on;
+bool turn_complete;
 
 uint8 comp0_sum;
 uint8 comp1_sum;
 uint8 comp2_sum;
 uint8 comp3_sum;
 
-uint8 PWM_R=21;
-uint8 PWM_L=80;
+uint8 PWM_R=70;
+uint8 PWM_L=71;
 
-void goStraight(){
-    PWM_2_WriteCompare(65);
-    PWM_1_WriteCompare(35);
+CY_ISR(isr_2_handler) {
+    //every 1ms 
+    if(turn_counter==400){
+         PWM_L=30;
+        PWM_R=70; 
+    }
+    if(turn_counter==950){
+        PWM_L=50;
+        PWM_R=50;
+    }
+    
+        
+    
+    turn_counter++;
+    
 }
-void turnRight(){
-    PWM_2_WriteCompare(70);
-    PWM_1_WriteCompare(70);
-}
-void turnLeft(){
-    PWM_2_WriteCompare(30);
-    PWM_1_WriteCompare(30);
-}
-
 
 
 CY_ISR(isr_1_handler) {
@@ -74,21 +78,56 @@ CY_ISR(isr_1_handler) {
     
     
     if(count==3){
-        //reset to check again every 4ms
+        //reset to check again every 6ms
         comp0_sum=0;
         comp1_sum=0;
         comp2_sum=0;
         comp3_sum=0;
         count=0;
     }
-    if(counter==4000){
-        PWM_R=50;
-        PWM_L=50;
-    }
-    counter++;
+   
+
     count++;
     Timer_1_ReadStatusRegister();
 }
+void stop(){
+    PWM_R=50;
+    PWM_L=50;
+}
+void turnLeft(){
+    isr_2_StartEx(isr_2_handler);
+    
+}
+
+void goStraight(){
+    //comp0==>middle left comp1==>middle right
+   
+    if(comp2_sum==0){
+        stop();
+        turnLeft();
+        
+    }else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
+        PWM_L=PWM_L+1;
+    }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
+        PWM_R=PWM_R+1;
+        
+    }else if(comp1_sum==0 && comp0_sum==0){
+        PWM_R=75;
+        PWM_L=76;
+    }
+     
+}
+
+void turnRight(){
+        
+    PWM_R=30;
+    PWM_L=71;
+    while(comp1_sum==0 && comp0_sum==0);
+    PWM_R=50;
+    PWM_L=50;
+    
+}
+
 
 
 int main(void)
@@ -119,29 +158,22 @@ int main(void)
     
     QuadDec_M1_Start();
     QuadDec_M2_Start();
+   
+    
     
     for(;;)
     {
-        if(comp1_sum>0 || comp2_sum>0){
-            LED_1_Write(0);
-            //right wheel
-           PWM_1_WriteCompare(50);
-            //PWM2 corresponds to left wheel
-           PWM_2_WriteCompare(50);
-           
-        }else{
-            LED_1_Write(1);
-            //right wheel
-           PWM_1_WriteCompare(PWM_R);
-            //PWM2 corresponds to left wheel
-           PWM_2_WriteCompare(PWM_L);
-        }
-            
-           //comp0 and comp1 =0  => straight
+          //comp0 and comp1 =0  => straight
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
-                    
+        goStraight();
+       //right wheel
+          PWM_1_WriteCompare(PWM_R);
+       //PWM2 corresponds to left wheel
+          PWM_2_WriteCompare(PWM_L);
+//        
+              
 
     }
 }
