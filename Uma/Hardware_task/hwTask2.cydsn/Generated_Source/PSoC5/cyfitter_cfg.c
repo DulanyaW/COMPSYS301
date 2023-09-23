@@ -159,22 +159,22 @@ CYPACKED typedef struct
 #define cy_cfg_data_table ((const cy_cfg_addrvalue_t CYFAR *)0x48000090u)
 
 /* IOPORT_7 Address: CYDEV_PRTDSI_PRT12_BASE Size (bytes): 6 */
-#define BS_IOPORT_7_VAL ((const uint8 CYFAR *)0x4800085Cu)
+#define BS_IOPORT_7_VAL ((const uint8 CYFAR *)0x480007F0u)
 
 /* IOPINS0_7 Address: CYREG_PRT12_DM0 Size (bytes): 8 */
-#define BS_IOPINS0_7_VAL ((const uint8 CYFAR *)0x48000864u)
+#define BS_IOPINS0_7_VAL ((const uint8 CYFAR *)0x480007F8u)
 
 /* IOPINS0_8 Address: CYREG_PRT15_DR Size (bytes): 10 */
-#define BS_IOPINS0_8_VAL ((const uint8 CYFAR *)0x4800086Cu)
+#define BS_IOPINS0_8_VAL ((const uint8 CYFAR *)0x48000800u)
 
 /* IOPINS0_1 Address: CYREG_PRT1_DM0 Size (bytes): 8 */
-#define BS_IOPINS0_1_VAL ((const uint8 CYFAR *)0x48000878u)
+#define BS_IOPINS0_1_VAL ((const uint8 CYFAR *)0x4800080Cu)
 
 /* IOPINS0_2 Address: CYREG_PRT2_DM0 Size (bytes): 8 */
-#define BS_IOPINS0_2_VAL ((const uint8 CYFAR *)0x48000880u)
+#define BS_IOPINS0_2_VAL ((const uint8 CYFAR *)0x48000814u)
 
 /* IOPINS0_3 Address: CYREG_PRT3_DM0 Size (bytes): 8 */
-#define BS_IOPINS0_3_VAL ((const uint8 CYFAR *)0x48000888u)
+#define BS_IOPINS0_3_VAL ((const uint8 CYFAR *)0x4800081Cu)
 
 
 /*******************************************************************************
@@ -418,8 +418,11 @@ void cyfitter_cfg(void)
 
 		cfg_write_bytes32(cy_cfg_addr_table, cy_cfg_data_table);
 
-		/* B0_P0_U1_CFG24 Starting address: CYDEV_UCFG_B0_P0_U1_CFG24 */
-		CY_SET_XTND_REG32((void CYFAR *)(CYREG_B0_P0_U1_CFG24), 0xC4040404u);
+		/* B0_P2_U0_CFG24 Starting address: CYDEV_UCFG_B0_P2_U0_CFG24 */
+		CY_SET_XTND_REG32((void CYFAR *)(CYREG_B0_P2_U0_CFG24), 0x44000404u);
+
+		/* B0_P2_U1_CFG24 Starting address: CYDEV_UCFG_B0_P2_U1_CFG24 */
+		CY_SET_XTND_REG32((void CYFAR *)(CYREG_B0_P2_U1_CFG24), 0x44000404u);
 
 		/* Enable digital routing */
 		CY_SET_XTND_REG8((void CYFAR *)CYREG_BCTL0_BANK_CTL, CY_GET_XTND_REG8((void CYFAR *)CYREG_BCTL0_BANK_CTL) | 0x02u);

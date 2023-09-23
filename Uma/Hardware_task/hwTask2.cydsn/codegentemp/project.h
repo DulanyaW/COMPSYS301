@@ -53,7 +53,6 @@
 #include "Clock_QENC.h"
 #include "ENCD_A_2_aliases.h"
 #include "ENCD_A_2.h"
-#include "timer_1_isr.h"
 #include "ENCD_A_1_aliases.h"
 #include "ENCD_A_1.h"
 #include "QuadDec_M1.h"
@@ -70,6 +69,9 @@
 #include "D1_A.h"
 #include "LED_1_aliases.h"
 #include "LED_1.h"
+#include "timer_1_isr.h"
+#include "LED_2_aliases.h"
+#include "LED_2.h"
 #include "USBUART_1_Dm_aliases.h"
 #include "USBUART_1_Dm.h"
 #include "USBUART_1_Dp_aliases.h"
@@ -78,7 +80,6 @@
 #include "QuadDec_M2_Cnt16.h"
 #include "QuadDec_M1_isr.h"
 #include "QuadDec_M1_Cnt16.h"
-#include "cy_em_eeprom.h"
 #include "core_cm3_psoc5.h"
 #include "CyDmac.h"
 #include "CyFlash.h"
@@ -87,6 +88,7 @@
 #include "cyPm.h"
 #include "CySpc.h"
 #include "cytypes.h"
+#include "cy_em_eeprom.h"
 
 /*[]*/
 
