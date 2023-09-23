@@ -1,0 +1,173 @@
+/* ========================================
+ *
+ * Copyright YOUR COMPANY, THE YEAR
+ * All Rights Reserved
+ * UNPUBLISHED, LICENSED SOFTWARE.
+ *
+ * CONFIDENTIAL AND PROPRIETARY INFORMATION
+ * WHICH IS THE PROPERTY OF your company.
+ *
+ * ========================================
+*/
+#include <stdio.h> 
+#include <stdlib.h>
+#include <math.h>
+#include "project.h"
+#include "defines.h"
+
+void usbPutString(char *s);
+uint8 counter = 1;
+uint8 ready_to_send = 0;
+char bufferi[64];
+char bufferj[64];
+
+
+//distance calculation paras
+int32 encoderCounts_M1 = 0;  
+int32 encoderCounts_M2 = 0;  
+int32 CPR = 2;  // Adjusted for 4x resolution(228/4)
+float wheelCircumference_mm = (M_PI*64.46)/10;// wheel circumference wheelDiameter_mm = 64.46)
+double timeInterval_s = 10.924;  // Effective time interval( (timer period )2.731*4)
+float32  distance_M1 = 0;
+float32  distance_M2 = 0;
+float32  current_distance_M1 = 0;
+float32  current_distance_M2 = 0;
+float32 target_diatance = 20;//50cm
+float32 speed_M1 = 0;
+float32 speed_M2 = 0;
+int32 encoder_sum = 0;
+
+
+void stopMotors() {
+    PWM_1_WriteCompare(50);  // Set PWM duty cycle to 50 to stop motor 1
+    PWM_2_WriteCompare(50);  // Set PWM duty cycle to 50 to stop motor 2
+}
+
+
+
+CY_ISR(isr_TC_handler){ 
+    if (counter % 4 != 0){
+        LED_1_Write(1);
+     counter++;
+    }else{
+        // Encoder counts (negative due to counterclockwise rotation)
+        encoderCounts_M1 = QuadDec_M1_GetCounter();//QuadDec_M1_GetCounter();
+        encoderCounts_M2 = QuadDec_M2_GetCounter();
+    
+        // Adjust for counterclockwise rotation by multiplying counts by -1
+        encoderCounts_M1 *= -1;
+        encoder_sum += encoderCounts_M1;
+        //speed calculation
+        speed_M1 = encoderCounts_M1 * 8.13/4;//8.13_cm
+        speed_M2 = encoderCounts_M2 * 8.13/4;
+        
+        //distance calculations
+        current_distance_M1 = speed_M1* (timeInterval_s/1000);//(encoderCounts_M1/57) * 20;
+        current_distance_M2 = speed_M2* (timeInterval_s/1000);
+        distance_M1 += current_distance_M1;
+        distance_M2 += current_distance_M2;
+        
+        
+        counter = 1;
+        ready_to_send = 1;
+        
+        //reset the encoder counters 
+        QuadDec_M1_SetCounter(0);
+        QuadDec_M2_SetCounter(0);     
+    }
+        Timer_1_ReadStatusRegister();
+}
+
+
+
+
+
+ 
+int main(void)
+{
+    CyGlobalIntEnable; /* Enable global interrupts. */
+    /*Start PWM Clk*/
+    Timer_1_Start();
+    Clock_PWM_Start(); 
+    //Start PWM
+    PWM_1_Start();
+    PWM_2_Start();
+    PWM_1_WritePeriod(100);
+    PWM_2_WritePeriod(100);
+    
+    // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
+    PWM_1_WriteCompare(70);
+    PWM_2_WriteCompare(30);
+   
+    
+    //Start UART for operation
+    USBUART_1_Start(0, USBUART_1_5V_OPERATION);
+    while (USBUART_1_GetConfiguration()==0){};
+    //sprintf(buffer, "Hello\n");
+    //usbPutString(buffer);
+    
+    
+    QuadDec_M1_Start();
+    QuadDec_M2_Start();
+    
+    timer_1_isr_StartEx(isr_TC_handler);
+    
+//    usbPutString(itoa(ci,buffer,10));
+    
+
+    /* Place your initialization/startup code here (e.g. MyInst_Start()) */
+
+    for(;;)
+    {  
+        
+        if(encoder_sum >=1000){
+            LED_1_Write(1);
+            stopMotors(); 
+           // distance_M1 = 0;
+        }
+             
+        if (ready_to_send == 1){
+            sprintf(bufferi, "encoder value: %ld\r\n", encoderCounts_M1);
+            usbPutString(bufferi);
+            
+            sprintf(bufferi, "speed_M1: %ld\r\n", (long)speed_M1);
+            usbPutString(bufferi);
+            
+            sprintf(bufferi, "en sum: %ld\r\n", (long)encoder_sum);
+            usbPutString(bufferi);         
+            
+                   
+            sprintf(bufferi, "distance_M1 in mm: %ld\r\n",(long) distance_M1);
+            usbPutString(bufferi);
+//
+//            sprintf(bufferj, "encoderCounts_M2: %ld\r\n", encoderCounts_M2);
+//            usbPutString(bufferj);
+            
+          ready_to_send = 0;            
+        }
+    }
+}
+
+
+void usbPutString(char *s)
+{
+// !! Assumes that *s is a string with allocated space >=64 chars     
+//  Since USB implementation retricts data packets to 64 chars, this function truncates the
+//  length to 62 char (63rd char is a '!')
+
+#ifdef USE_USB     
+    while (USBUART_1_CDCIsReady() == 0);
+    s[63]='\0';
+    s[62]='!';
+    USBUART_1_PutData((uint8*)s,strlen(s));
+#endif
+}
+//* ========================================
+void usbPutChar(char c)
+{
+#ifdef USE_USB     
+    while (USBUART_1_CDCIsReady() == 0);
+    USBUART_1_PutChar(c);
+#endif    
+}
+/* [] END OF FILE */

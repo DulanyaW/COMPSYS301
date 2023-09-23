@@ -12,36 +12,48 @@
 #include <stdio.h> 
 #include <stdlib.h>
 #include <math.h>
-
 #include "project.h"
 #include "defines.h"
 
 void usbPutString(char *s);
 int32 ci = 0;
 int32 cj = 0;
-
 uint8 counter = 1;
-
 uint32 speedi = 0;
 uint32 speedj = 0;
 uint8 ready_to_send = 0;
 char bufferi[64];
 char bufferj[64];
 
+
+// distance calcu
+int32 encoder_count_i = 0;
+int32 encoder_count_j = 0;
+double distance_i = 0;
+double distance_j = 0;
+int32 target_distance = 100;// need to decide
+double current_distance_i = 0;
+double current_distance_j = 0;
+double wheel_circumference_mm = 202.5;
+int CPR_value = 228;
+
+
+
 CY_ISR(isr_TC_handler){
-    /*if ( counter == 20){
-        PWM_1_WriteCompare(0);
-        PWM_2_WriteCompare(0);
-    }*/
     //if counter is not divisible by 4, counter is incremented
     if (counter % 4 != 0){
      counter++;
     }else{
         // 2.731ms *4 ~=11 ms
-        ci = QuadDec_M1_GetCounter();
-        cj = QuadDec_M2_GetCounter();
-        speedi = (uint32)(-ci * 8.13/4);
-        speedj = (uint32)(-cj * 8.13/4);
+        encoder_count_i = QuadDec_M1_GetCounter();
+        encoder_count_j = QuadDec_M2_GetCounter();
+        speedi = (uint32)(-encoder_count_i * 8.13/4);
+        speedj = (uint32)(-encoder_count_j * 8.13/4);
+        
+        double current_distance_i = (double)(-encoder_count_i/CPR_value)*wheel_circumference_mm;
+        distance_i += current_distance_i;
+        
+        
         counter = 1;
         ready_to_send = 1;
         QuadDec_M1_SetCounter(0);
@@ -49,7 +61,17 @@ CY_ISR(isr_TC_handler){
     }
     Timer_1_ReadStatusRegister();
     
+    
 }
+//
+//void stop_M1(){
+//    PWM_1_WriteCompare(50);
+//    PWM_2_WriteCompare(50);
+//}
+
+
+
+
  
 int main(void)
 {
@@ -60,8 +82,8 @@ int main(void)
     PWM_1_Start();
     PWM_2_Start();
     // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
-    PWM_2_WriteCompare(60);
-    PWM_1_WriteCompare(60);
+    PWM_2_WriteCompare(80);
+    PWM_1_WriteCompare(20);
     PWM_1_WritePeriod(100);
     PWM_2_WritePeriod(100);
     //Start UART for operation
@@ -81,11 +103,22 @@ int main(void)
 
     for(;;)
     {
+//        if(distance_i >= target_distance){
+//            stop_M1();
+//        }
+        
         if (ready_to_send == 1){
-            sprintf(bufferi, "speed_M1: %ld\r\n", speedi);
+            sprintf(bufferi, "encode count: %ld\r\n", encoder_count_i);
             usbPutString(bufferi);
             
-            sprintf(bufferj, "speed_M2: %ld\r\n", speedj);
+            sprintf(bufferi, "distance: %ld\r\n", (long)distance_i);
+            usbPutString(bufferi);
+            
+            sprintf(bufferi, "curret Distance: %ld\r\n", (long)current_distance_i);
+            usbPutString(bufferi);
+            
+           
+            sprintf(bufferj, "speed_M2: %ld\r\n", speedi);
             usbPutString(bufferj);
             ready_to_send = 0;
             
@@ -116,52 +149,6 @@ void usbPutChar(char c)
     while (USBUART_1_CDCIsReady() == 0);
     USBUART_1_PutChar(c);
 #endif    
-}
-
-
-
-
-
-
-int32 wheel_circumference = 100;
-int32 encoder_count_i = 0;
-int32 encoder_count_j = 0;
-int32 cpr = 0;
-int32 ppr = 0;
-int32 distance_i = 0;
-int32 distance_j = 0;
-//void distance_Calculation (encoder_count_i,encoder_count_j){
-//    //calculate count per reslution
-//    cpr = ppr*4;
-//    //calculate disance
-//    distance_i = encoder_count_i/cpr;
-//    distance_j = encoder_count_j/cpr;
-//       
-//}
-
-
-int8 target_distance = 0;// need to decide
-int8 current_distance = 0;
-int32 prev_encoder_value_M1 = 0;
-int32 prev_encoder_value_M2 = 0;
-void distance_based_Stopping(encoder_count_i,encoder_count_j){
-    //calculate count per reslution
-    cpr = ppr*4;
-    //calculate disances since the last reading
-    distance_i = encoder_count_i/cpr;
-    distance_j = encoder_count_j/cpr;
-    current_distance = 
-    
-    
-}
-
-
-void stop_M1(){
-    PWM_1_WriteCompare(0);
-}
-
-void stop_M2(){
-    PWM_2_WriteCompare(0);
 }
 
 /* [] END OF FILE */
