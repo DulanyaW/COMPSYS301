@@ -1,6 +1,6 @@
 // ======================================================================
 // Additional_HD.v generated from TopDesign.cysch
-// 09/23/2023 at 01:54
+// 09/23/2023 at 17:46
 // This file is auto generated. ANY EDITS YOU MAKE MAY BE LOST WHEN THIS FILE IS REGENERATED!!!
 // ======================================================================
 
@@ -1083,8 +1083,8 @@ module top ;
           wire  Net_8950;
           wire  Net_8949;
           wire  Net_8952;
-          wire  Net_8951;
           wire  CLK24M;
+          wire  Net_8951;
           wire  Net_8937;
           wire  Net_8936;
           wire  Net_8933;
@@ -1114,7 +1114,8 @@ module top ;
           wire  Net_501;
           wire  Net_400;
     electrical  Net_264;
-          wire  Net_258;
+          wire  Net_8964;
+          wire  Net_2860;
           wire  Net_2986;
           wire  Net_398;
           wire  Net_1645;
@@ -1123,7 +1124,6 @@ module top ;
           wire  Net_1611;
           wire  Net_1832;
           wire  Net_3236;
-          wire  Net_2860;
           wire  Net_509;
           wire  Net_2404;
           wire  Net_730;
@@ -1224,7 +1224,7 @@ module top ;
 	cy_isr_v1_0
 		#(.int_type(2'b10))
 		isr_1
-		 (.int_signal(Net_258));
+		 (.int_signal(Net_8964));
 
 
     Comp_v2_0_0 Comp_3 (
@@ -1401,7 +1401,7 @@ module top ;
 
     Timer_v2_80_1 Timer_1 (
         .reset(Net_134),
-        .interrupt(Net_258),
+        .interrupt(Net_8964),
         .enable(1'b1),
         .trigger(1'b1),
         .capture(1'b0),
@@ -2182,7 +2182,7 @@ module top ;
 		  .input_buffer_sel(2'b00))
 		IN1_A
 		 (.oe(tmpOE__IN1_A_net),
-		  .y({Net_2404}),
+		  .y({Net_2860}),
 		  .fb({tmpFB_0__IN1_A_net[0:0]}),
 		  .io({tmpIO_0__IN1_A_net[0:0]}),
 		  .siovref(tmpSIOVREF__IN1_A_net),
@@ -2771,7 +2771,7 @@ module top ;
 		  .input_buffer_sel(2'b00))
 		IN2_A
 		 (.oe(tmpOE__IN2_A_net),
-		  .y({Net_2860}),
+		  .y({Net_2404}),
 		  .fb({tmpFB_0__IN2_A_net[0:0]}),
 		  .io({tmpIO_0__IN2_A_net[0:0]}),
 		  .siovref(tmpSIOVREF__IN2_A_net),
@@ -3063,6 +3063,20 @@ module top ;
     defparam CONTROL_ENABLE_0.BusDisplay = 0;
     defparam CONTROL_ENABLE_0.ExtrReset = 0;
     defparam CONTROL_ENABLE_0.NumOutputs = 2;
+
+
+	cy_isr_v1_0
+		#(.int_type(2'b10))
+		isr_2
+		 (.int_signal(Net_8964));
+
+
+
+	cy_isr_v1_0
+		#(.int_type(2'b10))
+		isr_3
+		 (.int_signal(Net_8964));
+
 
 
 

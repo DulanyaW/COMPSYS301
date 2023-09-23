@@ -82,11 +82,12 @@
 #include "EN_B_aliases.h"
 #include "EN_B.h"
 #include "CONTROL_ENABLE_0.h"
+#include "isr_2.h"
+#include "isr_3.h"
 #include "QuadDec_M1_isr.h"
 #include "QuadDec_M1_Cnt16.h"
 #include "QuadDec_M2_isr.h"
 #include "QuadDec_M2_Cnt16.h"
-#include "cy_em_eeprom.h"
 #include "core_cm3_psoc5.h"
 #include "CyDmac.h"
 #include "CyFlash.h"
@@ -95,6 +96,7 @@
 #include "cyPm.h"
 #include "CySpc.h"
 #include "cytypes.h"
+#include "cy_em_eeprom.h"
 
 /*[]*/
 
