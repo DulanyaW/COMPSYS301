@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <project.h>
 #include <stdbool.h>
-
+#include <unistd.h> 
 
 #include "project.h"
 
@@ -52,15 +52,14 @@ uint8 PWM_L=71;
 CY_ISR(isr_2_handler) {
     //every 1ms 
     if(turn_counter==400){
-         PWM_L=30;
-        PWM_R=70; 
+        PWM_1_WriteCompare(70);
+        PWM_2_WriteCompare(30);
     }
     if(turn_counter==950){
-        PWM_L=50;
-        PWM_R=50;
+        PWM_1_WriteCompare(50);
+        PWM_2_WriteCompare(50);
+        turn_complete=true;
     }
-    
-        
     
     turn_counter++;
     
@@ -104,7 +103,6 @@ void goStraight(){
    
     if(comp2_sum==0){
         stop();
-        turnLeft();
         
     }else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
         PWM_L=PWM_L+1;
@@ -137,6 +135,7 @@ int main(void)
     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
     Timer_1_Start();
     isr_1_StartEx(isr_1_handler);
+
     
     //start comparators
     Comp_0_Start();
@@ -167,12 +166,28 @@ int main(void)
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
-        goStraight();
-       //right wheel
+    if(comp2_sum==0){
+        PWM_R=30;
+        PWM_L=70;
+//        while(turn_complete==0){};    
+    }else     if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
+        PWM_L=PWM_L+1;
+    }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
+        PWM_R=PWM_R+1;
+        
+    }else if(comp1_sum==0 && comp0_sum==0){
+        PWM_R=75;
+        PWM_L=76;
+    }else if(comp1_sum>0 && comp0_sum>0){
+        PWM_R=50;
+        PWM_L=50;
+    }
+        
+           //PWM1 => right wheel
           PWM_1_WriteCompare(PWM_R);
-       //PWM2 corresponds to left wheel
+          //PWM2 => left wheel
           PWM_2_WriteCompare(PWM_L);
-//        
+        
               
 
     }
