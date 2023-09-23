@@ -166,21 +166,20 @@ int main(void)
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
-    if(comp2_sum==0){
-        PWM_R=30;
-        PWM_L=70;
-//        while(turn_complete==0){};    
-    }else     if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
+     if(comp2_sum==0){
+        PWM_R=72;
+        PWM_L=38;  
+    }else if(comp3_sum==0){
+        PWM_R=35;
+        PWM_L=73;  
+    }else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
         PWM_L=PWM_L+1;
     }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
         PWM_R=PWM_R+1;
         
     }else if(comp1_sum==0 && comp0_sum==0){
-        PWM_R=75;
-        PWM_L=76;
-    }else if(comp1_sum>0 && comp0_sum>0){
-        PWM_R=50;
-        PWM_L=50;
+        PWM_R=72;
+        PWM_L=73;
     }
         
            //PWM1 => right wheel
