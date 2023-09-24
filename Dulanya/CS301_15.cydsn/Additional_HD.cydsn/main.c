@@ -167,9 +167,11 @@ int main(void)
            //comp3=0 => right
            /* Place your application code here. */
      if(comp2_sum==0){
+        LED_1_Write(1);
         PWM_R=72;
         PWM_L=38;  
     }else if(comp3_sum==0){
+        LED_2_Write(1);
         PWM_R=35;
         PWM_L=73;  
     }else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
@@ -178,6 +180,7 @@ int main(void)
         PWM_R=PWM_R+1;
         
     }else if(comp1_sum==0 && comp0_sum==0){
+        LED_3_Write(1);
         PWM_R=72;
         PWM_L=73;
     }

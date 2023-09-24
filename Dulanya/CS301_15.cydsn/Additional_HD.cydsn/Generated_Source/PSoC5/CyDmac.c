@@ -1,6 +1,6 @@
 /***************************************************************************//**
 * \file CyDmac.c
-* \version 6.10
+* \version 5.82
 *
 * \brief
 * Provides an API for the DMAC component. The API includes functions for the
