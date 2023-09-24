@@ -205,7 +205,7 @@ int main(void)
     QuadDec_M1_Start();
     QuadDec_M2_Start();
     
-    go_distance(100);
+    go_distance(0);
     
     for(;;)
     {
@@ -213,14 +213,14 @@ int main(void)
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
-           
+        
             if(comp2_sum==0){
                 //left_on=true;
                 PWM_R=70;
                 PWM_L=10;  
             }else if(comp3_sum==0){
-                PWM_R=0;
-                PWM_L=85;  
+                PWM_R=11;
+                PWM_L=70;  
             }else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
                 PWM_L=PWM_L+1;
             }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
@@ -233,7 +233,6 @@ int main(void)
                 PWM_R=50;
                 PWM_L=50;
             }
-            
             if(distance_M1>=(target_diatance/1.03) && target_diatance!=0){
                 LED_1_Write(1);
                 stop();
@@ -243,6 +242,7 @@ int main(void)
           PWM_1_WriteCompare(PWM_R);
         //PWM2 corresponds to left wheel
           PWM_2_WriteCompare(PWM_L);
+              
 
     }
 }
