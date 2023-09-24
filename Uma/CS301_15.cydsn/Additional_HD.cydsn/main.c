@@ -33,6 +33,15 @@
 #include <math.h>
 #include "project.h"
 
+
+// Define states for the state machine
+typedef enum {
+    GO_STRAIGHT,
+    TURN_LEFT,
+    STOP,
+} RobotState;
+
+
 //distance calculation paras
 int32 encoderCounts_M1 = 0;  
 int32 encoderCounts_M2 = 0;  
@@ -53,6 +62,7 @@ int32 prev_encoder_value_M2 = 0;
 uint8 counter = 1;
 
 
+RobotState currentState = GO_STRAIGHT; // Initialize the state machine
 
 
 
@@ -230,32 +240,42 @@ int main(void)
            //comp3=0 => right
            /* Place your application code here. */
         
-        if(comp2_sum > 0){
+        // Check the left sensor
+        if (comp2_sum > 0) {
             LED_2_Write(1);
-            while(distance_M1 >= distance_M1+3){
-                goStraight();
-            }
-            stop();
+            
+            // Left sensor is triggered, change state to TURN_LEFT
+            currentState = TURN_LEFT;
+            target_diatance = 3;
+            
+
         }
         
-////   current_encoder_count = abs(QuadDec_M1_GetCounter());     
-//        if(abs(QuadDec_M1_GetCounter()) < current_encoder_count+50){
-//            goStraight();
-//            LED_1_Write(1);
-//        }
-//        }
-            //stop();
-      
-//        if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
-//            PWM_L=PWM_L+1;
-//        }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
-//            PWM_R=PWM_R+1;
-//            
-//        }else if(comp1_sum==0 && comp0_sum==0){
-//            PWM_R=75;
-//            PWM_L=76;
-//        }
-     
+        // Implement state machine logic
+        switch (currentState) {
+            case GO_STRAIGHT:
+                // Implement goStraight logic
+                goStraight();
+                break;
+                
+            case TURN_LEFT:
+                // Implement logic to turn left for a specific angle or time
+                // Check encoder counts or time to decide when to transition back
+                // to GO_STRAIGHT state
+                if(distance_M1 >=target_diatance ){// M1 is faster than M2 
+                    LED_1_Write(1);
+                    stop(); 
+                }else{
+                    goStraight();
+                }
+                
+                break;
+                
+            case STOP:
+                // Implement logic to stop the robot
+               stop();
+                break;
+        }
        
         //target distance task
 //        if(distance_M1 >=target_diatance ){// M1 is faster than M2 
