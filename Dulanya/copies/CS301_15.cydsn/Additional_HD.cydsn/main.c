@@ -71,7 +71,7 @@ uint8 PWM_L=100;
 
 
 CY_ISR(isr_3_handler) {
-    if (counter < 10){
+    if (counter < 20){
         counter++;
     }else{
         counter = 1;
@@ -101,7 +101,7 @@ CY_ISR(isr_2_handler) {
         if(turn_counter==0){
             PWM_L=50;
             PWM_R=80; 
-            LED_1_Write(1);
+           // LED_1_Write(1);
         }
         turn_counter++;
         if(turn_counter==650){
@@ -109,7 +109,7 @@ CY_ISR(isr_2_handler) {
             PWM_L=50;
             PWM_R=50;
             turn_counter=0;
-            LED_1_Write(0);
+            //LED_1_Write(0);
         }
         
     }
@@ -160,12 +160,12 @@ void goStraight(){
         PWM_R=PWM_R+1;
         
     }else if(comp1_sum==0 && comp0_sum==0){
-        PWM_R=75;
-        PWM_L=76;
+        PWM_R=80;
+        PWM_L=81;
     }
      
 }
-void go_distance(int distance){
+void go_distance(float32 distance){
     distance_M1=0;
     target_diatance=distance;
 }
@@ -205,7 +205,7 @@ int main(void)
     QuadDec_M1_Start();
     QuadDec_M2_Start();
     
-    go_distance(100);
+    go_distance(0);
     
     for(;;)
     {
@@ -213,28 +213,28 @@ int main(void)
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
-//        if(left_on==false){
+        
             if(comp2_sum==0){
-//               left_on=true;
-                PWM_R=72;
-                PWM_L=38;  
+                //left_on=true;
+                PWM_R=70;
+                PWM_L=10;  
             }else if(comp3_sum==0){
-                PWM_R=35;
-                PWM_L=73;  
+                PWM_R=11;
+                PWM_L=70;  
             }else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
                 PWM_L=PWM_L+1;
             }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
                 PWM_R=PWM_R+1;
                 
             }else if(comp1_sum==0 && comp0_sum==0){
-                PWM_R=72;
-                PWM_L=73;
+                PWM_R=80;
+                PWM_L=81;
             }else if(comp0_sum>0 && comp1_sum>0 && comp2_sum>0 && comp3_sum>0){
                 PWM_R=50;
                 PWM_L=50;
             }
- //       }  
-            if(distance_M1>(target_diatance/1.03) && target_diatance!=0){
+            if(distance_M1>=(target_diatance/1.03) && target_diatance!=0){
+                LED_1_Write(1);
                 stop();
             }
 
