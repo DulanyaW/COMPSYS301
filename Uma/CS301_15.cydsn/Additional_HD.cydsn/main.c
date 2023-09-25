@@ -56,8 +56,14 @@ float32  distance_M1 = 0;
 float32  distance_M2 = 0;
 float32  current_distance_M1 = 0;
 float32  current_distance_M2 = 0;
+<<<<<<< HEAD
+float32 target_diatance = 100;//cm
+float32 turn_left_diatance = 5.06;//(90/360) * wheelCircumference_cm
+float32 turn_back_diatance = 2.53;//cm
+=======
 float32 target_diatance = 0;//cm
 float32 turn_back_diatance = 10.125;//cm
+>>>>>>> 551c227b3e607c945d0813acebd402305acd8153
 
 float32 speed_M1 = 0;
 float32 speed_M2 = 0;
@@ -95,16 +101,31 @@ CY_ISR(isr_3_handler) {
         encoderCounts_M2 = abs(QuadDec_M2_GetCounter());
         
         // sum of encodercounts
+<<<<<<< HEAD
+        encoder_value_sum_M1 += encoderCounts_M1 - prev_encoder_value_M1;
+        encoder_value_sum_M2 += encoderCounts_M2 - prev_encoder_value_M2;
+=======
         encoder_value_sum_M1 += encoderCounts_M1;
         encoder_value_sum_M2 += encoderCounts_M2;
+>>>>>>> 551c227b3e607c945d0813acebd402305acd8153
         
         // distance calculations 
         distance_M1 = (encoder_value_sum_M1/CPR) * wheelCircumference_cm;
         distance_M2 = (encoder_value_sum_M2/CPR) * wheelCircumference_cm;
 
+<<<<<<< HEAD
+        //update prev encoder value
+        prev_encoder_value_M1 = encoderCounts_M1;
+        prev_encoder_value_M2 = encoderCounts_M2;
+        
+//      //reset the encoder counters 
+//        QuadDec_M1_SetCounter(0);
+//        QuadDec_M2_SetCounter(0);     
+=======
         //reset the encoder counters 
         QuadDec_M1_SetCounter(0);
         QuadDec_M2_SetCounter(0);     
+>>>>>>> 551c227b3e607c945d0813acebd402305acd8153
     }
         Timer_1_ReadStatusRegister();
 }
@@ -112,6 +133,18 @@ CY_ISR(isr_3_handler) {
 
 CY_ISR(isr_2_handler) {
     //every 1ms 
+<<<<<<< HEAD
+    if(turn_counter==400){
+         PWM_L=30;
+        PWM_R=70; 
+    }
+    if(turn_counter==950){
+        PWM_L=50;
+        PWM_R=50;
+    }
+    
+    turn_counter++;   
+=======
     if(left_on==true){
         if(turn_counter==0){
             PWM_L=50;
@@ -128,6 +161,7 @@ CY_ISR(isr_2_handler) {
         }
         
     }
+>>>>>>> 551c227b3e607c945d0813acebd402305acd8153
 }
 
 
@@ -149,9 +183,7 @@ CY_ISR(isr_1_handler) {
         comp3_sum=0;
         count=0;
     }
-   
-
-    count++;
+       count++;
     Timer_1_ReadStatusRegister();
 }
 
@@ -283,6 +315,52 @@ int main(void)
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
+<<<<<<< HEAD
+        
+        // Check the left sensor
+        if (comp2_sum >= 0) {
+            LED_2_Write(1);
+            distance_M1 = 0;
+            // Left sensor is triggered, change state to TURN_LEFT
+            currentState = TURN_LEFT;
+            target_diatance = 3;
+        }
+        
+        // Implement state machine logic
+        switch (currentState) {
+            case GO_STRAIGHT:
+                // Implement goStraight logic
+                goStraight();
+                break;
+                
+            case TURN_LEFT:
+                if(distance_M1 >= distance_M1 + target_diatance ){// M1 is faster than M2 
+                    currentState = GO_STRAIGHT;
+                    LED_1_Write(1);
+                }else {
+                    
+                }
+                turnLeft();
+                
+//                if(distance_M1 >= distance_M1 + turn_left_diatance){
+//                    LED_3_Write(1);
+//                    turnLeft();
+//                }
+                break;
+                
+            case STOP:
+                // Implement logic to stop the robot
+               stop();
+                break;
+        }
+       
+        //target distance task
+//        if(distance_M1 >=target_diatance ){// M1 is faster than M2 
+//            LED_1_Write(1);
+//            stop(); 
+//        }else{
+//            goStraight();
+=======
 //        if(comp1_sum==0 && comp0_sum==0){
 //                current_state = GO_STRAIGHT;
 //                current_Encod_Count_M1 = abs(QuadDec_M1_GetCounter());
@@ -347,6 +425,7 @@ int main(void)
 //                PWM_1_WriteCompare(50);
 //                PWM_2_WriteCompare(50);
 //                break;
+>>>>>>> 551c227b3e607c945d0813acebd402305acd8153
 //        }
     }
 }
