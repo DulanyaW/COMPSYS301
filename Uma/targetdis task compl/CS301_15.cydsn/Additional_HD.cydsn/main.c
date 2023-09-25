@@ -43,7 +43,7 @@ float32  distance_M1 = 0;
 float32  distance_M2 = 0;
 float32  current_distance_M1 = 0;
 float32  current_distance_M2 = 0;
-float32 target_diatance = 100;//cm
+float32 target_diatance = 97;//cm
 float32 speed_M1 = 0;
 float32 speed_M2 = 0;
 int32 encoder_value_sum_M1 = 0;
@@ -69,8 +69,8 @@ uint8 comp1_sum;
 uint8 comp2_sum;
 uint8 comp3_sum;
 
-uint8 PWM_R=70;
-uint8 PWM_L=71;
+uint8 PWM_R=65;
+uint8 PWM_L=66;
 
 
 CY_ISR(isr_3_handler) {
@@ -173,8 +173,8 @@ void goStraight(){
         PWM_R=PWM_R+1;
         
     }else if(comp1_sum==0 && comp0_sum==0){
-        PWM_R=75;
-        PWM_L=76;
+        PWM_R=85;
+        PWM_L=87;
     }
      
 }
@@ -229,14 +229,14 @@ int main(void)
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
-        
-        if(comp2_sum > 0){
-            LED_2_Write(1);
-            while(distance_M1 >= distance_M1+3){
-                goStraight();
-            }
-            stop();
-        }
+//        
+//        if(comp2_sum > 0){
+//            LED_2_Write(1);
+//            while(distance_M1 >= distance_M1+3){
+//                goStraight();
+//            }
+//            stop();
+//        }
         
 ////   current_encoder_count = abs(QuadDec_M1_GetCounter());     
 //        if(abs(QuadDec_M1_GetCounter()) < current_encoder_count+50){
@@ -258,18 +258,18 @@ int main(void)
      
        
         //target distance task
-//        if(distance_M1 >=target_diatance ){// M1 is faster than M2 
-//            LED_1_Write(1);
-//            stop(); 
-//        }else{
-//            goStraight();
-//        }
+        if(distance_M1 >=target_diatance ){// M1 is faster than M2 
+            LED_1_Write(1);
+            stop(); 
+        }else{
+            goStraight();
+        }
         
 
-//        //right wheel
-//          PWM_1_WriteCompare(PWM_R);
-//       //PWM2 corresponds to left wheel
-//          PWM_2_WriteCompare(PWM_L);
+        //right wheel
+          PWM_1_WriteCompare(PWM_R);
+       //PWM2 corresponds to left wheel
+          PWM_2_WriteCompare(PWM_L);
               
 
     }

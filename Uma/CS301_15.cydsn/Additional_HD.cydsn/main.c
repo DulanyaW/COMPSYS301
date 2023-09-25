@@ -53,6 +53,9 @@ float32  distance_M2 = 0;
 float32  current_distance_M1 = 0;
 float32  current_distance_M2 = 0;
 float32 target_diatance = 100;//cm
+float32 turn_left_diatance = 5.06;//(90/360) * wheelCircumference_cm
+float32 turn_back_diatance = 2.53;//cm
+
 float32 speed_M1 = 0;
 float32 speed_M2 = 0;
 int32 encoder_value_sum_M1 = 0;
@@ -92,26 +95,19 @@ CY_ISR(isr_3_handler) {
         encoderCounts_M1 = abs(QuadDec_M1_GetCounter());//QuadDec_M1_GetCounter();
         encoderCounts_M2 = abs(QuadDec_M2_GetCounter());
         
-        
-        
-        
         // sum of encodercounts
         encoder_value_sum_M1 += encoderCounts_M1 - prev_encoder_value_M1;
         encoder_value_sum_M2 += encoderCounts_M2 - prev_encoder_value_M2;
-        
-        
         
         // distance calculations 
         distance_M1 = (encoder_value_sum_M1/CPR) * wheelCircumference_cm;
         distance_M2 = (encoder_value_sum_M2/CPR) * wheelCircumference_cm;
 
-        
         //update prev encoder value
         prev_encoder_value_M1 = encoderCounts_M1;
         prev_encoder_value_M2 = encoderCounts_M2;
         
-        
-//        //reset the encoder counters 
+//      //reset the encoder counters 
 //        QuadDec_M1_SetCounter(0);
 //        QuadDec_M2_SetCounter(0);     
     }
@@ -130,10 +126,7 @@ CY_ISR(isr_2_handler) {
         PWM_R=50;
     }
     
-        
-    
-    turn_counter++;
-    
+    turn_counter++;   
 }
 
 
@@ -155,9 +148,7 @@ CY_ISR(isr_1_handler) {
         comp3_sum=0;
         count=0;
     }
-   
-
-    count++;
+       count++;
     Timer_1_ReadStatusRegister();
 }
 
@@ -241,14 +232,12 @@ int main(void)
            /* Place your application code here. */
         
         // Check the left sensor
-        if (comp2_sum > 0) {
+        if (comp2_sum >= 0) {
             LED_2_Write(1);
-            
+            distance_M1 = 0;
             // Left sensor is triggered, change state to TURN_LEFT
             currentState = TURN_LEFT;
             target_diatance = 3;
-            
-
         }
         
         // Implement state machine logic
@@ -259,16 +248,18 @@ int main(void)
                 break;
                 
             case TURN_LEFT:
-                // Implement logic to turn left for a specific angle or time
-                // Check encoder counts or time to decide when to transition back
-                // to GO_STRAIGHT state
-                if(distance_M1 >=target_diatance ){// M1 is faster than M2 
+                if(distance_M1 >= distance_M1 + target_diatance ){// M1 is faster than M2 
+                    currentState = GO_STRAIGHT;
                     LED_1_Write(1);
-                    stop(); 
-                }else{
-                    goStraight();
+                }else {
+                    
                 }
+                turnLeft();
                 
+//                if(distance_M1 >= distance_M1 + turn_left_diatance){
+//                    LED_3_Write(1);
+//                    turnLeft();
+//                }
                 break;
                 
             case STOP:
