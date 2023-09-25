@@ -55,7 +55,12 @@ float32  distance_M1 = 0;
 float32  distance_M2 = 0;
 float32  current_distance_M1 = 0;
 float32  current_distance_M2 = 0;
-float32 target_diatance = 0;//cm
+float32 target_diatance = 100;//cm
+float32 total_distance_M1 = 0;
+float32 total_distance_M2 = 0;
+
+
+
 float32 turn_back_diatance = 10.125;//cm
 
 float32 speed_M1 = 0;
@@ -73,7 +78,7 @@ uint32 turn_counter = 0;
 bool left_on=false;
 bool right_on;
 bool middle_on;
-bool turn_complete;
+bool is_turning;
 
 uint8 comp0_sum;
 uint8 comp1_sum;
@@ -90,25 +95,30 @@ CY_ISR(isr_3_handler) {
         counter++;
     }else{
         counter = 1;
-        // Encoder counts (negative due to counterclockwise rotation)
+          // Encoder counts (negative due to counterclockwise rotation)
         encoderCounts_M1 = abs(QuadDec_M1_GetCounter());//QuadDec_M1_GetCounter();
         encoderCounts_M2 = abs(QuadDec_M2_GetCounter());
-            
         
-        // sum of encodercounts
-        encoder_value_sum_M1 += encoderCounts_M1 - prev_encoder_value_M1;
-        encoder_value_sum_M2 += encoderCounts_M2 - prev_encoder_value_M2;
         
-        current_distance_M1 = ((encoderCounts_M1 - prev_encoder_value_M1)/CPR)*wheelCircumference_cm;
+        
+        
+//        // sum of encodercounts
+//        encoder_value_sum_M1 += encoderCounts_M1 - prev_encoder_value_M1;
+//        encoder_value_sum_M2 += encoderCounts_M2 - prev_encoder_value_M2;
+        
+        
         
         // distance calculations 
-        distance_M1 = (encoder_value_sum_M1/CPR) * wheelCircumference_cm;
-        distance_M2 = (encoder_value_sum_M2/CPR) * wheelCircumference_cm;
+        distance_M1 = (encoderCounts_M1/CPR) * wheelCircumference_cm;
+        distance_M2 = (encoderCounts_M2/CPR) * wheelCircumference_cm;
 
         
-        //update prev encoder value
-        prev_encoder_value_M1 = encoderCounts_M1;
-        prev_encoder_value_M2 = encoderCounts_M2;
+        total_distance_M1 += distance_M1;
+        total_distance_M2 += distance_M2;
+        
+//        //update prev encoder value
+//        prev_encoder_value_M1 = encoderCounts_M1;
+//        prev_encoder_value_M2 = encoderCounts_M2;
         
         
         //reset the encoder counters 
@@ -197,13 +207,21 @@ int main(void)
           //comp0 and comp1 =0  => straight
            //comp2=0 => left
            //comp3=0 => right
-        if(turn_start== false){
+//        if(turn_start== false){
+            if(total_distance_M1>=(target_diatance) && target_diatance!=0){
+                LED_1_Write(1);
+                current_state = STOP;
+            }else{
+                current_state = GO_STRAIGHT;
+            }
+        
+        
             if(comp1_sum==0 && comp0_sum==0){
                     current_state = GO_STRAIGHT;
             }else if(comp2_sum == 0) {
                     QuadDec_M1_SetCounter(0);
                     distance_M1 =0 ; // Reset the distance traveled
-                    turn_start= true;
+                    is_turning = true;
                     current_state = TURN_LEFT;
             }else if(comp3_sum==0){
                     QuadDec_M2_SetCounter(0);
@@ -216,71 +234,46 @@ int main(void)
             }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
                     current_state = RIGHT_ADJUST;
             }
-        }
+    
             
-            
-//            if(distance_M1>=(target_diatance/1.03) && target_diatance!=0){
-//                LED_1_Write(1);
-//                current_state = STOP;
-//            }
-           
-
-//          PWM_1_WriteCompare(PWM_R);
-//          PWM_2_WriteCompare(PWM_L);
-     
-        switch (current_state) {
+            switch (current_state) {
             case GO_STRAIGHT:
-                PWM_1_WriteCompare(80);
-                PWM_2_WriteCompare(81);
-                break;
+                PWM_1_WriteCompare(75);
+                PWM_2_WriteCompare(76);
+                    break;
             case TURN_LEFT:
-//                while ( comp0_sum==0 || comp1_sum==0 ) {//turn_complete = true;
-                    if (((abs(QuadDec_M1_GetCounter())*(360/228))>= 90) ) {//|| (distance_M1 >= 40)
-                            //current_state = GO_STRAIGHT;
-                            turn_start = false;
-                    }else {
-//                        while ( comp0_sum==0||comp1_sum==0 ){
-                           PWM_1_WriteCompare(87);
-                           PWM_2_WriteCompare(10);
-//                        }
-                    } 
-//                }
-                break;    
+                PWM_1_WriteCompare(95);
+                PWM_2_WriteCompare(30);
+                break;   
             case TURN_RIGHT:
-//                while ( comp0_sum==0 || comp1_sum==0 ) {//turn_complete = true;
-//                    if (((abs(QuadDec_M2_GetCounter())*(360/228))>= 90) || (distance_M2 >= 40)) {
-//                            current_state = GO_STRAIGHT;
-//                    }else {
-//                        while ( comp0_sum==0||comp1_sum==0 ){
-//                           PWM_1_WriteCompare(0);
-//                           PWM_2_WriteCompare(87);
-//                        }
-//                    } 
-//                }
+                PWM_1_WriteCompare(0);
+                PWM_2_WriteCompare(80);
                 break;  
-            
             case RIGHT_ADJUST:
                 PWM_R = PWM_1_ReadCompare();
                 PWM_1_WriteCompare(PWM_R+1);
-//                PWM_R = PWM_1_ReadCompare();
-//                PWM_1_WriteCompare(PWM_R+1);
                 break; 
-                
-                
             case LEFT_ADJUST:
                 PWM_L = PWM_2_ReadCompare();
-                PWM_2_WriteCompare(PWM_L+1);//2+,1-
-//                PWM_R = PWM_1_ReadCompare();
-//                PWM_1_WriteCompare(PWM_R-1);
-//                
+                PWM_2_WriteCompare(PWM_L+1);            
                 break; 
             case STOP:
                 PWM_1_WriteCompare(50);
                 PWM_2_WriteCompare(50);
                 break;
+    
+             if(distance_M1>=(target_diatance/1.03) && target_diatance!=0){
+                LED_1_Write(1);
+                current_state = STOP;
+            }
         }
     }
 }
-
-
+//                    if (((abs(QuadDec_M1_GetCounter()) * (360 / 228)) <= 90)) {
+//                        is_turning = false;
+//                        current_state = GO_STRAIGHT;
+//                    } else {
+//                        PWM_1_WriteCompare(95);
+//                        PWM_2_WriteCompare(30);
+//                    } 
 /* [] END OF FILE */

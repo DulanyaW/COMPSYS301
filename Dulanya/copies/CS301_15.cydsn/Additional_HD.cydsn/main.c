@@ -32,6 +32,18 @@
 #include <stdbool.h>
 #include <math.h>
 #include "project.h"
+#define TURN_ANGLE 90 // Desired turn angle in degrees
+
+
+// Define states for the state machine
+typedef enum {
+    GO_STRAIGHT,
+    TURN_LEFT,
+    TURN_RIGHT,
+    RIGHT_ADJUST,
+    LEFT_ADJUST,
+    STOP,
+} RobotState;
 
 //distance calculation paras
 int32 encoderCounts_M1 = 0;  
@@ -44,12 +56,14 @@ float32  distance_M2 = 0;
 float32  current_distance_M1 = 0;
 float32  current_distance_M2 = 0;
 float32 target_diatance = 0;//cm
+float32 turn_back_diatance = 10.125;//cm
+
 float32 speed_M1 = 0;
 float32 speed_M2 = 0;
 int32 encoder_value_sum_M1 = 0;
 int32 encoder_value_sum_M2 = 0;
 uint8 counter = 1;
-
+float current_distance = 0;
 
 
 
@@ -66,12 +80,12 @@ uint8 comp1_sum;
 uint8 comp2_sum;
 uint8 comp3_sum;
 
-uint8 PWM_R=99;
-uint8 PWM_L=100;
+uint8 PWM_R=80;
+uint8 PWM_L=81;
 
-
+RobotState current_state = GO_STRAIGHT;// intialse state
 CY_ISR(isr_3_handler) {
-    if (counter < 20){
+    if (counter < 10){
         counter++;
     }else{
         counter = 1;
@@ -154,12 +168,13 @@ void turnLeft(){
 
 void goStraight(){
     //comp0==>middle left comp1==>middle right
-    if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
-        PWM_L=PWM_L+1;
-    }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
-        PWM_R=PWM_R+1;
-        
-    }else if(comp1_sum==0 && comp0_sum==0){
+//    if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
+//        PWM_L=PWM_L+1;
+//    }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
+//        PWM_R=PWM_R+1;
+//        
+//    }else 
+    if(comp1_sum==0 && comp0_sum==0){
         PWM_R=80;
         PWM_L=81;
     }
@@ -205,7 +220,7 @@ int main(void)
     QuadDec_M1_Start();
     QuadDec_M2_Start();
     
-    go_distance(0);
+    //go_distance(0);
     
     for(;;)
     {
@@ -213,37 +228,59 @@ int main(void)
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
-        
-            if(comp2_sum==0){
-                //left_on=true;
-                PWM_R=70;
-                PWM_L=10;  
-            }else if(comp3_sum==0){
-                PWM_R=11;
-                PWM_L=70;  
-            }else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
-                PWM_L=PWM_L+1;
-            }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
-                PWM_R=PWM_R+1;
-                
-            }else if(comp1_sum==0 && comp0_sum==0){
-                PWM_R=80;
-                PWM_L=81;
-            }else if(comp0_sum>0 && comp1_sum>0 && comp2_sum>0 && comp3_sum>0){
-                PWM_R=50;
-                PWM_L=50;
-            }
-            if(distance_M1>=(target_diatance/1.03) && target_diatance!=0){
-                LED_1_Write(1);
-                stop();
-            }
+        if(comp1_sum==0 && comp0_sum==0){
+                current_state = GO_STRAIGHT;
+        }else if(comp2_sum == 0) {
+                go_distance(0); // Reset the distance traveled
+                turn_complete = false;
+                current_state = TURN_LEFT;
+        }else if(comp3_sum==0){
+                current_state = TURN_RIGHT;
+        }else if(comp0_sum>0 && comp1_sum>0 && comp2_sum>0 && comp3_sum>0){
+                current_state = STOP;
+        }
+        else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
+                current_state = LEFT_ADJUST;
+        }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
+                current_state = RIGHT_ADJUST;
+        }
+            
+            
+//            if(distance_M1>=(target_diatance/1.03) && target_diatance!=0){
+//                LED_1_Write(1);
+//                current_state = STOP;
+//            }
+           
 
-        //PWM1 right wheel
-          PWM_1_WriteCompare(PWM_R);
-        //PWM2 corresponds to left wheel
-          PWM_2_WriteCompare(PWM_L);
-              
-
+//          PWM_1_WriteCompare(PWM_R);
+//          PWM_2_WriteCompare(PWM_L);
+     
+        switch (current_state) {
+            case GO_STRAIGHT:
+                PWM_1_WriteCompare(70);
+                PWM_2_WriteCompare(71);
+                break;
+            case TURN_LEFT:
+                PWM_1_WriteCompare(80);
+                PWM_2_WriteCompare(0);
+                break;    
+            case TURN_RIGHT:
+                PWM_1_WriteCompare(0);
+                PWM_2_WriteCompare(80);
+                break;  
+            case LEFT_ADJUST:
+                PWM_L = PWM_1_ReadCompare();
+                PWM_2_WriteCompare(PWM_L+1);
+                break; 
+            case RIGHT_ADJUST:
+                PWM_R = PWM_2_ReadCompare();
+                PWM_1_WriteCompare(PWM_R+1);
+                break; 
+            case STOP:
+                PWM_1_WriteCompare(50);
+                PWM_2_WriteCompare(50);
+                break;
+        }
     }
 }
 

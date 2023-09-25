@@ -1,5 +1,5 @@
 -- Project:   Additional_HD
--- Generated: 09/23/2023 16:22:43
+-- Generated: 09/24/2023 20:08:11
 -- PSoC Creator  4.4
 
 ENTITY Additional_HD IS
@@ -83,12 +83,12 @@ ARCHITECTURE __DEFAULT__ OF Additional_HD IS
     SIGNAL Net_2860 : bit;
     SIGNAL Net_2986 : bit;
     SIGNAL Net_3236 : bit;
+    SIGNAL Net_398 : bit;
     SIGNAL Net_402 : bit;
     ATTRIBUTE global_signal OF Net_402 : SIGNAL IS true;
     SIGNAL Net_402_adig : bit;
     SIGNAL Net_402_adig_local : bit;
     SIGNAL Net_402_local : bit;
-    SIGNAL Net_403 : bit;
     SIGNAL Net_509 : bit;
     SIGNAL Net_724 : bit;
     SIGNAL Net_724_SYNCOUT : bit;
@@ -122,9 +122,9 @@ ARCHITECTURE __DEFAULT__ OF Additional_HD IS
     SIGNAL \CONTROL_ENABLE_0:control_5\ : bit;
     SIGNAL \CONTROL_ENABLE_0:control_6\ : bit;
     SIGNAL \CONTROL_ENABLE_0:control_7\ : bit;
+    SIGNAL \Comp_0:Net_1\ : bit;
     SIGNAL \Comp_1:Net_1\ : bit;
     SIGNAL \Comp_2:Net_1\ : bit;
-    SIGNAL \Comp_3:Net_1\ : bit;
     SIGNAL \PWM_1:Net_54\ : bit;
     SIGNAL \PWM_1:Net_63\ : bit;
     SIGNAL \PWM_2:Net_54\ : bit;
@@ -921,7 +921,7 @@ BEGIN
         PORT MAP(
             pa_out => Sout_M1(0)__PA,
             oe => open,
-            pin_input => Net_403,
+            pin_input => Net_398,
             pad_out => Sout_M1(0)_PAD,
             pad_in => Sout_M1(0)_PAD,
             in_clock => open,
@@ -2932,7 +2932,7 @@ BEGIN
             cy_registers => "")
         PORT MAP(
             clock => \ClockBlock.aclk_glb_ff_0__sig\,
-            out => \Comp_3:Net_1\);
+            out => Net_398);
 
     ENCD_B_2(0)_SYNC:synccell
         GENERIC MAP(
@@ -2984,7 +2984,7 @@ BEGIN
             cy_registers => "")
         PORT MAP(
             clock => \ClockBlock.aclk_glb_ff_0__sig\,
-            out => Net_403);
+            out => \Comp_0:Net_1\);
 
     \CONTROL_DISABLE_1:Sync:ctrl_reg\:controlcell
         GENERIC MAP(
@@ -3555,6 +3555,14 @@ BEGIN
             busclk => ClockBlock_BUS_CLK);
 
     isr_2:interrupt
+        GENERIC MAP(
+            int_type => "10",
+            is_nmi => 0)
+        PORT MAP(
+            interrupt => Net_8964,
+            clock => ClockBlock_BUS_CLK);
+
+    isr_3:interrupt
         GENERIC MAP(
             int_type => "10",
             is_nmi => 0)

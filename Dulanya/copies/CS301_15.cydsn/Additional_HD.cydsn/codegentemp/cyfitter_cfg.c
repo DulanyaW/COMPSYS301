@@ -148,7 +148,7 @@ static void CyClockStartupError(uint8 errorCode)
 }
 #endif
 
-#define CY_CFG_BASE_ADDR_COUNT 34u
+#define CY_CFG_BASE_ADDR_COUNT 33u
 CYPACKED typedef struct
 {
 	uint8 offset;
@@ -156,31 +156,31 @@ CYPACKED typedef struct
 } CYPACKED_ATTR cy_cfg_addrvalue_t;
 
 #define cy_cfg_addr_table ((const uint32 CYFAR *)0x48000000u)
-#define cy_cfg_data_table ((const cy_cfg_addrvalue_t CYFAR *)0x48000088u)
+#define cy_cfg_data_table ((const cy_cfg_addrvalue_t CYFAR *)0x48000084u)
 
 /* UDB_1_1_0_CONFIG Address: CYDEV_UCFG_B1_P3_U1_BASE Size (bytes): 128 */
-#define BS_UDB_1_1_0_CONFIG_VAL ((const uint8 CYFAR *)0x48000780u)
+#define BS_UDB_1_1_0_CONFIG_VAL ((const uint8 CYFAR *)0x4800077Cu)
 
 /* IOPINS0_0 Address: CYREG_PRT0_DM0 Size (bytes): 8 */
-#define BS_IOPINS0_0_VAL ((const uint8 CYFAR *)0x48000800u)
+#define BS_IOPINS0_0_VAL ((const uint8 CYFAR *)0x480007FCu)
 
 /* IOPINS0_7 Address: CYREG_PRT12_DM0 Size (bytes): 8 */
-#define BS_IOPINS0_7_VAL ((const uint8 CYFAR *)0x48000808u)
+#define BS_IOPINS0_7_VAL ((const uint8 CYFAR *)0x48000804u)
 
 /* IOPINS0_8 Address: CYREG_PRT15_DM0 Size (bytes): 8 */
-#define BS_IOPINS0_8_VAL ((const uint8 CYFAR *)0x48000810u)
+#define BS_IOPINS0_8_VAL ((const uint8 CYFAR *)0x4800080Cu)
 
 /* IOPINS0_1 Address: CYREG_PRT1_DM0 Size (bytes): 8 */
-#define BS_IOPINS0_1_VAL ((const uint8 CYFAR *)0x48000818u)
+#define BS_IOPINS0_1_VAL ((const uint8 CYFAR *)0x48000814u)
 
 /* IOPINS0_2 Address: CYREG_PRT2_DM0 Size (bytes): 8 */
-#define BS_IOPINS0_2_VAL ((const uint8 CYFAR *)0x48000820u)
+#define BS_IOPINS0_2_VAL ((const uint8 CYFAR *)0x4800081Cu)
 
 /* IOPINS0_3 Address: CYREG_PRT3_DM0 Size (bytes): 8 */
-#define BS_IOPINS0_3_VAL ((const uint8 CYFAR *)0x48000828u)
+#define BS_IOPINS0_3_VAL ((const uint8 CYFAR *)0x48000824u)
 
 /* CYDEV_CLKDIST_ACFG0_CFG0 Address: CYREG_CLKDIST_ACFG0_CFG0 Size (bytes): 4 */
-#define BS_CYDEV_CLKDIST_ACFG0_CFG0_VAL ((const uint8 CYFAR *)0x48000830u)
+#define BS_CYDEV_CLKDIST_ACFG0_CFG0_VAL ((const uint8 CYFAR *)0x4800082Cu)
 
 
 /*******************************************************************************

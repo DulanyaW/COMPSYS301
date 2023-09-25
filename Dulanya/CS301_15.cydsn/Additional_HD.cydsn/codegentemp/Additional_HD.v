@@ -1,6 +1,6 @@
 // ======================================================================
 // Additional_HD.v generated from TopDesign.cysch
-// 09/23/2023 at 16:22
+// 09/24/2023 at 20:08
 // This file is auto generated. ANY EDITS YOU MAKE MAY BE LOST WHEN THIS FILE IS REGENERATED!!!
 // ======================================================================
 
@@ -1100,8 +1100,8 @@ module top ;
           wire  Net_8947;
           wire  Net_8946;
           wire  Net_8945;
-          wire  Net_8944;
           wire  CLK24M;
+          wire  Net_8944;
           wire  Net_8943;
           wire  Net_8942;
           wire  Net_8941;
@@ -1132,10 +1132,10 @@ module top ;
           wire  Net_499;
           wire  Net_400;
     electrical  Net_264;
+          wire  Net_398;
           wire  Net_8964;
           wire  Net_2860;
           wire  Net_2986;
-          wire  Net_398;
           wire  Net_1645;
           wire  Net_1644;
           wire  Net_1610;
@@ -1312,7 +1312,7 @@ module top ;
 		  .input_buffer_sel(2'b00))
 		Sout_M1
 		 (.oe(tmpOE__Sout_M1_net),
-		  .y({Net_403}),
+		  .y({Net_398}),
 		  .fb({tmpFB_0__Sout_M1_net[0:0]}),
 		  .io({tmpIO_0__Sout_M1_net[0:0]}),
 		  .siovref(tmpSIOVREF__Sout_M1_net),
@@ -3086,6 +3086,13 @@ module top ;
 	cy_isr_v1_0
 		#(.int_type(2'b10))
 		isr_2
+		 (.int_signal(Net_8964));
+
+
+
+	cy_isr_v1_0
+		#(.int_type(2'b10))
+		isr_3
 		 (.int_signal(Net_8964));
 
 
