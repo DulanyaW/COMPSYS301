@@ -25,6 +25,7 @@
  *
  * ========================================
 */
+#include <cytypes.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -73,7 +74,7 @@ uint32 turn_counter = 0;
 bool left_on=false;
 bool right_on;
 bool middle_on;
-bool turn_complete;
+bool turn_complete=true;
 
 uint8 comp0_sum;
 uint8 comp1_sum;
@@ -109,25 +110,6 @@ CY_ISR(isr_3_handler) {
 }
 
 
-CY_ISR(isr_2_handler) {
-    //every 1ms 
-    if(left_on==true){
-        if(turn_counter==0){
-            PWM_L=50;
-            PWM_R=80; 
-           // LED_1_Write(1);
-        }
-        turn_counter++;
-        if(turn_counter==650){
-            left_on=false;
-            PWM_L=50;
-            PWM_R=50;
-            turn_counter=0;
-            //LED_1_Write(0);
-        }
-        
-    }
-}
 
 
 CY_ISR(isr_1_handler) {
@@ -174,14 +156,15 @@ void goStraight(){
 //        PWM_R=PWM_R+1;
 //        
 //    }else 
-    if(comp1_sum==0 && comp0_sum==0){
+
         PWM_R=80;
         PWM_L=81;
-    }
+    
      
 }
 void go_distance(float32 distance){
     distance_M1=0;
+    goStraight();
     target_diatance=distance;
 }
 
@@ -197,7 +180,7 @@ int main(void)
     
     isr_1_StartEx(isr_1_handler);
     isr_3_StartEx(isr_3_handler);
-    isr_2_StartEx(isr_2_handler);
+  
     
     //start comparators
     Comp_0_Start();
@@ -228,11 +211,10 @@ int main(void)
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
+        
         if(comp1_sum==0 && comp0_sum==0){
                 current_state = GO_STRAIGHT;
         }else if(comp2_sum == 0) {
-                go_distance(0); // Reset the distance traveled
-                turn_complete = false;
                 current_state = TURN_LEFT;
         }else if(comp3_sum==0){
                 current_state = TURN_RIGHT;
@@ -244,42 +226,35 @@ int main(void)
         }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
                 current_state = RIGHT_ADJUST;
         }
-            
-            
-//            if(distance_M1>=(target_diatance/1.03) && target_diatance!=0){
-//                LED_1_Write(1);
-//                current_state = STOP;
-//            }
-           
+     
 
-//          PWM_1_WriteCompare(PWM_R);
-//          PWM_2_WriteCompare(PWM_L);
      
         switch (current_state) {
             case GO_STRAIGHT:
-                PWM_1_WriteCompare(70);
-                PWM_2_WriteCompare(71);
+                PWM_1_WriteCompare(69);
+                PWM_2_WriteCompare(70);
                 break;
             case TURN_LEFT:
-                PWM_1_WriteCompare(80);
+                PWM_1_WriteCompare(89);
                 PWM_2_WriteCompare(0);
+                CyDelay(10);
                 break;    
             case TURN_RIGHT:
-                PWM_1_WriteCompare(0);
-                PWM_2_WriteCompare(80);
+                PWM_1_WriteCompare(7);
+                PWM_2_WriteCompare(91);
                 break;  
-            case LEFT_ADJUST:
-                PWM_L = PWM_1_ReadCompare();
-                PWM_2_WriteCompare(PWM_L+1);
-                break; 
-            case RIGHT_ADJUST:
-                PWM_R = PWM_2_ReadCompare();
-                PWM_1_WriteCompare(PWM_R+1);
-                break; 
             case STOP:
                 PWM_1_WriteCompare(50);
                 PWM_2_WriteCompare(50);
                 break;
+            case LEFT_ADJUST:
+                PWM_L = PWM_2_ReadCompare();
+                PWM_2_WriteCompare(PWM_L+1);
+                break; 
+            case RIGHT_ADJUST:
+                PWM_R = PWM_1_ReadCompare();
+                PWM_1_WriteCompare(PWM_R+1);
+                break; 
         }
     }
 }
