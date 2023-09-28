@@ -32,8 +32,8 @@ bool s3_flag;
 
 RobotState current_state = GO_STRAIGHT;// intialse state
 
-CY_ISR(isr_2_handler) {
-//void sensor_status(){
+//CY_ISR(isr_2_handler) {
+void sensor_status(){
     if (comp0_sum==0 ) {
         s0_flag = true;
     }
@@ -79,7 +79,7 @@ int main(void)
     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
     Timer_1_Start();
     isr_1_StartEx(isr_1_handler);
-    isr_2_StartEx(isr_2_handler);
+//    isr_2_StartEx(isr_2_handler);
     
     //start comparators
     Comp_0_Start();
@@ -103,57 +103,58 @@ int main(void)
     
     for(;;)
     {      
-        //sensor_status();
-            if(s0_flag || s1_flag){
+        sensor_status();
+            if(comp0_sum==0 || comp1_sum==0){
                     current_state = GO_STRAIGHT;
-            }else if(s1_flag) {
+            }
+            if(s2_flag) {
                     QuadDec_M1_SetCounter(0);
                     current_state = TURN_LEFT;
-            }else if(s3_flag){
+            }
+            if(s3_flag){
                     QuadDec_M2_SetCounter(0);
                     current_state = TURN_RIGHT;
-            }else if(comp0_sum>0 && comp1_sum>0 && comp2_sum>0 && comp3_sum>0){
+            }
+            if(comp0_sum>0 && comp1_sum>0 && comp2_sum>0 && comp3_sum>0){
                     current_state = STOP;
-            }else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
+            }
+            if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
                     current_state = LEFT_ADJUST;
-            }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
+            }
+            if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
                     current_state = RIGHT_ADJUST;
             }
     
             
             switch (current_state) {
             case GO_STRAIGHT:
-                PWM_1_WriteCompare(75);
-                PWM_2_WriteCompare(76);
+                PWM_1_WriteCompare(69);
+                PWM_2_WriteCompare(70);
                     break;
             case TURN_LEFT:
                 if(abs(QuadDec_M1_GetCounter()) < TURN_90_ANGLE_EN_COUNT){
-                    PWM_1_WriteCompare(95);
+                    PWM_1_WriteCompare(70);
                     PWM_2_WriteCompare(30);
                 }
-                LED_1_Write(1);
-                if(comp0_sum==0 || comp1_sum==0){
-                    s2_flag = false;
-                }
-                
-                current_state = STOP;
+                 s2_flag = false;
+                current_state = GO_STRAIGHT;
+                    
                 break;   
             case TURN_RIGHT:
                 if(abs(QuadDec_M2_GetCounter()) < TURN_90_ANGLE_EN_COUNT){
-                    PWM_1_WriteCompare(0);
-                    PWM_2_WriteCompare(80);
+                    PWM_1_WriteCompare(30);
+                    PWM_2_WriteCompare(70);
                     }
-                LED_2_Write(1);
-                s2_flag = false;
-                current_state = STOP;
+                s3_flag = false;
+                current_state = GO_STRAIGHT;
                 break;  
             case RIGHT_ADJUST:
-                PWM_R = PWM_1_ReadCompare();
-                PWM_1_WriteCompare(PWM_R+1);
+//                PWM_R = PWM_1_ReadCompare();
+//                PWM_1_WriteCompare(PWM_R+1);
                 break; 
             case LEFT_ADJUST:
-                PWM_L = PWM_2_ReadCompare();
-                PWM_2_WriteCompare(PWM_L+1);            
+//                PWM_L = PWM_2_ReadCompare();
+//                PWM_2_WriteCompare(PWM_L+1);            
                 break; 
             case STOP:
                 PWM_1_WriteCompare(50);
