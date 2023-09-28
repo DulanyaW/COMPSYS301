@@ -162,23 +162,13 @@ void goStraight(){
 
 void turnRight(){
     PWM_1_WriteCompare(30);
-    PWM_2_WriteCompare(65);
-//    while(1){
-//        LED_1_Write(1);
-//        if(comp0_sum==0 || comp1_sum==0) {break;}  
-//        //wait until both middle Sensors are in line
-//    };
-    CyDelay(300);
-    PWM_1_WriteCompare(69);
     PWM_2_WriteCompare(70);
+
 }
 void turnLeft(){
    
-    PWM_1_WriteCompare(65);
+    PWM_1_WriteCompare(70);
     PWM_2_WriteCompare(30);
-    CyDelay(300);
-    PWM_1_WriteCompare(69);
-    PWM_2_WriteCompare(70);
      
  
 }
@@ -232,6 +222,7 @@ int main(void)
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
+        
         if((comp2_sum>0 && comp3_sum>0)==1){//left & right sensor on white light
             goStraight();
         }
