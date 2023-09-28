@@ -25,6 +25,7 @@
  *
  * ========================================
 */
+
 #include <cytypes.h>
 #include <stdio.h>
 #include <string.h>
@@ -41,8 +42,8 @@ typedef enum {
     GO_STRAIGHT,
     TURN_LEFT,
     TURN_RIGHT,
-    RIGHT_ADJUST,
-    LEFT_ADJUST,
+//    RIGHT_ADJUST,
+//    LEFT_ADJUST,
     STOP,
 } RobotState;
 
@@ -122,7 +123,7 @@ CY_ISR(isr_1_handler) {
     comp3_sum+=Comp_3_GetCompare();
     
     
-    if(count==8){
+    if(count==6){
         //reset to check again every 8ms
         comp0_sum=0;
         comp1_sum=0;
@@ -139,25 +140,6 @@ void stop(){
     PWM_1_WriteCompare(50);
     PWM_2_WriteCompare(50);
 }
-void turnRight(){
-    PWM_1_WriteCompare(30);
-    PWM_2_WriteCompare(70);
-    
-    while(1){
-        if(comp0_sum==0 || comp1_sum==0) {break;}    
-        //wait until both middle Sensors are in line
-    };
-    
-}
-void turnLeft(){
-    PWM_1_WriteCompare(30);
-    PWM_2_WriteCompare(70);
-    
-    while(1){
-        if(comp0_sum==0 || comp1_sum==0) {break;}    
-        //wait until both middle Sensors are in line
-    };
-}
 
 void goStraight(){
     //comp0==>middle left comp1==>middle right
@@ -171,12 +153,35 @@ void goStraight(){
         
     }else {
         
-        PWM_1_WriteCompare(67);
-        PWM_2_WriteCompare(68);
+        PWM_1_WriteCompare(70);
+        PWM_2_WriteCompare(71);
         
     }
     
      
+}
+
+void turnRight(){
+    PWM_1_WriteCompare(30);
+    PWM_2_WriteCompare(65);
+//    while(1){
+//        LED_1_Write(1);
+//        if(comp0_sum==0 || comp1_sum==0) {break;}  
+//        //wait until both middle Sensors are in line
+//    };
+    CyDelay(300);
+    PWM_1_WriteCompare(69);
+    PWM_2_WriteCompare(70);
+}
+void turnLeft(){
+   
+    PWM_1_WriteCompare(65);
+    PWM_2_WriteCompare(30);
+    CyDelay(300);
+    PWM_1_WriteCompare(69);
+    PWM_2_WriteCompare(70);
+     
+ 
 }
 
 void go_distance(float32 distance){
@@ -228,22 +233,68 @@ int main(void)
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
-        
-        
-        if(comp2_sum==0){
-              turnLeft();
-        }else if(comp3_sum == 0) {
-              turnRight();
-        }else if( comp1_sum==0|| comp0_sum==0){
-               goStraight();
-        }else{
-               stop();
-        }
-         
-        
+  
+       if(comp3_sum==0){
+        stop();
+    }else{
+        goStraight();}
+
 
     }
 }
 
-
+      
+        
+//        if(comp2_sum==0){
+//              turnLeft();
+//    if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
+//        
+//        PWM_2_WriteCompare(PWM_2_ReadCompare()+1);//increase left wheel speed
+//        
+//    }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
+//        
+//        PWM_1_WriteCompare(PWM_1_ReadCompare()+1);//increase right wheel speed
+//        
+//    }else if( comp1_sum==0 && comp0_sum==0){
+//        PWM_1_WriteCompare(70);
+//        PWM_2_WriteCompare(71);
+//    } else if(comp3_sum == 0) {
+//        turnRight();
+//    } else if(comp2_sum == 0) {
+//        turnLeft();
+//    }else{
+//        stop();
+//    }
+//        if(comp1_sum==0 || comp0_sum==0){
+//                current_state = GO_STRAIGHT; 
+//        }else if(comp3_sum==0){
+//                current_state = TURN_RIGHT;
+//        }else if(comp2_sum == 0) {
+//                current_state = TURN_LEFT; 
+//        }else if(comp0_sum>0 && comp1_sum>0 && comp2_sum>0 && comp3_sum>0){
+//                current_state = STOP;
+//        }
+//     
+//        switch (current_state) {
+//            case GO_STRAIGHT:
+//                goStraight();
+//                break;
+//            case TURN_LEFT:
+//                PWM_1_WriteCompare(68);
+//                PWM_2_WriteCompare(32);
+//                CyDelay(300);
+//                PWM_1_WriteCompare(50);
+//                PWM_2_WriteCompare(50);
+//                break;    
+//            case TURN_RIGHT:
+//                PWM_1_WriteCompare(32);
+//                PWM_2_WriteCompare(68);
+//                CyDelay(300);
+//                 PWM_1_WriteCompare(50);
+//                PWM_2_WriteCompare(50);
+//                break;  
+//            case STOP:
+//                stop();
+//                break;
+//        }
 /* [] END OF FILE */

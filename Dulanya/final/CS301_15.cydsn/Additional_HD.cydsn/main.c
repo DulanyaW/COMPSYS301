@@ -169,8 +169,8 @@ void goStraight(){
         PWM_R=PWM_R+1;
         
     }else if(comp1_sum==0 && comp0_sum==0){
-        PWM_R=80;
-        PWM_L=81;
+        PWM_R=70;
+        PWM_L=71;
     }
      
 }
@@ -214,72 +214,74 @@ int main(void)
     QuadDec_M1_Start();
     QuadDec_M2_Start();
     
-    go_distance(100);
+    go_distance(00);
     
     for(;;)
     {
           //comp0 and comp1 =0  => straight
            //comp2=0 => left
            //comp3=0 => right
-           /* Place your application code here. */
-         if(comp1_sum==0 && comp0_sum==0){
-                current_state = GO_STRAIGHT;
-        }else if(comp2_sum == 0) {
-                current_state = TURN_LEFT;
-        }else if(comp3_sum==0){
-                current_state = TURN_RIGHT;
-        }else if(comp0_sum>0 && comp1_sum>0 && comp2_sum>0 && comp3_sum>0){
-                current_state = STOP;
-        }
-        else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
-                current_state = LEFT_ADJUST;
-        }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
-                current_state = RIGHT_ADJUST;
-        }
-     
-        switch (current_state) {
-            case GO_STRAIGHT:
-                PWM_R=86;
-                PWM_L=87; 
-                break;
-            case TURN_LEFT:
-                PWM_L=0; 
-                PWM_R=90;
-                break;    
-            case TURN_RIGHT:
-                PWM_L=87;
-                PWM_R=0; 
-                break;  
-            case STOP:
-                PWM_R=50;
-                PWM_L=50; 
-                break;
-            case LEFT_ADJUST:
-                PWM_L=PWM_L+1; 
-                break; 
-            case RIGHT_ADJUST:
-                PWM_R=PWM_R+1;
-                break; 
-        }
-        
-//            if(comp2_sum==0){
-//                //left_on=true;
-//                PWM_R=71;
-//                PWM_L=10;  
-//            }else if(comp3_sum==0){
-//                PWM_R=0;
-//                PWM_L=86;  
-//            }else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
-//                PWM_L=PWM_L+1;
-//            }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
-//                PWM_R=PWM_R+1;    
-//            }else if(comp1_sum==0 && comp0_sum==0){//both sensors on the line
-//                PWM_R=80;
-//                PWM_L=81;
-//            }else if(comp0_sum>0 && comp1_sum>0 && comp2_sum>0 && comp3_sum>0){
+//           /* Place your application code here. */
+//         if(comp1_sum==0 && comp0_sum==0){
+//                current_state = GO_STRAIGHT;
+//        }else if(comp2_sum == 0) {
+//                current_state = TURN_LEFT;
+//        }else if(comp3_sum==0){
+//                current_state = TURN_RIGHT;
+//        }else if(comp0_sum>0 && comp1_sum>0 && comp2_sum>0 && comp3_sum>0){
+//                current_state = STOP;
+//        }
+//        else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
+//                current_state = LEFT_ADJUST;
+//        }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
+//                current_state = RIGHT_ADJUST;
+//        }
+//     
+//        switch (current_state) {
+//            case GO_STRAIGHT:
+//                PWM_R=70;
+//                PWM_L=71; 
+//                break;
+//            case TURN_LEFT:
+//                PWM_L=20; 
+//                PWM_R=70;
+//                CyDelay(200);
+//                break;    
+//            case TURN_RIGHT:
+//                PWM_L=70;
+//                PWM_R=20; 
+//                CyDelay(200);
+//                break;  
+//            case STOP:
 //                PWM_R=50;
-//                PWM_L=50;
-//            }
+//                PWM_L=50; 
+//                break;
+//            case LEFT_ADJUST:
+//                PWM_L=PWM_L+1; 
+//                break; 
+//            case RIGHT_ADJUST:
+//                PWM_R=PWM_R+1;
+//                break; 
+//        }
+        
+            if(comp2_sum==0){
+                //left_on=true;
+                PWM_R=71;
+                PWM_L=10;  
+            }else if(comp3_sum==0){
+                PWM_R=0;
+                PWM_L=86;  
+            }else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
+                PWM_L=PWM_L+1;
+            }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
+                PWM_R=PWM_R+1;    
+            }else if(comp1_sum==0 && comp0_sum==0){//both sensors on the line
+                PWM_R=70;
+                PWM_L=71;
+            }else if(comp0_sum>0 && comp1_sum>0 && comp2_sum>0 && comp3_sum>0){
+                PWM_R=50;
+                PWM_L=50;
+            }
         
 
             if(distance_M1>=target_diatance && target_diatance!=0){
