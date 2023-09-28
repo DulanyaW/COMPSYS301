@@ -33,7 +33,6 @@
 #include <project.h>
 #include <stdbool.h>
 #include <math.h>
-#include "project.h"
 #define TURN_ANGLE 90 // Desired turn angle in degrees
 
 
@@ -123,7 +122,7 @@ CY_ISR(isr_1_handler) {
     comp3_sum+=Comp_3_GetCompare();
     
     
-    if(count==6){
+    if(count==8){
         //reset to check again every 8ms
         comp0_sum=0;
         comp1_sum=0;
@@ -233,68 +232,24 @@ int main(void)
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
+        if((comp2_sum>0 && comp3_sum>0)==1){//left & right sensor on white light
+            goStraight();
+        }
   
-       if(comp3_sum==0){
-        stop();
-    }else{
-        goStraight();}
-
+        if((comp2_sum==0 && comp3_sum>0)==1){//left sensor on black line
+            turnLeft();
+        }
+        if((comp3_sum==0 && comp2_sum>0)==1){//right sensor on black line
+            turnRight();
+        }
+        if((comp3_sum==0 && comp2_sum==0)==1){//right and left sensors on black line
+            stop();
+        }
 
     }
 }
 
       
         
-//        if(comp2_sum==0){
-//              turnLeft();
-//    if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
-//        
-//        PWM_2_WriteCompare(PWM_2_ReadCompare()+1);//increase left wheel speed
-//        
-//    }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
-//        
-//        PWM_1_WriteCompare(PWM_1_ReadCompare()+1);//increase right wheel speed
-//        
-//    }else if( comp1_sum==0 && comp0_sum==0){
-//        PWM_1_WriteCompare(70);
-//        PWM_2_WriteCompare(71);
-//    } else if(comp3_sum == 0) {
-//        turnRight();
-//    } else if(comp2_sum == 0) {
-//        turnLeft();
-//    }else{
-//        stop();
-//    }
-//        if(comp1_sum==0 || comp0_sum==0){
-//                current_state = GO_STRAIGHT; 
-//        }else if(comp3_sum==0){
-//                current_state = TURN_RIGHT;
-//        }else if(comp2_sum == 0) {
-//                current_state = TURN_LEFT; 
-//        }else if(comp0_sum>0 && comp1_sum>0 && comp2_sum>0 && comp3_sum>0){
-//                current_state = STOP;
-//        }
-//     
-//        switch (current_state) {
-//            case GO_STRAIGHT:
-//                goStraight();
-//                break;
-//            case TURN_LEFT:
-//                PWM_1_WriteCompare(68);
-//                PWM_2_WriteCompare(32);
-//                CyDelay(300);
-//                PWM_1_WriteCompare(50);
-//                PWM_2_WriteCompare(50);
-//                break;    
-//            case TURN_RIGHT:
-//                PWM_1_WriteCompare(32);
-//                PWM_2_WriteCompare(68);
-//                CyDelay(300);
-//                 PWM_1_WriteCompare(50);
-//                PWM_2_WriteCompare(50);
-//                break;  
-//            case STOP:
-//                stop();
-//                break;
-//        }
+
 /* [] END OF FILE */
