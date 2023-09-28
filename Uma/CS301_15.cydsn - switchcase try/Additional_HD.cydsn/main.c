@@ -1,30 +1,3 @@
-/* ========================================
- *
- * Copyright YOUR COMPANY, THE YEAR
- * All Rights Reserved
- * UNPUBLISHED, LICENSED SOFTWARE.
- *
- * CONFIDENTIAL AND PROPRIETARY INFORMATION
- * WHICH IS THE PROPERTY OF your company.
- *
- * ========================================
-*/
-/* ========================================
- * Fully working code: 
- * PWM      : 
- * Encoder  : 
- * ADC      :
- * USB      : port displays speed and position.
- * CMD: "PW xx"
- * Copyright Univ of Auckland, 2016
- * All Rights Reserved
- * UNPUBLISHED, LICENSED SOFTWARE.
- *
- * CONFIDENTIAL AND PROPRIETARY INFORMATION
- * WHICH IS THE PROPERTY OF Univ of Auckland.
- *
- * ========================================
-*/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -32,8 +5,8 @@
 #include <stdbool.h>
 #include <math.h>
 #include "project.h"
-#define TURN_ANGLE 90 // Desired turn angle in degrees
-
+#define TURN_90_ANGLE_EN_COUNT 57 // 90 degrees
+#define TURN_180_ANGLE_EN_COUNT 114 // 180 degrees
 
 // Define states for the state machine
 typedef enum {
@@ -45,107 +18,35 @@ typedef enum {
     STOP,
 } RobotState;
 
-//distance calculation paras
-int32 encoderCounts_M1 = 0;  
-int32 encoderCounts_M2 = 0;  
-int32 CPR = 228;  // Adjusted for 4x resolution(228/4)
-float wheelCircumference_cm = (M_PI*64.46)/10;// wheel circumference wheelDiameter_mm = 64.46)
-double timeInterval_s = 10.924;  // Effective time interval( (timer period )2.731*4)
-float32  distance_M1 = 0;
-float32  distance_M2 = 0;
-float32  current_distance_M1 = 0;
-float32  current_distance_M2 = 0;
-float32 target_diatance = 100;//cm
-float32 total_distance_M1 = 0;
-float32 total_distance_M2 = 0;
-
-
-
-float32 turn_back_diatance = 10.125;//cm
-
-float32 speed_M1 = 0;
-float32 speed_M2 = 0;
-int32 encoder_value_sum_M1 = 0;
-int32 encoder_value_sum_M2 = 0;
-uint8 counter = 1;
-float current_distance = 0;
-int32 prev_encoder_value_M1 = 0;
-int32 prev_encoder_value_M2 = 0;
-bool turn_start = false;
-
 uint32 count = 0;
-uint32 turn_counter = 0;
-bool left_on=false;
-bool right_on;
-bool middle_on;
-bool is_turning;
-
 uint8 comp0_sum;
 uint8 comp1_sum;
 uint8 comp2_sum;
 uint8 comp3_sum;
-
-uint8 PWM_R=80;
-uint8 PWM_L=81;
+uint8 PWM_R=0;
+uint8 PWM_L=0;
+bool s0_flag;
+bool s1_flag;
+bool s2_flag;
+bool s3_flag;
 
 RobotState current_state = GO_STRAIGHT;// intialse state
 
-CY_ISR(isr_3_handler) {
-    if (counter < 10){
-        counter++;
-    }else{
-        counter = 1;
-          // Encoder counts (negative due to counterclockwise rotation)
-        encoderCounts_M1 = abs(QuadDec_M1_GetCounter());//QuadDec_M1_GetCounter();
-        encoderCounts_M2 = abs(QuadDec_M2_GetCounter());
-        
-        
-        
-        
-//        // sum of encodercounts
-//        encoder_value_sum_M1 += encoderCounts_M1 - prev_encoder_value_M1;
-//        encoder_value_sum_M2 += encoderCounts_M2 - prev_encoder_value_M2;
-        
-        
-        
-        // distance calculations 
-        distance_M1 = (encoderCounts_M1/CPR) * wheelCircumference_cm;
-        distance_M2 = (encoderCounts_M2/CPR) * wheelCircumference_cm;
-
-        
-        total_distance_M1 += distance_M1;
-        total_distance_M2 += distance_M2;
-        
-//        //update prev encoder value
-//        prev_encoder_value_M1 = encoderCounts_M1;
-//        prev_encoder_value_M2 = encoderCounts_M2;
-        
-        
-        //reset the encoder counters 
-        QuadDec_M1_SetCounter(0);
-        QuadDec_M2_SetCounter(0);     
-    }
-        Timer_1_ReadStatusRegister();
-}
-
 CY_ISR(isr_2_handler) {
-    //every 1ms 
-    if(left_on==true){
-        if(turn_counter==0){
-            PWM_L=50;
-            PWM_R=80; 
-           // LED_1_Write(1);
-        }
-        turn_counter++;
-        if(turn_counter==650){
-            left_on=false;
-            PWM_L=50;
-            PWM_R=50;
-            turn_counter=0;
-            //LED_1_Write(0);
-        }
-        
+//void sensor_status(){
+    if (comp0_sum==0 ) {
+        s0_flag = true;
     }
+    if (comp1_sum==0 ) {
+        s1_flag = true;
+    }
+    
+    if (comp2_sum==0 ) {
+        s2_flag = true;
+    }
+    if (comp3_sum==0 ) {
+        s3_flag = true;
+    }    
 }
 
 
@@ -177,9 +78,7 @@ int main(void)
 
     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
     Timer_1_Start();
-    
     isr_1_StartEx(isr_1_handler);
-    isr_3_StartEx(isr_3_handler);
     isr_2_StartEx(isr_2_handler);
     
     //start comparators
@@ -203,29 +102,15 @@ int main(void)
 
     
     for(;;)
-    {
-          //comp0 and comp1 =0  => straight
-           //comp2=0 => left
-           //comp3=0 => right
-//        if(turn_start== false){
-            if(total_distance_M1>=(target_diatance) && target_diatance!=0){
-                LED_1_Write(1);
-                current_state = STOP;
-            }else{
-                current_state = GO_STRAIGHT;
-            }
-        
-        
-            if(comp1_sum==0 && comp0_sum==0){
+    {      
+        //sensor_status();
+            if(s0_flag || s1_flag){
                     current_state = GO_STRAIGHT;
-            }else if(comp2_sum == 0) {
+            }else if(s1_flag) {
                     QuadDec_M1_SetCounter(0);
-                    distance_M1 =0 ; // Reset the distance traveled
-                    is_turning = true;
                     current_state = TURN_LEFT;
-            }else if(comp3_sum==0){
+            }else if(s3_flag){
                     QuadDec_M2_SetCounter(0);
-                    distance_M2 =0 ; // Reset the distance traveled
                     current_state = TURN_RIGHT;
             }else if(comp0_sum>0 && comp1_sum>0 && comp2_sum>0 && comp3_sum>0){
                     current_state = STOP;
@@ -242,12 +127,25 @@ int main(void)
                 PWM_2_WriteCompare(76);
                     break;
             case TURN_LEFT:
-                PWM_1_WriteCompare(95);
-                PWM_2_WriteCompare(30);
+                if(abs(QuadDec_M1_GetCounter()) < TURN_90_ANGLE_EN_COUNT){
+                    PWM_1_WriteCompare(95);
+                    PWM_2_WriteCompare(30);
+                }
+                LED_1_Write(1);
+                if(comp0_sum==0 || comp1_sum==0){
+                    s2_flag = false;
+                }
+                
+                current_state = STOP;
                 break;   
             case TURN_RIGHT:
-                PWM_1_WriteCompare(0);
-                PWM_2_WriteCompare(80);
+                if(abs(QuadDec_M2_GetCounter()) < TURN_90_ANGLE_EN_COUNT){
+                    PWM_1_WriteCompare(0);
+                    PWM_2_WriteCompare(80);
+                    }
+                LED_2_Write(1);
+                s2_flag = false;
+                current_state = STOP;
                 break;  
             case RIGHT_ADJUST:
                 PWM_R = PWM_1_ReadCompare();
@@ -261,19 +159,12 @@ int main(void)
                 PWM_1_WriteCompare(50);
                 PWM_2_WriteCompare(50);
                 break;
-    
-             if(distance_M1>=(target_diatance/1.03) && target_diatance!=0){
-                LED_1_Write(1);
-                current_state = STOP;
-            }
         }
     }
 }
-//                    if (((abs(QuadDec_M1_GetCounter()) * (360 / 228)) <= 90)) {
-//                        is_turning = false;
-//                        current_state = GO_STRAIGHT;
-//                    } else {
-//                        PWM_1_WriteCompare(95);
-//                        PWM_2_WriteCompare(30);
-//                    } 
+
 /* [] END OF FILE */
+//             if(distance_M1>=(target_diatance/1.03) && target_diatance!=0){
+//                LED_1_Write(1);
+//                current_state = STOP;
+//            }
