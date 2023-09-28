@@ -131,37 +131,54 @@ CY_ISR(isr_1_handler) {
         count=0;
     }
    
-
     count++;
     Timer_1_ReadStatusRegister();
 }
 
 void stop(){
-    PWM_R=50;
-    PWM_L=50;
+    PWM_1_WriteCompare(50);
+    PWM_2_WriteCompare(50);
+}
+void turnRight(){
+    PWM_1_WriteCompare(30);
+    PWM_2_WriteCompare(70);
+    
+    while(1){
+        if(comp0_sum==0 || comp1_sum==0) {break;}    
+        //wait until both middle Sensors are in line
+    };
+    
 }
 void turnLeft(){
+    PWM_1_WriteCompare(30);
+    PWM_2_WriteCompare(70);
     
-    if(turn_complete){
-       left_on=false;
-    }
-    
+    while(1){
+        if(comp0_sum==0 || comp1_sum==0) {break;}    
+        //wait until both middle Sensors are in line
+    };
 }
 
 void goStraight(){
     //comp0==>middle left comp1==>middle right
-//    if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
-//        PWM_L=PWM_L+1;
-//    }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
-//        PWM_R=PWM_R+1;
-//        
-//    }else 
-
-        PWM_R=80;
-        PWM_L=81;
+    if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
+        
+        PWM_2_WriteCompare(PWM_2_ReadCompare()+1);//increase left wheel speed
+        
+    }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
+        
+        PWM_1_WriteCompare(PWM_1_ReadCompare()+1);//increase right wheel speed
+        
+    }else {
+        
+        PWM_1_WriteCompare(67);
+        PWM_2_WriteCompare(68);
+        
+    }
     
      
 }
+
 void go_distance(float32 distance){
     distance_M1=0;
     goStraight();
@@ -212,50 +229,19 @@ int main(void)
            //comp3=0 => right
            /* Place your application code here. */
         
-        if(comp1_sum==0 && comp0_sum==0){
-                current_state = GO_STRAIGHT;
-        }else if(comp2_sum == 0) {
-                current_state = TURN_LEFT;
-        }else if(comp3_sum==0){
-                current_state = TURN_RIGHT;
-        }else if(comp0_sum>0 && comp1_sum>0 && comp2_sum>0 && comp3_sum>0){
-                current_state = STOP;
+        
+        if(comp2_sum==0){
+              turnLeft();
+        }else if(comp3_sum == 0) {
+              turnRight();
+        }else if( comp1_sum==0|| comp0_sum==0){
+               goStraight();
+        }else{
+               stop();
         }
-        else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
-                current_state = LEFT_ADJUST;
-        }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
-                current_state = RIGHT_ADJUST;
-        }
-     
+         
+        
 
-     
-        switch (current_state) {
-            case GO_STRAIGHT:
-                PWM_1_WriteCompare(69);
-                PWM_2_WriteCompare(70);
-                break;
-            case TURN_LEFT:
-                PWM_1_WriteCompare(89);
-                PWM_2_WriteCompare(0);
-                CyDelay(10);
-                break;    
-            case TURN_RIGHT:
-                PWM_1_WriteCompare(7);
-                PWM_2_WriteCompare(91);
-                break;  
-            case STOP:
-                PWM_1_WriteCompare(50);
-                PWM_2_WriteCompare(50);
-                break;
-            case LEFT_ADJUST:
-                PWM_L = PWM_2_ReadCompare();
-                PWM_2_WriteCompare(PWM_L+1);
-                break; 
-            case RIGHT_ADJUST:
-                PWM_R = PWM_1_ReadCompare();
-                PWM_1_WriteCompare(PWM_R+1);
-                break; 
-        }
     }
 }
 
