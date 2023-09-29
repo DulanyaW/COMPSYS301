@@ -66,23 +66,18 @@ int32 encoder_value_sum_M2 = 0;
 uint8 counter = 1;
 float current_distance = 0;
 
-
+uint32 turnStartTime = 0;       // Time when the turn started
+uint32 turnDuration = 400;      // in milliseconds
+bool isTurning = false;         // Flag to indicate whether the robot is turning
 
 
 uint32 count = 0;
-uint32 turn_counter = 0;
-bool left_on=false;
-bool right_on;
-bool middle_on;
-bool turn_complete=true;
-
 uint8 comp0_sum;
 uint8 comp1_sum;
 uint8 comp2_sum;
 uint8 comp3_sum;
 
-uint8 PWM_R=80;
-uint8 PWM_L=81;
+
 
 RobotState current_state = GO_STRAIGHT;// intialse state
 CY_ISR(isr_3_handler) {
@@ -163,13 +158,16 @@ void goStraight(){
 void turnRight(){
     PWM_1_WriteCompare(30);
     PWM_2_WriteCompare(70);
+    turnStartTime = Timer_1_ReadCounter(); // Record the start time
+    isTurning = true; // Set the turning flag
 
 }
 void turnLeft(){
    
     PWM_1_WriteCompare(70);
     PWM_2_WriteCompare(30);
-     
+    turnStartTime = Timer_1_ReadCounter(); // Record the start time
+    isTurning = true; // Set the turning flag
  
 }
 
@@ -223,20 +221,33 @@ int main(void)
            //comp3=0 => right
            /* Place your application code here. */
         
-        if((comp2_sum>0 && comp3_sum>0)==1){//left & right sensor on white light
-            goStraight();
-        }
-  
-        if((comp2_sum==0 && comp3_sum>0)==1){//left sensor on black line
-            turnLeft();
-        }
-        if((comp3_sum==0 && comp2_sum>0)==1){//right sensor on black line
-            turnRight();
-        }
-        if((comp3_sum==0 && comp2_sum==0)==1){//right and left sensors on black line
-            stop();
-        }
+        if(isTurning) {
+            // Calculate the elapsed time since the turn started
+            uint32 currentTime = Timer_1_ReadCounter();
+            uint32 elapsedTime = currentTime - turnStartTime;
 
+            // Check if the turn duration has elapsed
+            if (elapsedTime >= turnDuration) {
+                // Stop the turn
+                stop();
+                isTurning = false; // Reset the turning flag
+            }
+        }else{
+        
+            if((comp2_sum>0 && comp3_sum>0)==1){//left & right sensor on white light
+                goStraight();
+            }
+      
+            if((comp2_sum==0 && comp3_sum>0)==1){//left sensor on black line
+                turnLeft();
+            }
+            if((comp3_sum==0 && comp2_sum>0)==1){//right sensor on black line
+                turnRight();
+            }
+            if((comp3_sum==0 && comp2_sum==0)==1){//right and left sensors on black line
+                stop();
+            }
+        }
     }
 }
 
