@@ -1,19 +1,3 @@
-/* ========================================
- * Fully working code: 
- * PWM      : 
- * Encoder  : 
- * ADC      :
- * USB      : port displays speed and position.
- * CMD: "PW xx"
- * Copyright Univ of Auckland, 2016
- * All Rights Reserved
- * UNPUBLISHED, LICENSED SOFTWARE.
- *
- * CONFIDENTIAL AND PROPRIETARY INFORMATION
- * WHICH IS THE PROPERTY OF Univ of Auckland.
- *
- * ========================================
-*/
 #include <cytypes.h>
 #include <stdio.h>
 #include <string.h>
@@ -33,16 +17,6 @@ float previous_error = 0;
 float integral = 0;
 float output = 0;
 
-
-// Define states for the state machine
-typedef enum {
-    GO_STRAIGHT,
-    TURN_LEFT,
-    TURN_RIGHT,
-    RIGHT_ADJUST,
-    LEFT_ADJUST,
-    STOP,
-} RobotState;
 
 //distance calculation paras
 int32 encoderCounts_M1 = 0;  
@@ -83,7 +57,6 @@ uint8 PWM_R=80;
 uint8 PWM_L=81;
 float error = 0;
 
-RobotState current_state = GO_STRAIGHT;// intialse state
 
 
 
@@ -160,7 +133,6 @@ float calculateError() {
     int s1 = comp1_sum;
     int s2 = comp2_sum;
     int s3 = comp3_sum;
-printf("s0: %d, s1: %d, s2: %d, s3: %d\r\n", s0, s1, s2, s3);
 
 
     if (s0 == 0 || s1 == 0) {
