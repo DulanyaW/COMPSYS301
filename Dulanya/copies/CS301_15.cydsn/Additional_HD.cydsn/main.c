@@ -220,6 +220,7 @@ int main(void)
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
+        
         if(isTurning) {
             // Calculate the elapsed time since the turn started
             uint32 currentTime = Timer_1_ReadCounter();
