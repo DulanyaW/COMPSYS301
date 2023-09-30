@@ -14,7 +14,7 @@ typedef enum {
     TURN_LEFT,
     TURN_RIGHT,
     REVERSE,
-    STOP,
+    STOP
 } RobotState;
 //distance calculation paras
 int32 encoderCounts_M1 = 0;  
@@ -24,7 +24,7 @@ float wheelCircumference_cm = (M_PI*64.46)/10;// wheel circumference wheelDiamet
 double timeInterval_s = 10.924;  // Effective time interval( (timer period )2.731*4)
 int32  distance_M1 = 0;
 int32  distance_M2 = 0;
-int32 target_diatance = 0;//cm
+int32 target_diatance = 15;//cm
 
 
 int32 encoder_value_sum_M1 = 0;
@@ -47,10 +47,10 @@ bool continue_turn = false; // Added a flag to continue the turn
 RobotState current_state = GO_STRAIGHT;// intialse state
 
 CY_ISR(isr_2_handler) {
-    if (counter < 10){
-        counter++;
-    }else{
-        counter = 1;
+//    if (counter < 10){
+//        counter++;
+//    }else{
+//        counter = 1;
         // Encoder counts (negative due to counterclockwise rotation)
         encoderCounts_M1 = abs(QuadDec_M1_GetCounter());//QuadDec_M1_GetCounter();
         encoderCounts_M2 = abs(QuadDec_M2_GetCounter());
@@ -66,7 +66,7 @@ CY_ISR(isr_2_handler) {
         //reset the encoder counters 
         QuadDec_M1_SetCounter(0);
         QuadDec_M2_SetCounter(0);     
-    }
+//    }
         Timer_1_ReadStatusRegister();
 }
 CY_ISR(isr_1_handler) {
@@ -89,6 +89,10 @@ CY_ISR(isr_1_handler) {
     Timer_1_ReadStatusRegister();
 }
 
+int distance(){
+    return distance_M2 = (abs(QuadDec_M2_GetCounter())/CPR) * wheelCircumference_cm;
+}
+
 void goStraight(){
     if(C0_sum>0 && C1_sum==0){//s_ML out of line
         PWM_L = PWM_2_ReadCompare();
@@ -96,14 +100,17 @@ void goStraight(){
     }else if(C0_sum==0 && C1_sum>0){//s_MR out of line
         PWM_R = PWM_1_ReadCompare();
         PWM_1_WriteCompare(PWM_R+1);
+    }else{
+        PWM_1_WriteCompare(70);
+        PWM_2_WriteCompare(70); 
     }
 }
 void turnLeft(){
     PWM_1_WriteCompare(70);
-    PWM_2_WriteCompare(37); 
+    PWM_2_WriteCompare(30); 
 }
 void turnRight(){
-    PWM_1_WriteCompare(5);
+    PWM_1_WriteCompare(30);
     PWM_2_WriteCompare(70); 
 }
 void reverse(){
@@ -137,58 +144,63 @@ int main(void)
     
     for(;;)
     {      
-            if(C0_sum==0 || C1_sum==0){
-                    current_state = GO_STRAIGHT;
-            }else if(C2_sum) {
-                    distance_M2 = 0;
-                    QuadDec_M2_SetCounter(0);
-                    current_state = TURN_LEFT;
-            }else if(C3_sum){
-                    QuadDec_M1_SetCounter(0);
-                    current_state = TURN_RIGHT;
-            }else if(C0_sum>0 && C1_sum>0 && C2_sum>0 && C3_sum>0){
-                    while(C2_sum==0 || C3_sum ==0){
-                        goStraight();
-                    }
-                    current_state = STOP; 
-            }else {
-                current_state = GO_STRAIGHT;
-            }
-            
-            
-            switch (current_state) {
-            case GO_STRAIGHT:
-                    goStraight(); 
-            break;
-                
-              
-            // turn LEFT
-            case TURN_LEFT:
-                 if(abs(QuadDec_M2_GetCounter()) < TURN_90_ANGLE_EN_COUNT){
-                    turnLeft();
-                }else{  
-                    current_state = GO_STRAIGHT;   
-                }   
-            break;   
-                
-             // turn RIGHT  
-            case TURN_RIGHT:
-                if(abs(QuadDec_M1_GetCounter()) < 80){
-                    turnRight();
-                }else{
-                    current_state = GO_STRAIGHT;  
-                }
-            break;  
-                
-                
-            case STOP:
+           
+         
+//            QuadDec_M2_SetCounter(0);
+           if(distance_M2<5){
+                LED_1_Write(1);
+                turnRight();
+            }else{
                 stop();
-            break;
-                
-            case REVERSE:
-                reverse();
-                break;
-        }
+            }
+//            else if(C3_sum==0){
+//                    distance_M2 = 0;
+//                    QuadDec_M1_SetCounter(0);
+//                    current_state = TURN_RIGHT;
+////            }
+////            else if(C0_sum>0 && C1_sum>0 && C2_sum>0 && C3_sum>0){
+////                    while(C2_sum==0){
+////                        goStraight();
+////                    }
+//////                    current_state = TURN_LEFT;
+//            }else {
+//                current_state = STOP;
+//            }
+            
+            
+//            switch (current_state) {
+//            case GO_STRAIGHT:
+//                    goStraight(); 
+//            break;
+//                
+//              
+//            // turn LEFT
+//            case TURN_LEFT:
+//                if((distance_M1 >= (target_diatance/1.03) && target_diatance!=0 ) || (distance_M2 >= (target_diatance/1.03) && target_diatance!=0 )){
+//                    current_state = STOP; 
+//                }else{
+//                    turnLeft();  
+//                }   
+//            break;   
+//                
+//             // turn RIGHT  
+//            case TURN_RIGHT:
+//                if(abs(QuadDec_M1_GetCounter()) < 80){
+//                    turnRight();
+//                }else{
+//                    current_state = GO_STRAIGHT;  
+//                }
+//            break;  
+//                
+//                
+//            case STOP:
+//                stop();
+//            break;
+//                
+//            case REVERSE:
+//                reverse();
+//                break;
+//        }
     }
 }
 
