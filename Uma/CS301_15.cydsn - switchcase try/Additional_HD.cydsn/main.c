@@ -37,6 +37,7 @@ uint8 C2_sum;
 uint8 C3_sum;
 uint8 PWM_R=0;
 uint8 PWM_L=0;
+int32 current_encoder;
 
 
 bool is_turning;
@@ -47,10 +48,10 @@ bool continue_turn = false; // Added a flag to continue the turn
 RobotState current_state = GO_STRAIGHT;// intialse state
 
 CY_ISR(isr_2_handler) {
-//    if (counter < 10){
-//        counter++;
-//    }else{
-//        counter = 1;
+    if (counter < 10){
+        counter++;
+    }else{
+        counter = 1;
         // Encoder counts (negative due to counterclockwise rotation)
         encoderCounts_M1 = abs(QuadDec_M1_GetCounter());//QuadDec_M1_GetCounter();
         encoderCounts_M2 = abs(QuadDec_M2_GetCounter());
@@ -60,13 +61,17 @@ CY_ISR(isr_2_handler) {
         encoder_value_sum_M2 += encoderCounts_M2;
         
         // distance calculations 
-        distance_M1 = (encoder_value_sum_M1/CPR) * wheelCircumference_cm;
+        distance_M1 = (encoderCounts_M1/CPR) * wheelCircumference_cm;
         distance_M2 = (encoder_value_sum_M2/CPR) * wheelCircumference_cm;
-
+        
+        if(C3_sum==0){
+            current_encoder = abs(QuadDec_M2_GetCounter());
+        }
         //reset the encoder counters 
-        QuadDec_M1_SetCounter(0);
-        QuadDec_M2_SetCounter(0);     
-//    }
+//        QuadDec_M1_SetCounter(0);
+//        QuadDec_M2_SetCounter(0);     
+    }
+        
         Timer_1_ReadStatusRegister();
 }
 CY_ISR(isr_1_handler) {
@@ -144,15 +149,22 @@ int main(void)
     
     for(;;)
     {      
-           
-         
-//            QuadDec_M2_SetCounter(0);
-           if(distance_M2<5){
-                LED_1_Write(1);
+        
+        if(C0_sum==0 || C1_sum==0){
+            goStraight();
+        }else 
+        if(C3_sum==0){
+//           int32 current_encoder = abs(QuadDec_M2_GetCounter());
+           if(abs(QuadDec_M2_GetCounter()) < 80+encoder_value_sum_M2){
                 turnRight();
+                
             }else{
-                stop();
+                LED_1_Write(1);
+                stop();   
             }
+        }else{
+         stop();   
+        }
 //            else if(C3_sum==0){
 //                    distance_M2 = 0;
 //                    QuadDec_M1_SetCounter(0);

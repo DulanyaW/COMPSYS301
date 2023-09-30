@@ -34,7 +34,7 @@ double distance_j = 0;
 int32 target_distance = 100;// need to decide
 double current_distance_i = 0;
 double current_distance_j = 0;
-double wheel_circumference_mm = 202.5;
+double wheel_circumference_mm = 20.25;
 int CPR_value = 228;
 
 
@@ -63,11 +63,11 @@ CY_ISR(isr_TC_handler){
     
     
 }
-//
-//void stop_M1(){
-//    PWM_1_WriteCompare(50);
-//    PWM_2_WriteCompare(50);
-//}
+
+void stop_M1(){
+    PWM_1_WriteCompare(50);
+    PWM_2_WriteCompare(50);
+}
 
 
 
@@ -76,25 +76,26 @@ CY_ISR(isr_TC_handler){
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
+        Timer_1_Start();
+    isr_1_StartEx(isr_TC_handler);
     /*Start PWM Clk*/
     Clock_PWM_Start(); 
     //Start PWM
     PWM_1_Start();
     PWM_2_Start();
     // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
-    PWM_2_WriteCompare(80);
-    PWM_1_WriteCompare(20);
+    
+    
     PWM_1_WritePeriod(100);
     PWM_2_WritePeriod(100);
     //Start UART for operation
-    USBUART_1_Start(0, USBUART_1_5V_OPERATION);
-    while (USBUART_1_GetConfiguration()==0){};
+//    USBUART_1_Start(0, USBUART_1_5V_OPERATION);
+//    while (USBUART_1_GetConfiguration()==0){};
     //sprintf(buffer, "Hello\n");
     //usbPutString(buffer);
     QuadDec_M1_Start();
     QuadDec_M2_Start();
-    Timer_1_Start();
-    isr_1_StartEx(isr_TC_handler);
+
     
 //    usbPutString(itoa(ci,buffer,10));
     
@@ -103,26 +104,26 @@ int main(void)
 
     for(;;)
     {
-//        if(distance_i >= target_distance){
-//            stop_M1();
-//        }
+        
+            
+       PWM_2_WriteCompare(80);
+        PWM_1_WriteCompare(20);
+
         
         if (ready_to_send == 1){
-            sprintf(bufferi, "encode count: %ld\r\n", encoder_count_i);
+            sprintf(bufferi, "encode count: %ld\r\n", (long) abs(QuadDec_M1_GetCounter()));
             usbPutString(bufferi);
             
-            sprintf(bufferi, "distance: %ld\r\n", (long)distance_i);
+            sprintf(bufferi, "encode count: %ld\r\n", (long) distance_i);
             usbPutString(bufferi);
-            
-            sprintf(bufferi, "curret Distance: %ld\r\n", (long)current_distance_i);
-            usbPutString(bufferi);
-            
            
-            sprintf(bufferj, "speed_M2: %ld\r\n", speedi);
+            sprintf(bufferj, "encoder value M2: %ld\r\n", (long) abs(QuadDec_M2_GetCounter()));
             usbPutString(bufferj);
             ready_to_send = 0;
             
         }
+        
+                   
         
         /* Place your application code here. */
     }

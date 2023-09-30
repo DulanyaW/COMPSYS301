@@ -32,6 +32,8 @@
 #include <stdbool.h>
 #include <math.h>
 #include "project.h"
+#include "defines.h"
+
 
 //distance calculation paras
 int32 encoderCounts_M1 = 0;  
@@ -54,7 +56,10 @@ int32 prev_encoder_value_M1 = 0;
 int32 prev_encoder_value_M2 = 0;
 uint8 counter = 1;
 
-
+void usbPutString(char *s);
+uint8 ready_to_send = 0;
+char bufferi[64];
+char bufferj[64];
 
 
 
@@ -106,9 +111,9 @@ CY_ISR(isr_3_handler) {
 //        prev_encoder_value_M2 = encoderCounts_M2;
         
         
-        //reset the encoder counters 
-        QuadDec_M1_SetCounter(0);
-        QuadDec_M2_SetCounter(0);     
+//        //reset the encoder counters 
+//        QuadDec_M1_SetCounter(0);
+//        QuadDec_M2_SetCounter(0);     
     }
         Timer_1_ReadStatusRegister();
 }
@@ -223,6 +228,9 @@ int main(void)
     PWM_1_WritePeriod(100);
     PWM_2_WritePeriod(100);
     
+        USBUART_1_Start(0, USBUART_1_5V_OPERATION);
+    while (USBUART_1_GetConfiguration()==0){};
+    
     QuadDec_M1_Start();
     QuadDec_M2_Start();
    
@@ -237,7 +245,7 @@ int main(void)
 
        
         //target distance task
-        if(total_distance_M1 >=target_diatance ){// M1 is faster than M2 
+        if(abs(QuadDec_M1_GetCounter()) >= 47 ){// M1 is faster than M2 
             LED_1_Write(1);
             stop(); 
         }else{
@@ -246,13 +254,44 @@ int main(void)
         
 
         //right wheel
-          PWM_1_WriteCompare(PWM_R);
+          PWM_1_WriteCompare(70);
        //PWM2 corresponds to left wheel
-          PWM_2_WriteCompare(PWM_L);
-              
+          PWM_2_WriteCompare(71);
+          if (ready_to_send == 1){
+            sprintf(bufferi, "encode count: %ld\r\n", (long) abs(QuadDec_M1_GetCounter()));
+            usbPutString(bufferi);
+            
+            sprintf(bufferi, "encode count: %ld\r\n", (long) distance_M1);
+            usbPutString(bufferi);
+           
+            sprintf(bufferj, "encoder value M2: %ld\r\n", (long) abs(QuadDec_M2_GetCounter()));
+            usbPutString(bufferj);
+            ready_to_send = 0;
+            
+        }      
 
     }
 }
 
+void usbPutString(char *s)
+{
+// !! Assumes that *s is a string with allocated space >=64 chars     
+//  Since USB implementation retricts data packets to 64 chars, this function truncates the
+//  length to 62 char (63rd char is a '!')
 
+#ifdef USE_USB     
+    while (USBUART_1_CDCIsReady() == 0);
+    s[63]='\0';
+    s[62]='!';
+    USBUART_1_PutData((uint8*)s,strlen(s));
+#endif
+}
+//* ========================================
+void usbPutChar(char c)
+{
+#ifdef USE_USB     
+    while (USBUART_1_CDCIsReady() == 0);
+    USBUART_1_PutChar(c);
+#endif    
+}
 /* [] END OF FILE */
