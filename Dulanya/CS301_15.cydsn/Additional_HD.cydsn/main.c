@@ -136,18 +136,22 @@ void stop(){
 void turnLeft(){
     PWM_1_WriteCompare(70);
     PWM_2_WriteCompare(30);
-    if(abs(QuadDec_M1_GetCounter())>70){
+    if(Sout_M1_Read()==0 || Sout_M2_Read()==0){
        isTurning=false;
        current_state=GO_STRAIGHT;
+       PWM_1_WriteCompare(70);
+       PWM_2_WriteCompare(71);
     }
     
 }
 void turnRight(){
     PWM_1_WriteCompare(30);
     PWM_2_WriteCompare(70);
-    if(abs(QuadDec_M1_GetCounter())>70){
+    if(Sout_M1_Read()==0 || Sout_M2_Read()==0){
        isTurning=false;
        current_state=GO_STRAIGHT;
+       PWM_1_WriteCompare(70);
+       PWM_2_WriteCompare(71);
     }
 }
     
@@ -230,15 +234,12 @@ int main(void)
                     QuadDec_M2_SetCounter(0);//reset 
                     isTurning=true;
             }else {
-                    current_state = STOP;
+                 if(current_state==GO_STRAIGHT){
+                    current_state=STOP;
+                }
             }
         }
-//        else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
-//                current_state = LEFT_ADJUST;
-//        }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
-//                current_state = RIGHT_ADJUST;
-//        }
-     
+
 
         
         switch (current_state) {
