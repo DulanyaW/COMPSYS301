@@ -61,12 +61,10 @@ CY_ISR(isr_2_handler) {
         encoder_value_sum_M2 += encoderCounts_M2;
         
         // distance calculations 
-        distance_M1 = (encoderCounts_M1/CPR) * wheelCircumference_cm;
+        distance_M1 = (encoder_value_sum_M1/CPR) * wheelCircumference_cm;
         distance_M2 = (encoder_value_sum_M2/CPR) * wheelCircumference_cm;
         
-        if(C3_sum==0){
-            current_encoder = abs(QuadDec_M2_GetCounter());
-        }
+
         //reset the encoder counters 
 //        QuadDec_M1_SetCounter(0);
 //        QuadDec_M2_SetCounter(0);     
@@ -151,26 +149,41 @@ int main(void)
     for(;;)
     {      
         
-        if(C0_sum==0 || C1_sum==0){
+        if(abs(QuadDec_M2_GetCounter()) < 80){
             goStraight();
-        }else 
-        if(C3_sum==0){
-            if(is_turning==false){
-              is_turning=true;
-              QuadDec_M2_SetCounter(0);
-            }
-//           int32 current_encoder = abs(QuadDec_M2_GetCounter());
-            while(abs(QuadDec_M2_GetCounter()) <80){
-                turnRight();
-                
-            }
-            is_turning=false;
-            LED_1_Write(1);
-            stop();   
             
-        }else{
-         stop();   
-        }
+            
+        }else
+        if(abs(QuadDec_M2_GetCounter()) < 100){
+                QuadDec_M2_SetCounter(0);
+                turnLeft();
+            }
+        
+        
+        
+        
+        
+//        if(C0_sum==0 || C1_sum==0){
+//            goStraight();
+//            is_turning= false;
+//        }else if(C3_sum==0){
+//            if(!is_turning){
+//              turnRight();
+//              QuadDec_M2_SetCounter(0);
+//              is_turning=true;  
+//            }
+//            if(abs(QuadDec_M2_GetCounter()) >= 80){
+//                goStraight();
+//                is_turning=false;
+////                CyDelay(1000);
+//            }
+//        }
+//        else{
+//            LED_1_Write(1);
+//            stop();   
+//            is_turning=false;
+//        }
+        
 //            else if(C3_sum==0){
 //                    distance_M2 = 0;
 //                    QuadDec_M1_SetCounter(0);
