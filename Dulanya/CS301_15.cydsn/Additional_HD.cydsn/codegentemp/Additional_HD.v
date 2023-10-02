@@ -1,6 +1,6 @@
 // ======================================================================
 // Additional_HD.v generated from TopDesign.cysch
-// 10/02/2023 at 13:24
+// 10/02/2023 at 15:25
 // This file is auto generated. ANY EDITS YOU MAKE MAY BE LOST WHEN THIS FILE IS REGENERATED!!!
 // ======================================================================
 
@@ -1067,9 +1067,37 @@ module QuadDec_v3_0_10 (
 
 endmodule
 
+// Component: GlitchFilter_v2_0
+`ifdef CY_BLK_DIR
+`undef CY_BLK_DIR
+`endif
+
+`ifdef WARP
+`define CY_BLK_DIR "C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\CyComponentLibrary\CyComponentLibrary.cylib\GlitchFilter_v2_0"
+`include "C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\CyComponentLibrary\CyComponentLibrary.cylib\GlitchFilter_v2_0\GlitchFilter_v2_0.v"
+`else
+`define CY_BLK_DIR "C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\CyComponentLibrary\CyComponentLibrary.cylib\GlitchFilter_v2_0"
+`include "C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\CyComponentLibrary\CyComponentLibrary.cylib\GlitchFilter_v2_0\GlitchFilter_v2_0.v"
+`endif
+
 // top
 module top ;
 
+          wire  Net_9259;
+          wire  Net_9313;
+          wire  Net_9312;
+          wire  Net_9087;
+          wire  Net_9085;
+          wire  Net_9061;
+          wire  Net_9059;
+          wire  Net_9311;
+          wire  Net_9047;
+          wire  Net_9045;
+          wire  Net_9310;
+          wire  Net_9257;
+          wire  Net_9046;
+          wire  Net_9060;
+          wire  Net_9086;
           wire  Net_2174;
           wire  Net_2173;
           wire  Net_2172;
@@ -1084,6 +1112,7 @@ module top ;
           wire  Net_2163;
           wire  Net_2162;
           wire  Net_2161;
+          wire  CLK24M;
           wire  Net_2160;
           wire  Net_2159;
           wire  Net_1374;
@@ -1099,7 +1128,6 @@ module top ;
           wire  Net_8948;
           wire  Net_8947;
           wire  Net_8946;
-          wire  CLK24M;
           wire  Net_8945;
           wire  Net_8944;
           wire  Net_8943;
@@ -1131,8 +1159,10 @@ module top ;
           wire  Net_500;
           wire  Net_499;
           wire  Net_400;
+          wire  Net_9258;
     electrical  Net_264;
           wire  Net_398;
+          wire  Net_505;
           wire  Net_403;
           wire  Net_8964;
           wire  Net_2860;
@@ -1157,7 +1187,6 @@ module top ;
     electrical  Net_189;
     electrical  Net_619;
     electrical  Net_612;
-          wire  Net_505;
           wire  Net_511;
           wire  Net_134;
           wire  Net_131;
@@ -1312,7 +1341,7 @@ module top ;
 		  .input_buffer_sel(2'b00))
 		Sout_R
 		 (.oe(tmpOE__Sout_R_net),
-		  .y({Net_398}),
+		  .y({Net_9258}),
 		  .fb({tmpFB_0__Sout_R_net[0:0]}),
 		  .io({tmpIO_0__Sout_R_net[0:0]}),
 		  .siovref(tmpSIOVREF__Sout_R_net),
@@ -3150,7 +3179,7 @@ module top ;
 		  .input_buffer_sel(2'b00))
 		Sout_M1
 		 (.oe(tmpOE__Sout_M1_net),
-		  .y({Net_403}),
+		  .y({Net_9086}),
 		  .fb({tmpFB_0__Sout_M1_net[0:0]}),
 		  .io({tmpIO_0__Sout_M1_net[0:0]}),
 		  .siovref(tmpSIOVREF__Sout_M1_net),
@@ -3225,7 +3254,7 @@ module top ;
 		  .input_buffer_sel(2'b00))
 		Sout_M2
 		 (.oe(tmpOE__Sout_M2_net),
-		  .y({Net_505}),
+		  .y({Net_9060}),
 		  .fb({tmpFB_0__Sout_M2_net[0:0]}),
 		  .io({tmpIO_0__Sout_M2_net[0:0]}),
 		  .siovref(tmpSIOVREF__Sout_M2_net),
@@ -3300,7 +3329,7 @@ module top ;
 		  .input_buffer_sel(2'b00))
 		Sout_L
 		 (.oe(tmpOE__Sout_L_net),
-		  .y({Net_511}),
+		  .y({Net_9046}),
 		  .fb({tmpFB_0__Sout_L_net[0:0]}),
 		  .io({tmpIO_0__Sout_L_net[0:0]}),
 		  .siovref(tmpSIOVREF__Sout_L_net),
@@ -3313,6 +3342,102 @@ module top ;
 		  .out_reset({1'b0}));
 
 	assign tmpOE__Sout_L_net = (`CYDEV_CHIP_MEMBER_USED == `CYDEV_CHIP_MEMBER_3A && `CYDEV_CHIP_REVISION_USED < `CYDEV_CHIP_REVISION_3A_ES3) ? ~{1'b1} : {1'b1};
+
+
+	cy_clock_v1_0
+		#(.id("3177386a-0132-4549-875f-90b3b27fec64"),
+		  .source_clock_id("315365C3-2E3E-4f04-84A2-BB564A173261"),
+		  .divisor(0),
+		  .period("0"),
+		  .is_direct(1),
+		  .is_digital(1))
+		timer_clock_2
+		 (.clock_out(Net_9257));
+
+
+    GlitchFilter_v2_0 GlitchFilter_2 (
+        .clock(Net_9045),
+        .d(Net_511),
+        .q(Net_9046),
+        .reset(Net_9047));
+    defparam GlitchFilter_2.BypassFilter = 0;
+    defparam GlitchFilter_2.GlitchLength = 200;
+    defparam GlitchFilter_2.SignalWidth = 1;
+
+
+	cy_clock_v1_0
+		#(.id("04816ddd-8b57-425e-b05c-3120d1d4c881"),
+		  .source_clock_id("315365C3-2E3E-4f04-84A2-BB564A173261"),
+		  .divisor(0),
+		  .period("0"),
+		  .is_direct(1),
+		  .is_digital(1))
+		timer_clock_3
+		 (.clock_out(Net_9045));
+
+
+    ZeroTerminal ZeroTerminal_3 (
+        .z(Net_9047));
+
+    GlitchFilter_v2_0 GlitchFilter_3 (
+        .clock(Net_9059),
+        .d(Net_505),
+        .q(Net_9060),
+        .reset(Net_9061));
+    defparam GlitchFilter_3.BypassFilter = 0;
+    defparam GlitchFilter_3.GlitchLength = 200;
+    defparam GlitchFilter_3.SignalWidth = 1;
+
+    ZeroTerminal ZeroTerminal_4 (
+        .z(Net_9061));
+
+    GlitchFilter_v2_0 GlitchFilter_4 (
+        .clock(Net_9085),
+        .d(Net_403),
+        .q(Net_9086),
+        .reset(Net_9087));
+    defparam GlitchFilter_4.BypassFilter = 0;
+    defparam GlitchFilter_4.GlitchLength = 200;
+    defparam GlitchFilter_4.SignalWidth = 1;
+
+
+	cy_clock_v1_0
+		#(.id("6c8df360-daf6-47dd-865e-1ee0c01cf919"),
+		  .source_clock_id("315365C3-2E3E-4f04-84A2-BB564A173261"),
+		  .divisor(0),
+		  .period("0"),
+		  .is_direct(1),
+		  .is_digital(1))
+		timer_clock_4
+		 (.clock_out(Net_9059));
+
+
+    ZeroTerminal ZeroTerminal_5 (
+        .z(Net_9087));
+
+
+	cy_clock_v1_0
+		#(.id("dd12eb9f-3ae3-4dc9-be34-a7f1058b01d3"),
+		  .source_clock_id("315365C3-2E3E-4f04-84A2-BB564A173261"),
+		  .divisor(0),
+		  .period("0"),
+		  .is_direct(1),
+		  .is_digital(1))
+		timer_clock_5
+		 (.clock_out(Net_9085));
+
+
+    GlitchFilter_v2_0 GlitchFilter_1 (
+        .clock(Net_9257),
+        .d(Net_398),
+        .q(Net_9258),
+        .reset(Net_9259));
+    defparam GlitchFilter_1.BypassFilter = 0;
+    defparam GlitchFilter_1.GlitchLength = 200;
+    defparam GlitchFilter_1.SignalWidth = 1;
+
+    ZeroTerminal ZeroTerminal_1 (
+        .z(Net_9259));
 
 
 
