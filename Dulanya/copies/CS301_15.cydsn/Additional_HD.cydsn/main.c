@@ -66,6 +66,7 @@ int32 encoder_value_sum_M2 = 0;
 uint8 counter = 1;
 float current_distance = 0;
 
+uint32 turnTime = 0;            //time keep for turning in milliseconds
 uint32 turnStartTime = 0;       // Time when the turn started
 uint32 turnDuration = 400;      // in milliseconds
 bool isTurning = false;         // Flag to indicate whether the robot is turning
@@ -109,7 +110,13 @@ CY_ISR(isr_3_handler) {
 
 CY_ISR(isr_1_handler) {
     //every 1ms 
+    turnTime++;
     
+        // Check for overflow
+    if (turnTime>= UINT32_MAX) {
+        // Handle overflow by resetting elapsedTime
+        turnTime = 0;
+    }
     //sum up comp values every 1ms
     comp0_sum+=Comp_0_GetCompare();
     comp1_sum+=Comp_1_GetCompare();
@@ -158,7 +165,7 @@ void goStraight(){
 void turnRight(){
     PWM_1_WriteCompare(30);
     PWM_2_WriteCompare(70);
-    turnStartTime = Timer_1_ReadCounter(); // Record the start time
+    turnTime=0; // reset turning timer counter
     isTurning = true; // Set the turning flag
 
 }
@@ -166,7 +173,7 @@ void turnLeft(){
    
     PWM_1_WriteCompare(70);
     PWM_2_WriteCompare(30);
-    turnStartTime = Timer_1_ReadCounter(); // Record the start time
+    turnTime=0; // reset turning timer counter
     isTurning = true; // Set the turning flag
  
 }
@@ -220,14 +227,10 @@ int main(void)
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
-        
         if(isTurning) {
-            // Calculate the elapsed time since the turn started
-            uint32 currentTime = Timer_1_ReadCounter();
-            uint32 elapsedTime = currentTime - turnStartTime;
 
             // Check if the turn duration has elapsed
-            if (elapsedTime >= turnDuration) {
+            if (turnTime >= turnDuration) {
                 // Stop the turn
                 stop();
                 isTurning = false; // Reset the turning flag
@@ -237,14 +240,14 @@ int main(void)
             if((comp2_sum>0 && comp3_sum>0)==1){//left & right sensor on white light
                 goStraight();
             }
-      
-            if((comp2_sum==0 && comp3_sum>0)==1){//left sensor on black line
+    
+            else if((comp2_sum==0 && comp3_sum>0)==1){//left sensor on black line
                 turnLeft();
             }
-            if((comp3_sum==0 && comp2_sum>0)==1){//right sensor on black line
+            else if((comp3_sum==0 && comp2_sum>0)==1){//right sensor on black line
                 turnRight();
             }
-            if((comp3_sum==0 && comp2_sum==0)==1){//right and left sensors on black line
+            else if((comp3_sum==0 && comp2_sum==0)==1){//right and left sensors on black line
                 stop();
             }
         }
