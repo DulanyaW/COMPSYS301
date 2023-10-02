@@ -111,6 +111,7 @@ void goStraight(){
     }
 }
 void turnLeft(){
+    
     PWM_1_WriteCompare(70);
     PWM_2_WriteCompare(30); 
 }
@@ -154,14 +155,19 @@ int main(void)
             goStraight();
         }else 
         if(C3_sum==0){
+            if(is_turning==false){
+              is_turning=true;
+              QuadDec_M2_SetCounter(0);
+            }
 //           int32 current_encoder = abs(QuadDec_M2_GetCounter());
-           if(abs(QuadDec_M2_GetCounter()) < 80+encoder_value_sum_M2){
+            while(abs(QuadDec_M2_GetCounter()) <80){
                 turnRight();
                 
-            }else{
-                LED_1_Write(1);
-                stop();   
             }
+            is_turning=false;
+            LED_1_Write(1);
+            stop();   
+            
         }else{
          stop();   
         }
