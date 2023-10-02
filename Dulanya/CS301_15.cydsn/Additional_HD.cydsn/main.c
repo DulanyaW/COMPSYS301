@@ -114,7 +114,8 @@ CY_ISR(isr_1_handler) {
     
     
     if(count==8){
-      
+        
+
         //reset to check again every 8ms
         comp0_sum=0;
         comp1_sum=0;
@@ -135,16 +136,18 @@ void stop(){
 void turnLeft(){
     PWM_1_WriteCompare(70);
     PWM_2_WriteCompare(30);
-     if(abs(QuadDec_M2_GetCounter())>100){
+    if(abs(QuadDec_M1_GetCounter())>70){
        isTurning=false;
+       current_state=GO_STRAIGHT;
     }
     
 }
 void turnRight(){
     PWM_1_WriteCompare(30);
     PWM_2_WriteCompare(70);
-    if(abs(QuadDec_M2_GetCounter())>100){
+    if(abs(QuadDec_M1_GetCounter())>70){
        isTurning=false;
+       current_state=GO_STRAIGHT;
     }
 }
     
@@ -200,6 +203,8 @@ int main(void)
     PWM_1_WritePeriod(100);
     PWM_2_WritePeriod(100);
     
+    PWM_1_WriteCompare(70);
+    PWM_2_WriteCompare(30);
     QuadDec_M1_Start();
     QuadDec_M2_Start();
     
@@ -211,16 +216,18 @@ int main(void)
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
-        if(!isTurning || current_state==STOP){
-            if(comp1_sum==0 || comp0_sum==0){
+        
+//        
+        if(!isTurning ){//if not turning check the sensors
+            if(Sout_M1_Read()==0 || Sout_M2_Read()==0){
                     current_state = GO_STRAIGHT;
-            }else if(comp2_sum == 0) {
+            }else if(Sout_L_Read()==0) {//left on
                     current_state = TURN_LEFT;
                     QuadDec_M1_SetCounter(0);
                     isTurning=true;
-            }else if(comp3_sum==0){
+            }else if(Sout_R_Read()==0){//right on
                     current_state = TURN_RIGHT;
-                    QuadDec_M2_SetCounter(0);
+                    QuadDec_M2_SetCounter(0);//reset 
                     isTurning=true;
             }else {
                     current_state = STOP;
@@ -239,14 +246,16 @@ int main(void)
                 goStraight();
                 break;
             case TURN_LEFT:
-                while(isTurning){
+                while(isTurning){//keep turning until QuadDec value reached
                     turnLeft();
-                }
+                };
+                current_state=STOP;
                 break;    
             case TURN_RIGHT:
                 while(isTurning){
                     turnRight();
-                }
+                };
+                current_state=STOP;
                 break;  
             case STOP:
                 PWM_1_WriteCompare(50);
@@ -261,6 +270,7 @@ int main(void)
                 break; 
         }
 
+         
 
 
              
