@@ -1,6 +1,6 @@
 // ======================================================================
 // Additional_HD.v generated from TopDesign.cysch
-// 10/02/2023 at 15:25
+// 10/04/2023 at 12:14
 // This file is auto generated. ANY EDITS YOU MAKE MAY BE LOST WHEN THIS FILE IS REGENERATED!!!
 // ======================================================================
 
@@ -1083,21 +1083,13 @@ endmodule
 // top
 module top ;
 
-          wire  Net_9259;
           wire  Net_9313;
           wire  Net_9312;
-          wire  Net_9087;
-          wire  Net_9085;
           wire  Net_9061;
           wire  Net_9059;
           wire  Net_9311;
-          wire  Net_9047;
-          wire  Net_9045;
           wire  Net_9310;
-          wire  Net_9257;
-          wire  Net_9046;
           wire  Net_9060;
-          wire  Net_9086;
           wire  Net_2174;
           wire  Net_2173;
           wire  Net_2172;
@@ -1112,7 +1104,6 @@ module top ;
           wire  Net_2163;
           wire  Net_2162;
           wire  Net_2161;
-          wire  CLK24M;
           wire  Net_2160;
           wire  Net_2159;
           wire  Net_1374;
@@ -1121,6 +1112,7 @@ module top ;
           wire  Net_1371;
           wire  Net_1370;
           wire  Net_8953;
+          wire  CLK24M;
           wire  Net_8952;
           wire  Net_8951;
           wire  Net_8950;
@@ -1161,10 +1153,19 @@ module top ;
           wire  Net_400;
           wire  Net_9258;
     electrical  Net_264;
-          wire  Net_398;
-          wire  Net_505;
-          wire  Net_403;
           wire  Net_8964;
+          wire  Net_9257;
+          wire  Net_9259;
+          wire  Net_9086;
+          wire  Net_9085;
+          wire  Net_9087;
+          wire  Net_403;
+          wire  Net_9046;
+          wire  Net_398;
+          wire  Net_9045;
+          wire  Net_9047;
+          wire  Net_511;
+          wire  Net_505;
           wire  Net_2860;
           wire  Net_2986;
           wire  Net_1645;
@@ -1187,7 +1188,6 @@ module top ;
     electrical  Net_189;
     electrical  Net_619;
     electrical  Net_612;
-          wire  Net_511;
           wire  Net_134;
           wire  Net_131;
     electrical  Net_405;
@@ -1266,13 +1266,6 @@ module top ;
 		  .out_reset({1'b0}));
 
 	assign tmpOE__D1_B_net = (`CYDEV_CHIP_MEMBER_USED == `CYDEV_CHIP_MEMBER_3A && `CYDEV_CHIP_REVISION_USED < `CYDEV_CHIP_REVISION_3A_ES3) ? ~{1'b1} : {1'b1};
-
-
-	cy_isr_v1_0
-		#(.int_type(2'b00))
-		isr_1
-		 (.int_signal(Net_8964));
-
 
     Comp_v2_0_0 Comp_3 (
         .clock(Net_402),

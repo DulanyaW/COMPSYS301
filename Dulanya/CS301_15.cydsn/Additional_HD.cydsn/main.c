@@ -32,6 +32,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include "project.h"
+#include "Astar.c"
 #include <cytypes.h> // Include the appropriate header for your platform
 
 //distance calculation paras
@@ -77,57 +78,32 @@ uint8 PWM_L;
 
 
 CY_ISR(isr_3_handler) {
-    if (counter < 20){
-        counter++;
-    }else{
-        counter = 1;
-        // Encoder counts (negative due to counterclockwise rotation)
-        encoderCounts_M1 = abs(QuadDec_M1_GetCounter());//QuadDec_M1_GetCounter();
-        encoderCounts_M2 = abs(QuadDec_M2_GetCounter());
-        
-        // sum of encodercounts
-        encoder_value_sum_M1 += encoderCounts_M1;
-        encoder_value_sum_M2 += encoderCounts_M2;
-        
-        // distance calculations 
-        distance_M1 = (encoder_value_sum_M1/CPR) * wheelCircumference_cm;
-        distance_M2 = (encoder_value_sum_M2/CPR) * wheelCircumference_cm;
-        
-
-//        //reset the encoder counters 
-//        QuadDec_M1_SetCounter(0);
-//        QuadDec_M2_SetCounter(0);     
-    }
-        Timer_1_ReadStatusRegister();
+//    if (counter < 20){
+//        counter++;
+//    }else{
+//        counter = 1;
+//        // Encoder counts (negative due to counterclockwise rotation)
+//        encoderCounts_M1 = abs(QuadDec_M1_GetCounter());//QuadDec_M1_GetCounter();
+//        encoderCounts_M2 = abs(QuadDec_M2_GetCounter());
+//        
+//        // sum of encodercounts
+//        encoder_value_sum_M1 += encoderCounts_M1;
+//        encoder_value_sum_M2 += encoderCounts_M2;
+//        
+//        // distance calculations 
+//        distance_M1 = (encoder_value_sum_M1/CPR) * wheelCircumference_cm;
+//        distance_M2 = (encoder_value_sum_M2/CPR) * wheelCircumference_cm;
+//        
+//
+////        //reset the encoder counters 
+////        QuadDec_M1_SetCounter(0);
+////        QuadDec_M2_SetCounter(0);     
+//    }
+//        Timer_1_ReadStatusRegister();
 }
 
 
 
-CY_ISR(isr_1_handler) {
-    //every 1ms 
-    
-    //sum up comp values every 1ms
-    comp0_sum+=Comp_0_GetCompare();
-    comp1_sum+=Comp_1_GetCompare();
-    comp2_sum+=Comp_2_GetCompare();
-    comp3_sum+=Comp_3_GetCompare();
-    
-    
-    if(count==8){
-        
-
-        //reset to check again every 8ms
-        comp0_sum=0;
-        comp1_sum=0;
-        comp2_sum=0;
-        comp3_sum=0;
-        count=0;
-    }
-   
-
-    count++;
-    Timer_1_ReadStatusRegister();
-}
 
 void stop(){
     PWM_1_WriteCompare(50);
@@ -173,11 +149,7 @@ void goStraight(){
         PWM_1_WriteCompare(70);
         PWM_2_WriteCompare(71);
     }
-     
-}
-void go_distance(float32 distance){
-    distance_M1=0;
-    target_diatance=distance;
+
 }
 
 
@@ -190,7 +162,6 @@ int main(void)
     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
     Timer_1_Start();
     
-    isr_1_StartEx(isr_1_handler);
     isr_3_StartEx(isr_3_handler);
     
     //start comparators
@@ -216,6 +187,17 @@ int main(void)
     QuadDec_M1_Start();
     QuadDec_M2_Start();
     
+    QuadDec_M2_SetCounter(0);  
+    
+//**********************************calculate path    
+//    int startX = 0, startY = 0;
+//    int targetX = 4, targetY = 4;
+//
+//    Node* endNode = AStar(startX, startY, targetX, targetY);
+//
+//    // Print the path
+//    printPath(endNode);
+//**************************************************    
     
     
     for(;;)
@@ -224,61 +206,85 @@ int main(void)
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
-        
+        if(abs(QuadDec_M2_GetCounter())>  873){
+            stop();
+            break;
+        }
+       
+//        if(!isTurning ){//if not turning check the sensors
+//            if(Sout_M1_Read()==0 || Sout_M2_Read()==0){
+//                    current_state = GO_STRAIGHT;
+//            }else if(Sout_L_Read()==0) {//left on
+//                    current_state = TURN_LEFT;
+//                    QuadDec_M1_SetCounter(0);
+//                    isTurning=true;
+//            }else if(Sout_R_Read()==0){//right on
+//                    current_state = TURN_RIGHT;
+//                    QuadDec_M2_SetCounter(0);//reset 
+//                    isTurning=true;
+//            }else {
+//                    current_state=current_state;
+//            }
+//        }
 //        
-        if(!isTurning ){//if not turning check the sensors
-            if(Sout_M1_Read()==0 || Sout_M2_Read()==0){
-                    current_state = GO_STRAIGHT;
-            }else if(Sout_L_Read()==0) {//left on
-                    current_state = TURN_LEFT;
-                    QuadDec_M1_SetCounter(0);
-                    isTurning=true;
-            }else if(Sout_R_Read()==0){//right on
-                    current_state = TURN_RIGHT;
-                    QuadDec_M2_SetCounter(0);//reset 
-                    isTurning=true;
-            }else {
-                    current_state=current_state;
-            }
-        }
-        
-        
-
-        
-        switch (current_state) {
-            case GO_STRAIGHT:
-                goStraight();
-                break;
-            case TURN_LEFT:
-                while(isTurning){//keep turning until QuadDec value reached
-                    turnLeft();
-                }
-                break;    
-            case TURN_RIGHT:
-                while(isTurning){
-                    turnRight();
-                }
-                break;  
-            case STOP:
-                PWM_1_WriteCompare(50);
-                PWM_2_WriteCompare(50);
-                break;
-         //LEFT_ADJUST & RIGHT_ADJUST states not used    
-            case LEFT_ADJUST:
-                PWM_2_WriteCompare(PWM_2_ReadCompare()+1);//increase left wheel speed
-                break; 
-            case RIGHT_ADJUST:
-                PWM_1_WriteCompare(PWM_1_ReadCompare()+1);//increase right wheel speed
-                break; 
-        }
+//        
+//
+//        
+//        switch (current_state) {
+//            case GO_STRAIGHT:
+//                goStraight();
+//                break;
+//            case TURN_LEFT:
+//                while(isTurning){
+//                    turnLeft();
+//                }
+//                break;    
+//            case TURN_RIGHT:
+//                while(isTurning){
+//                    turnRight();
+//                }
+//                break;  
+//            case STOP:
+//                PWM_1_WriteCompare(50);
+//                PWM_2_WriteCompare(50);
+//                break;
+//         //LEFT_ADJUST & RIGHT_ADJUST states not used    
+//            case LEFT_ADJUST:
+//                PWM_2_WriteCompare(PWM_2_ReadCompare()+1);//increase left wheel speed
+//                break; 
+//            case RIGHT_ADJUST:
+//                PWM_1_WriteCompare(PWM_1_ReadCompare()+1);//increase right wheel speed
+//                break; 
+//        }
              
 
     }
 }
 
-
 /* [] END OF FILE */
-//  if(distance_M1>=target_diatance && target_diatance!=0){
-//                LED_1_Write(1);
-//                stop();
-//            }
+
+//CY_ISR(isr_1_handler) {
+//    //every 1ms 
+//    
+//    //sum up comp values every 1ms
+//    comp0_sum+=Comp_0_GetCompare();
+//    comp1_sum+=Comp_1_GetCompare();
+//    comp2_sum+=Comp_2_GetCompare();
+//    comp3_sum+=Comp_3_GetCompare();
+//    
+//    
+//    if(count==8){
+//        
+//
+//        //reset to check again every 8ms
+//        comp0_sum=0;
+//        comp1_sum=0;
+//        comp2_sum=0;
+//        comp3_sum=0;
+//        count=0;
+//    }
+//   
+//
+//    count++;
+//    Timer_1_ReadStatusRegister();
+//}

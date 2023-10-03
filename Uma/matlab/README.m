@@ -2,7 +2,7 @@
 % 1s - wall, 0s - track 
 
 % Load the required functions and data
-mapfile = 'demo_map.txt';
+mapfile = 'map.txt';
 
 % %target 1
 % startlocation = [14, 1];
@@ -10,8 +10,8 @@ mapfile = 'demo_map.txt';
 
 
 % %target 1
-startlocation = [2, 2];
-targetlocation = [10, 18];
+startlocation = [2, 10];
+targetlocation = [6, 6];
 
 %****************************************************************************%
 
@@ -42,9 +42,9 @@ plotmapAStar(map, completePath);
 
 %****************************************************************************%
 % Run dfs algorithm
-[retmap,retvisited,retsteps]=dfs(mapfile,[startlocation],[targetlocation]);
+%[retmap,retvisited,retsteps]=dfs(mapfile,[startlocation],[targetlocation]);
 % Visualize the complete path using the plotmap function
-plotmap(retmap, retsteps);
+%plotmap(retmap, retsteps);
 
 
 
