@@ -136,23 +136,27 @@ void stop(){
 void turnLeft(){
     PWM_1_WriteCompare(70);
     PWM_2_WriteCompare(30);
-    if(Sout_M1_Read()==0 || Sout_M2_Read()==0){
-       isTurning=false;
-       current_state=GO_STRAIGHT;
-       PWM_1_WriteCompare(70);
-       PWM_2_WriteCompare(71);
-    }
+    CyDelay(400);
+    isTurning=false;
+//    if(Sout_M1_Read()==0 || Sout_M2_Read()==0){
+//       isTurning=false;
+//       current_state=GO_STRAIGHT;
+//       PWM_1_WriteCompare(70);
+//       PWM_2_WriteCompare(71);
+//    }
     
 }
 void turnRight(){
     PWM_1_WriteCompare(30);
     PWM_2_WriteCompare(70);
-    if(Sout_M1_Read()==0 || Sout_M2_Read()==0){
-       isTurning=false;
-       current_state=GO_STRAIGHT;
-       PWM_1_WriteCompare(70);
-       PWM_2_WriteCompare(71);
-    }
+    CyDelay(400);
+    isTurning=false;
+//    if(Sout_M1_Read()==0 || Sout_M2_Read()==0){
+//       isTurning=false;
+//       current_state=GO_STRAIGHT;
+//       PWM_1_WriteCompare(70);
+//       PWM_2_WriteCompare(71);
+//    }
 }
     
 
@@ -200,7 +204,7 @@ int main(void)
     //Start PWM
     PWM_1_Start();
     PWM_2_Start();
-    
+     
     // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
 
     
@@ -234,12 +238,11 @@ int main(void)
                     QuadDec_M2_SetCounter(0);//reset 
                     isTurning=true;
             }else {
-                 if(current_state==GO_STRAIGHT){
-                    current_state=STOP;
-                }
+                    current_state=current_state;
             }
         }
-
+        
+        
 
         
         switch (current_state) {
@@ -249,14 +252,12 @@ int main(void)
             case TURN_LEFT:
                 while(isTurning){//keep turning until QuadDec value reached
                     turnLeft();
-                };
-                current_state=STOP;
+                }
                 break;    
             case TURN_RIGHT:
                 while(isTurning){
                     turnRight();
-                };
-                current_state=STOP;
+                }
                 break;  
             case STOP:
                 PWM_1_WriteCompare(50);
@@ -270,10 +271,6 @@ int main(void)
                 PWM_1_WriteCompare(PWM_1_ReadCompare()+1);//increase right wheel speed
                 break; 
         }
-
-         
-
-
              
 
     }
