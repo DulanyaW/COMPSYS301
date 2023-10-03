@@ -1,4 +1,30 @@
-#include <cytypes.h>
+/* ========================================
+ *
+ * Copyright YOUR COMPANY, THE YEAR
+ * All Rights Reserved
+ * UNPUBLISHED, LICENSED SOFTWARE.
+ *
+ * CONFIDENTIAL AND PROPRIETARY INFORMATION
+ * WHICH IS THE PROPERTY OF your company.
+ *
+ * ========================================
+*/
+/* ========================================
+ * Fully working code: 
+ * PWM      : 
+ * Encoder  : 
+ * ADC      :
+ * USB      : port displays speed and position.
+ * CMD: "PW xx"
+ * Copyright Univ of Auckland, 2016
+ * All Rights Reserved
+ * UNPUBLISHED, LICENSED SOFTWARE.
+ *
+ * CONFIDENTIAL AND PROPRIETARY INFORMATION
+ * WHICH IS THE PROPERTY OF Univ of Auckland.
+ *
+ * ========================================
+*/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -6,17 +32,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include "project.h"
-#define TURN_ANGLE 90 // Desired turn angle in degrees
-
-// Define PID controller parameters
-float Kp = 1.0;  // Proportional gain
-float Ki = 0.1;  // Integral gain
-float Kd = 0.01; // Derivative gain
-
-float previous_error = 0;
-float integral = 0;
-float output = 0;
-
+#include <cytypes.h> // Include the appropriate header for your platform
 
 //distance calculation paras
 int32 encoderCounts_M1 = 0;  
@@ -29,63 +45,39 @@ float32  distance_M2 = 0;
 float32  current_distance_M1 = 0;
 float32  current_distance_M2 = 0;
 float32 target_diatance = 0;//cm
-float32 turn_back_diatance = 10.125;//cm
-
 float32 speed_M1 = 0;
 float32 speed_M2 = 0;
 int32 encoder_value_sum_M1 = 0;
 int32 encoder_value_sum_M2 = 0;
 uint8 counter = 1;
-float current_distance = 0;
 
+// Define states for the state machine
+typedef enum {
+    GO_STRAIGHT,
+    TURN_LEFT,
+    TURN_RIGHT,
+    RIGHT_ADJUST,
+    LEFT_ADJUST,
+    STOP,
+} RobotState;
 
-
+RobotState current_state = STOP;// intialse state
 
 uint32 count = 0;
-uint32 turn_counter = 0;
-bool left_on=false;
-bool right_on;
-bool middle_on;
-bool turn_complete=true;
+bool isTurning=false;
 
 uint8 comp0_sum;
 uint8 comp1_sum;
 uint8 comp2_sum;
 uint8 comp3_sum;
 
-uint8 PWM_R=80;
-uint8 PWM_L=81;
-float error = 0;
-
-
-
-
-
-CY_ISR(isr_1_handler) {
-    //every 1ms 
-    
-    //sum up comp values every 1ms
-    comp0_sum+=Comp_0_GetCompare();
-    comp1_sum+=Comp_1_GetCompare();
-    comp2_sum+=Comp_2_GetCompare();
-    comp3_sum+=Comp_3_GetCompare();
-    
-    
-    if(count==8){
-        //reset to check again every 8ms
-        comp0_sum=0;
-        comp1_sum=0;
-        comp2_sum=0;
-        comp3_sum=0;
-        count=0;
-    }
-   
-}
+uint8 PWM_R;
+uint8 PWM_L;
 
 
 
 CY_ISR(isr_3_handler) {
-    if (counter < 10){
+    if (counter < 20){
         counter++;
     }else{
         counter = 1;
@@ -100,108 +92,89 @@ CY_ISR(isr_3_handler) {
         // distance calculations 
         distance_M1 = (encoder_value_sum_M1/CPR) * wheelCircumference_cm;
         distance_M2 = (encoder_value_sum_M2/CPR) * wheelCircumference_cm;
+        
 
-        //reset the encoder counters 
-        QuadDec_M1_SetCounter(0);
-        QuadDec_M2_SetCounter(0);     
+//        //reset the encoder counters 
+//        QuadDec_M1_SetCounter(0);
+//        QuadDec_M2_SetCounter(0);     
     }
         Timer_1_ReadStatusRegister();
 }
 
 
+
+CY_ISR(isr_1_handler) {
+    //every 1ms 
+    
+    //sum up comp values every 1ms
+    comp0_sum+=Comp_0_GetCompare();
+    comp1_sum+=Comp_1_GetCompare();
+    comp2_sum+=Comp_2_GetCompare();
+    comp3_sum+=Comp_3_GetCompare();
+    
+    
+    if(count==8){
+        
+
+        //reset to check again every 8ms
+        comp0_sum=0;
+        comp1_sum=0;
+        comp2_sum=0;
+        comp3_sum=0;
+        count=0;
+    }
+   
+
+    count++;
+    Timer_1_ReadStatusRegister();
+}
+
 void stop(){
     PWM_1_WriteCompare(50);
     PWM_2_WriteCompare(50);
 }
-
-void goStraight(){
-    if(comp0_sum>0 && comp1_sum==0){
-        PWM_2_WriteCompare(PWM_2_ReadCompare()+ 1);
-    }else if(comp0_sum==0 && comp1_sum>0){
-        PWM_1_WriteCompare(PWM_1_ReadCompare()+ 1);
-    }else{
-        PWM_1_WriteCompare(70);
-        PWM_2_WriteCompare(71);
-    }
-}
-
-
-// Function to calculate error based on sensor inputs
-float calculateError() {
-    // Read sensor inputs (s0, s1, s2, s3) from your hardware
-    int s0 = comp0_sum;
-    int s1 = comp1_sum;
-    int s2 = comp2_sum;
-    int s3 = comp3_sum;
-
-
-    if (s0 == 0 || s1 == 0) {
-        // Go straight
-        error = 0;
-    } else if (s2 == 0) {
-        // Turn left
-        error = 90; // Positive error
-    } else if (s3 == 0) {
-        // Turn right
-        error = -90; // Negative error
-    }
-
-    return error;
-}
-
-    
-
-
-void turnRight(){
-    PWM_1_WriteCompare(30);
-    PWM_2_WriteCompare(70);  
-}
-
 void turnLeft(){
     PWM_1_WriteCompare(70);
     PWM_2_WriteCompare(30);
+    if(Sout_M1_Read()==0 || Sout_M2_Read()==0){
+       isTurning=false;
+       current_state=GO_STRAIGHT;
+       PWM_1_WriteCompare(70);
+       PWM_2_WriteCompare(71);
+    }
+    
 }
+void turnRight(){
+    PWM_1_WriteCompare(30);
+    PWM_2_WriteCompare(70);
+    if(Sout_M1_Read()==0 || Sout_M2_Read()==0){
+       isTurning=false;
+       current_state=GO_STRAIGHT;
+       PWM_1_WriteCompare(70);
+       PWM_2_WriteCompare(71);
+    }
+}
+    
 
 
+void goStraight(){
+    
+    //comp0==>middle left comp1==>middle right
+    if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
+        PWM_2_WriteCompare(PWM_2_ReadCompare() +1);
+    }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
+        PWM_1_WriteCompare(PWM_1_ReadCompare() +1);
+        
+    }else if(comp1_sum==0 && comp0_sum==0){
+        PWM_1_WriteCompare(70);
+        PWM_2_WriteCompare(71);
+    }
+     
+}
 void go_distance(float32 distance){
     distance_M1=0;
-    goStraight();
     target_diatance=distance;
 }
-
-
-
-
-// Function to control the robot based on PID output
-void robotControl(float output) {
-
-    // Determine robot behavior based on PID output
-    if (output == 0) {
-        // PID output is 0, go straight
-        goStraight();
-        LED_1_Write(1);
-    } else if (output > 0) {
-        // Positive output, turn left
-        
-        while(output==0){
-            LED_2_Write(1);
-           turnLeft(); 
-        }
-        goStraight();
-        
-    } else if (output < 0){
-        // Negative output, turn right
-        
-        while(output==0){
-            LED_3_Write(1);
-        turnRight();
-        }
-    }else {
-        stop();
-    }
-
-}
-
 
 
 
@@ -215,7 +188,6 @@ int main(void)
     
     isr_1_StartEx(isr_1_handler);
     isr_3_StartEx(isr_3_handler);
-  
     
     //start comparators
     Comp_0_Start();
@@ -235,21 +207,80 @@ int main(void)
     PWM_1_WritePeriod(100);
     PWM_2_WritePeriod(100);
     
+    PWM_1_WriteCompare(70);
+    PWM_2_WriteCompare(30);
     QuadDec_M1_Start();
     QuadDec_M2_Start();
     
-    //go_distance(0);
+    
     
     for(;;)
     {
+           //comp0 and comp1 =0  => straight
+           //comp2=0 => left
+           //comp3=0 => right
+           /* Place your application code here. */       
+        if(!isTurning ){//if not turning check the sensors
+            if(Sout_M1_Read()==0 || Sout_M2_Read()==0){
+                    current_state = GO_STRAIGHT;
+            }else if(Sout_L_Read()==0) {//left on
+                    current_state = TURN_LEFT;
+                    QuadDec_M1_SetCounter(0);
+                    isTurning=true;
+            }else if(Sout_R_Read()==0){//right on
+                    current_state = TURN_RIGHT;
+                    QuadDec_M2_SetCounter(0);//reset 
+                    isTurning=true;
+            }else {
+                    current_state = GO_STRAIGHT;
+            }
+        }
+
+
         
-        error = calculateError();
-        output = Kp * error + Ki * integral + Kd * (error - previous_error);
-        integral += error;
-        previous_error = error;
-        robotControl(output);
+        switch (current_state) {
+            case GO_STRAIGHT:
+                goStraight();
+                break;
+            case TURN_LEFT:
+                while(isTurning){//keep turning until QuadDec value reached
+                    if(abs(QuadDec_M1_GetCounter()) < 80){
+                       turnLeft(); 
+                       // CyDelay(100);
+                    }
+                };
+                current_state=STOP;
+                break;    
+            case TURN_RIGHT:
+                while(isTurning){
+                    turnRight();
+                }
+                current_state=STOP;
+                break;  
+            case STOP:
+                PWM_1_WriteCompare(50);
+                PWM_2_WriteCompare(50);
+                break;
+         //LEFT_ADJUST & RIGHT_ADJUST states not used    
+            case LEFT_ADJUST:
+                PWM_2_WriteCompare(PWM_2_ReadCompare()+1);//increase left wheel speed
+                break; 
+            case RIGHT_ADJUST:
+                PWM_1_WriteCompare(PWM_1_ReadCompare()+1);//increase right wheel speed
+                break; 
+        }
+
+         
+
+
+             
+
     }
 }
 
 
 /* [] END OF FILE */
+//  if(distance_M1>=target_diatance && target_diatance!=0){
+//                LED_1_Write(1);
+//                stop();
+//            }
