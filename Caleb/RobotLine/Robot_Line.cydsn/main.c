@@ -20,11 +20,11 @@
 #include "cyapicallbacks.h"
 
 //distance calculation paras
-volatile int32 encoderCounts_M1 = 0;  
-volatile int32 encoderCounts_M2 = 0;  
+volatile int32 encoderCounts_RightWheel = 0;  
+volatile int32 encoderCounts_LeftWheel = 0;  
 volatile int32 CPR = 228; 
-float wheelCircumference_cm = 20.30725;
-double timeInterval_ms = 0.01;//10.924
+volatile float wheelCircumference_cm = 20.30725;
+volatile double timeInterval_ms = 0.01;//10.924
 volatile float32  distance_Right = 0; //M1
 volatile float32  distance_Left = 0; //M2
 volatile float32  current_distance_Right = 0; //M1
@@ -46,12 +46,12 @@ CY_ISR(counter_isr_handler){
     else {
         counter = 0;
         // Encoder counts (negative due to counterclockwise rotation)
-        encoderCounts_M1 = abs(QuadDec_M1_GetCounter());//QuadDec_M1_GetCounter();
-        encoderCounts_M2 = abs(QuadDec_M2_GetCounter());
+        encoderCounts_RightWheel = abs(QuadDec_RightWheel_GetCounter());//QuadDec_M1_GetCounter();
+        encoderCounts_LeftWheel = abs(QuadDec_LeftWheel_GetCounter());
         
         // sum of encodercounts
-        encoder_value_sum_RightWheel += encoderCounts_M1;
-        encoder_value_sum_LeftWheel += encoderCounts_M2;
+        encoder_value_sum_RightWheel += encoderCounts_RightWheel;
+        encoder_value_sum_LeftWheel += encoderCounts_LeftWheel;
         
         
         // distance calculations 
@@ -60,12 +60,12 @@ CY_ISR(counter_isr_handler){
         
 
         //reset the encoder counters 
-        QuadDec_M1_SetCounter(0);
-        QuadDec_M2_SetCounter(0);     
+        QuadDec_RightWheel_SetCounter(0);
+        QuadDec_LeftWheel_SetCounter(0);     
     }
         Timer_1_ReadStatusRegister();  
-        speed_RightWheel = (encoderCounts_M1/CPR * wheelCircumference_cm)/0.001;
-        speed_LeftWheel = (encoderCounts_M2/CPR * wheelCircumference_cm)/0.001;
+        speed_RightWheel = (encoderCounts_RightWheel/CPR * wheelCircumference_cm)/0.001;
+        speed_LeftWheel = (encoderCounts_LeftWheel/CPR * wheelCircumference_cm)/0.001;
 }
 
 typedef enum {
@@ -248,6 +248,10 @@ int main(void)
     CyGlobalIntEnable; /* Enable global interrupts. */
     Timer_1_Start();
     
+    LED_1_Write(0);
+    LED_2_Write(1);
+    LED_3_Write(1);
+    
     Comp_0_Start();
     Comp_1_Start();
     Comp_2_Start();
@@ -257,15 +261,15 @@ int main(void)
     
     PWM_1_WritePeriod(100);
     PWM_2_WritePeriod(100);
-    PWM_1_WriteCompare(55);
-    PWM_2_WriteCompare(56);
+    PWM_1_WriteCompare(50);
+    PWM_2_WriteCompare(50);
     Clock_PWM_Start(); 
     PWM_1_Start();
     PWM_2_Start();
     
-    QuadDec_M1_Start();
-    QuadDec_M2_Start();
-    /* Place your initialization/startup code here (e.g. MyInst_Start()) */
+    QuadDec_RightWheel_Start();
+    QuadDec_LeftWheel_Start();
+   
 
     for(;;)
     {
@@ -273,20 +277,20 @@ int main(void)
     while(!isTurning){
       if (((Sout_MidRight_Read() == 0) || (Sout_MidLeft_Read() == 0)) && ((Sout_Left_Read()) > 1 && (Sout_Right_Read() > 0))) {
         current_state = GO_STRAIGHT;
-    } else if(Sout_Left_Read() == 0){
+    } else if(Sout_Left_Read() == 0 && Sout_MidLeft_Read() != 0){
         stop();
         //CyDelay(200);
         if (Sout_Left_Read() == 0){
             current_state = TURN_LEFT;
-            QuadDec_M1_SetCounter(0);
+            QuadDec_RightWheel_SetCounter(0);
             isTurning=true;
         }
-    } else if (Sout_Right_Read() == 0){
+    } else if (Sout_Right_Read() == 0 && Sout_MidRight_Read() != 0){
         stop();
         //CyDelay(200);
         if(Sout_Right_Read() == 0){
             current_state = TURN_RIGHT;
-            QuadDec_M2_SetCounter(0);//reset 
+            QuadDec_LeftWheel_SetCounter(0);//reset 
             isTurning=true;
         }
     } else {

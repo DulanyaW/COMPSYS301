@@ -1,6 +1,6 @@
 // ======================================================================
 // Robot_Line.v generated from TopDesign.cysch
-// 10/06/2023 at 08:33
+// 10/06/2023 at 11:33
 // This file is auto generated. ANY EDITS YOU MAKE MAY BE LOST WHEN THIS FILE IS REGENERATED!!!
 // ======================================================================
 
@@ -599,7 +599,7 @@ endmodule
 `include "C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\CyComponentLibrary\CyComponentLibrary.cylib\B_Counter_v3_0\B_Counter_v3_0.v"
 `endif
 
-// Counter_v3_0(CaptureMode=0, CaptureModeSoftware=0, ClockMode=1, CompareMode=0, CompareModeSoftware=0, CompareStatusEdgeSense=true, CompareValue=32768, CONTROL3=0, ControlRegRemoved=0, CyGetRegReplacementString=CY_GET_REG16, CySetRegReplacementString=CY_SET_REG16, EnableMode=0, FF16=false, FF8=false, FixedFunction=false, FixedFunctionUsed=0, InitCounterValue=32768, InterruptOnCapture=false, InterruptOnCompare=false, InterruptOnOverUnderFlow=false, InterruptOnTC=false, Period=32768, RegDefReplacementString=reg16, RegSizeReplacementString=uint16, ReloadOnCapture=false, ReloadOnCompare=false, ReloadOnOverUnder=true, ReloadOnReset=true, Resolution=16, RunMode=0, UDB16=true, UDB24=false, UDB32=false, UDB8=false, UDBControlReg=true, UseInterrupt=true, VerilogSectionReplacementString=sC16, CY_API_CALLBACK_HEADER_INCLUDE=#include "cyapicallbacks.h", CY_COMMENT=, CY_COMPONENT_NAME=Counter_v3_0, CY_CONFIG_TITLE=Cnt16, CY_CONST_CONFIG=true, CY_CONTROL_FILE=<:default:>, CY_DATASHEET_FILE=<:default:>, CY_FITTER_NAME=QuadDec_M1:Cnt16, CY_INSTANCE_SHORT_NAME=Cnt16, CY_MAJOR_VERSION=3, CY_MINOR_VERSION=0, CY_PDL_DRIVER_NAME=, CY_PDL_DRIVER_REQ_VERSION=, CY_PDL_DRIVER_SUBGROUP=, CY_PDL_DRIVER_VARIANT=, CY_REMOVE=false, CY_SUPPRESS_API_GEN=false, CY_VERSION=PSoC Creator  4.4, INSTANCE_NAME=QuadDec_M1_Cnt16, )
+// Counter_v3_0(CaptureMode=0, CaptureModeSoftware=0, ClockMode=1, CompareMode=0, CompareModeSoftware=0, CompareStatusEdgeSense=true, CompareValue=32768, CONTROL3=0, ControlRegRemoved=0, CyGetRegReplacementString=CY_GET_REG16, CySetRegReplacementString=CY_SET_REG16, EnableMode=0, FF16=false, FF8=false, FixedFunction=false, FixedFunctionUsed=0, InitCounterValue=32768, InterruptOnCapture=false, InterruptOnCompare=false, InterruptOnOverUnderFlow=false, InterruptOnTC=false, Period=32768, RegDefReplacementString=reg16, RegSizeReplacementString=uint16, ReloadOnCapture=false, ReloadOnCompare=false, ReloadOnOverUnder=true, ReloadOnReset=true, Resolution=16, RunMode=0, UDB16=true, UDB24=false, UDB32=false, UDB8=false, UDBControlReg=true, UseInterrupt=true, VerilogSectionReplacementString=sC16, CY_API_CALLBACK_HEADER_INCLUDE=#include "cyapicallbacks.h", CY_COMMENT=, CY_COMPONENT_NAME=Counter_v3_0, CY_CONFIG_TITLE=Cnt16, CY_CONST_CONFIG=true, CY_CONTROL_FILE=<:default:>, CY_DATASHEET_FILE=<:default:>, CY_FITTER_NAME=QuadDec_RightWheel:Cnt16, CY_INSTANCE_SHORT_NAME=Cnt16, CY_MAJOR_VERSION=3, CY_MINOR_VERSION=0, CY_PDL_DRIVER_NAME=, CY_PDL_DRIVER_REQ_VERSION=, CY_PDL_DRIVER_SUBGROUP=, CY_PDL_DRIVER_VARIANT=, CY_REMOVE=false, CY_SUPPRESS_API_GEN=false, CY_VERSION=PSoC Creator  4.4, INSTANCE_NAME=QuadDec_RightWheel_Cnt16, )
 module Counter_v3_0_7 (
     capture,
     clock,
@@ -724,7 +724,7 @@ endmodule
 `include "C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\CyPrimitives\cyprimitives.cylib\and_v1_0\and_v1_0.v"
 `endif
 
-// QuadDec_v3_0(Counter8bit=false, CounterResolution=4, CounterSize=32, CounterSizeReplacementString=int32, CounterSizeReplacementStringUnsigned=uint16, TypeCastReplacementString=int32, UsingGlitchFiltering=true, UsingIndexInput=false, CY_API_CALLBACK_HEADER_INCLUDE=#include "cyapicallbacks.h", CY_COMMENT=, CY_COMPONENT_NAME=QuadDec_v3_0, CY_CONFIG_TITLE=QuadDec_M1, CY_CONST_CONFIG=true, CY_CONTROL_FILE=<:default:>, CY_DATASHEET_FILE=<:default:>, CY_FITTER_NAME=QuadDec_M1, CY_INSTANCE_SHORT_NAME=QuadDec_M1, CY_MAJOR_VERSION=3, CY_MINOR_VERSION=0, CY_PDL_DRIVER_NAME=, CY_PDL_DRIVER_REQ_VERSION=, CY_PDL_DRIVER_SUBGROUP=, CY_PDL_DRIVER_VARIANT=, CY_REMOVE=false, CY_SUPPRESS_API_GEN=false, CY_VERSION=PSoC Creator  4.4, INSTANCE_NAME=QuadDec_M1, )
+// QuadDec_v3_0(Counter8bit=false, CounterResolution=4, CounterSize=32, CounterSizeReplacementString=int32, CounterSizeReplacementStringUnsigned=uint16, TypeCastReplacementString=int32, UsingGlitchFiltering=true, UsingIndexInput=false, CY_API_CALLBACK_HEADER_INCLUDE=#include "cyapicallbacks.h", CY_COMMENT=, CY_COMPONENT_NAME=QuadDec_v3_0, CY_CONFIG_TITLE=QuadDec_RightWheel, CY_CONST_CONFIG=true, CY_CONTROL_FILE=<:default:>, CY_DATASHEET_FILE=<:default:>, CY_FITTER_NAME=QuadDec_RightWheel, CY_INSTANCE_SHORT_NAME=QuadDec_RightWheel, CY_MAJOR_VERSION=3, CY_MINOR_VERSION=0, CY_PDL_DRIVER_NAME=, CY_PDL_DRIVER_REQ_VERSION=, CY_PDL_DRIVER_SUBGROUP=, CY_PDL_DRIVER_VARIANT=, CY_REMOVE=false, CY_SUPPRESS_API_GEN=false, CY_VERSION=PSoC Creator  4.4, INSTANCE_NAME=QuadDec_RightWheel, )
 module QuadDec_v3_0_8 (
     clock,
     index,
@@ -846,7 +846,7 @@ module QuadDec_v3_0_8 (
 
 endmodule
 
-// Counter_v3_0(CaptureMode=0, CaptureModeSoftware=0, ClockMode=1, CompareMode=0, CompareModeSoftware=0, CompareStatusEdgeSense=true, CompareValue=32768, CONTROL3=0, ControlRegRemoved=0, CyGetRegReplacementString=CY_GET_REG16, CySetRegReplacementString=CY_SET_REG16, EnableMode=0, FF16=false, FF8=false, FixedFunction=false, FixedFunctionUsed=0, InitCounterValue=32768, InterruptOnCapture=false, InterruptOnCompare=false, InterruptOnOverUnderFlow=false, InterruptOnTC=false, Period=32768, RegDefReplacementString=reg16, RegSizeReplacementString=uint16, ReloadOnCapture=false, ReloadOnCompare=false, ReloadOnOverUnder=true, ReloadOnReset=true, Resolution=16, RunMode=0, UDB16=true, UDB24=false, UDB32=false, UDB8=false, UDBControlReg=true, UseInterrupt=true, VerilogSectionReplacementString=sC16, CY_API_CALLBACK_HEADER_INCLUDE=#include "cyapicallbacks.h", CY_COMMENT=, CY_COMPONENT_NAME=Counter_v3_0, CY_CONFIG_TITLE=Cnt16, CY_CONST_CONFIG=true, CY_CONTROL_FILE=<:default:>, CY_DATASHEET_FILE=<:default:>, CY_FITTER_NAME=QuadDec_M2:Cnt16, CY_INSTANCE_SHORT_NAME=Cnt16, CY_MAJOR_VERSION=3, CY_MINOR_VERSION=0, CY_PDL_DRIVER_NAME=, CY_PDL_DRIVER_REQ_VERSION=, CY_PDL_DRIVER_SUBGROUP=, CY_PDL_DRIVER_VARIANT=, CY_REMOVE=false, CY_SUPPRESS_API_GEN=false, CY_VERSION=PSoC Creator  4.4, INSTANCE_NAME=QuadDec_M2_Cnt16, )
+// Counter_v3_0(CaptureMode=0, CaptureModeSoftware=0, ClockMode=1, CompareMode=0, CompareModeSoftware=0, CompareStatusEdgeSense=true, CompareValue=32768, CONTROL3=0, ControlRegRemoved=0, CyGetRegReplacementString=CY_GET_REG16, CySetRegReplacementString=CY_SET_REG16, EnableMode=0, FF16=false, FF8=false, FixedFunction=false, FixedFunctionUsed=0, InitCounterValue=32768, InterruptOnCapture=false, InterruptOnCompare=false, InterruptOnOverUnderFlow=false, InterruptOnTC=false, Period=32768, RegDefReplacementString=reg16, RegSizeReplacementString=uint16, ReloadOnCapture=false, ReloadOnCompare=false, ReloadOnOverUnder=true, ReloadOnReset=true, Resolution=16, RunMode=0, UDB16=true, UDB24=false, UDB32=false, UDB8=false, UDBControlReg=true, UseInterrupt=true, VerilogSectionReplacementString=sC16, CY_API_CALLBACK_HEADER_INCLUDE=#include "cyapicallbacks.h", CY_COMMENT=, CY_COMPONENT_NAME=Counter_v3_0, CY_CONFIG_TITLE=Cnt16, CY_CONST_CONFIG=true, CY_CONTROL_FILE=<:default:>, CY_DATASHEET_FILE=<:default:>, CY_FITTER_NAME=QuadDec_LeftWheel:Cnt16, CY_INSTANCE_SHORT_NAME=Cnt16, CY_MAJOR_VERSION=3, CY_MINOR_VERSION=0, CY_PDL_DRIVER_NAME=, CY_PDL_DRIVER_REQ_VERSION=, CY_PDL_DRIVER_SUBGROUP=, CY_PDL_DRIVER_VARIANT=, CY_REMOVE=false, CY_SUPPRESS_API_GEN=false, CY_VERSION=PSoC Creator  4.4, INSTANCE_NAME=QuadDec_LeftWheel_Cnt16, )
 module Counter_v3_0_9 (
     capture,
     clock,
@@ -945,7 +945,7 @@ module Counter_v3_0_9 (
 
 endmodule
 
-// QuadDec_v3_0(Counter8bit=false, CounterResolution=4, CounterSize=32, CounterSizeReplacementString=int32, CounterSizeReplacementStringUnsigned=uint16, TypeCastReplacementString=int32, UsingGlitchFiltering=true, UsingIndexInput=false, CY_API_CALLBACK_HEADER_INCLUDE=#include "cyapicallbacks.h", CY_COMMENT=, CY_COMPONENT_NAME=QuadDec_v3_0, CY_CONFIG_TITLE=QuadDec_M2, CY_CONST_CONFIG=true, CY_CONTROL_FILE=<:default:>, CY_DATASHEET_FILE=<:default:>, CY_FITTER_NAME=QuadDec_M2, CY_INSTANCE_SHORT_NAME=QuadDec_M2, CY_MAJOR_VERSION=3, CY_MINOR_VERSION=0, CY_PDL_DRIVER_NAME=, CY_PDL_DRIVER_REQ_VERSION=, CY_PDL_DRIVER_SUBGROUP=, CY_PDL_DRIVER_VARIANT=, CY_REMOVE=false, CY_SUPPRESS_API_GEN=false, CY_VERSION=PSoC Creator  4.4, INSTANCE_NAME=QuadDec_M2, )
+// QuadDec_v3_0(Counter8bit=false, CounterResolution=4, CounterSize=32, CounterSizeReplacementString=int32, CounterSizeReplacementStringUnsigned=uint16, TypeCastReplacementString=int32, UsingGlitchFiltering=true, UsingIndexInput=false, CY_API_CALLBACK_HEADER_INCLUDE=#include "cyapicallbacks.h", CY_COMMENT=, CY_COMPONENT_NAME=QuadDec_v3_0, CY_CONFIG_TITLE=QuadDec_LeftWheel, CY_CONST_CONFIG=true, CY_CONTROL_FILE=<:default:>, CY_DATASHEET_FILE=<:default:>, CY_FITTER_NAME=QuadDec_LeftWheel, CY_INSTANCE_SHORT_NAME=QuadDec_LeftWheel, CY_MAJOR_VERSION=3, CY_MINOR_VERSION=0, CY_PDL_DRIVER_NAME=, CY_PDL_DRIVER_REQ_VERSION=, CY_PDL_DRIVER_SUBGROUP=, CY_PDL_DRIVER_VARIANT=, CY_REMOVE=false, CY_SUPPRESS_API_GEN=false, CY_VERSION=PSoC Creator  4.4, INSTANCE_NAME=QuadDec_LeftWheel, )
 module QuadDec_v3_0_10 (
     clock,
     index,
@@ -1121,8 +1121,8 @@ module top ;
           wire  Net_1935;
           wire  Net_1934;
           wire  Net_1933;
-          wire  Net_1932;
           wire  CLK24M;
+          wire  Net_1932;
           wire  Net_1931;
           wire  Net_1930;
           wire  Net_1929;
@@ -1142,17 +1142,18 @@ module top ;
           wire  Net_1917;
           wire  Net_20;
           wire  Net_19;
-          wire  Net_18;
           wire  Net_1916;
           wire  Net_16;
-          wire  Net_15;
           wire  Net_14;
+          wire  Net_15;
+          wire  Net_18;
           wire  Net_1915;
           wire  Net_12;
           wire  Net_11;
           wire  Net_10;
     electrical  Net_9;
           wire  Net_1914;
+    electrical  Net_1945;
           wire  Net_1913;
           wire  Net_6;
           wire  Net_5;
@@ -1188,7 +1189,6 @@ module top ;
     electrical  Net_612;
           wire  Net_511;
           wire  Net_505;
-    electrical  Net_405;
           wire  Net_134;
           wire  Net_131;
 
@@ -1241,7 +1241,7 @@ module top ;
         .clock(Net_402),
         .CmpOut(Net_403),
         .Vminus(Net_1034),
-        .Vplus(Net_405));
+        .Vplus(Net_1945));
 
 
 	cy_clock_v1_0
@@ -1318,7 +1318,7 @@ module top ;
 		 (.oe(tmpOE__Sin_MidRight_net),
 		  .y({1'b0}),
 		  .fb({tmpFB_0__Sin_MidRight_net[0:0]}),
-		  .analog({Net_405}),
+		  .analog({Net_612}),
 		  .io({tmpIO_0__Sin_MidRight_net[0:0]}),
 		  .siovref(tmpSIOVREF__Sin_MidRight_net),
 		  .interrupt({tmpINTERRUPT_0__Sin_MidRight_net[0:0]}),
@@ -1500,7 +1500,7 @@ module top ;
 		 (.oe(tmpOE__Sin_MidLeft_net),
 		  .y({1'b0}),
 		  .fb({tmpFB_0__Sin_MidLeft_net[0:0]}),
-		  .analog({Net_612}),
+		  .analog({Net_1945}),
 		  .io({tmpIO_0__Sin_MidLeft_net[0:0]}),
 		  .siovref(tmpSIOVREF__Sin_MidLeft_net),
 		  .interrupt({tmpINTERRUPT_0__Sin_MidLeft_net[0:0]}),
@@ -1999,7 +1999,7 @@ module top ;
 		  .input_buffer_sel(2'b00))
 		Sout_MidLeft
 		 (.oe(tmpOE__Sout_MidLeft_net),
-		  .y({Net_14}),
+		  .y({Net_18}),
 		  .fb({tmpFB_0__Sout_MidLeft_net[0:0]}),
 		  .io({tmpIO_0__Sout_MidLeft_net[0:0]}),
 		  .siovref(tmpSIOVREF__Sout_MidLeft_net),
@@ -2098,7 +2098,7 @@ module top ;
 		  .input_buffer_sel(2'b00))
 		Sout_MidRight
 		 (.oe(tmpOE__Sout_MidRight_net),
-		  .y({Net_18}),
+		  .y({Net_14}),
 		  .fb({tmpFB_0__Sout_MidRight_net[0:0]}),
 		  .io({tmpIO_0__Sout_MidRight_net[0:0]}),
 		  .siovref(tmpSIOVREF__Sout_MidRight_net),
@@ -2283,15 +2283,15 @@ module top ;
         .trigger(1'b0));
     defparam PWM_2.Resolution = 8;
 
-    QuadDec_v3_0_8 QuadDec_M1 (
+    QuadDec_v3_0_8 QuadDec_RightWheel (
         .clock(Net_1850),
         .index(1'b0),
         .interrupt(Net_274),
         .quad_A(Net_724),
         .quad_B(Net_725));
-    defparam QuadDec_M1.CounterResolution = 4;
-    defparam QuadDec_M1.UsingGlitchFiltering = 1;
-    defparam QuadDec_M1.UsingIndexInput = 0;
+    defparam QuadDec_RightWheel.CounterResolution = 4;
+    defparam QuadDec_RightWheel.UsingGlitchFiltering = 1;
+    defparam QuadDec_RightWheel.UsingIndexInput = 0;
 
 	wire [0:0] tmpOE__ENCD_Right_1_net;
 	wire [0:0] tmpIO_0__ENCD_Right_1_net;
@@ -2453,15 +2453,15 @@ module top ;
 		 (.clock_out(Net_1850));
 
 
-    QuadDec_v3_0_10 QuadDec_M2 (
+    QuadDec_v3_0_10 QuadDec_LeftWheel (
         .clock(Net_1850),
         .index(1'b0),
         .interrupt(Net_277),
         .quad_A(Net_729),
         .quad_B(Net_730));
-    defparam QuadDec_M2.CounterResolution = 4;
-    defparam QuadDec_M2.UsingGlitchFiltering = 1;
-    defparam QuadDec_M2.UsingIndexInput = 0;
+    defparam QuadDec_LeftWheel.CounterResolution = 4;
+    defparam QuadDec_LeftWheel.UsingGlitchFiltering = 1;
+    defparam QuadDec_LeftWheel.UsingIndexInput = 0;
 
 	wire [0:0] tmpOE__ENCD_Left_1_net;
 	wire [0:0] tmpIO_0__ENCD_Left_1_net;
