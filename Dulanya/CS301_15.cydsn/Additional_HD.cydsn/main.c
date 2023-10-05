@@ -103,23 +103,32 @@ void stop(){
 }
 
 void turnLeft(){
-    QuadDec_M1_SetCounter(0);
     PWM_1_WriteCompare(70);
     PWM_2_WriteCompare(30);
-    while(abs(QuadDec_M1_GetCounter())<80){
-        ;;
+//    CyDelay(350);
+    while(Sout_L_Read()==0){//wait while left is on line
+       ;;
+    }
+    while(!(Sout_M1_Read()==0 &&Sout_M1_Read()==0)){//wait while middle sensors off line
+       ;;
     }
     isTurning=false;
+    PWM_1_WriteCompare(65);
+    PWM_2_WriteCompare(66);
     
 }
 void turnRight(){
-    QuadDec_M2_SetCounter(0);
     PWM_1_WriteCompare(30);
     PWM_2_WriteCompare(70);
-    while(abs(QuadDec_M2_GetCounter())<80){
-        ;;
+    while(Sout_R_Read()==0){//wait while left is on line
+       ;;
+    }
+    while(!(Sout_M1_Read()==0 &&Sout_M1_Read()==0)){//wait while middle sensors off line
+       ;;
     }
     isTurning=false;
+    PWM_1_WriteCompare(65);
+    PWM_2_WriteCompare(66);
 
 }
     
@@ -133,19 +142,10 @@ void goStraight(){
         PWM_1_WriteCompare(PWM_1_ReadCompare() +1);
         
     }else if(comp1_sum==0 && comp0_sum==0){
-        PWM_1_WriteCompare(67);
-        PWM_2_WriteCompare(68);
+        PWM_1_WriteCompare(65);
+        PWM_2_WriteCompare(66);
     }
     
-//    //M1==>middle left M2==>middle right
-//    if(Sout_M1_Read()>0 && Sout_M2_Read()==0){//out of line to left
-//        PWM_2_WriteCompare(PWM_2_ReadCompare() +1);
-//    }else if(Sout_M1_Read()==0 &&  Sout_M2_Read()>0){//s_MR out of line
-//        PWM_1_WriteCompare(PWM_1_ReadCompare() +1);
-//    }else if(Sout_M1_Read()==0 && Sout_M2_Read()==0){
-//        PWM_1_WriteCompare(60);
-//        PWM_2_WriteCompare(61);
-//    }   
     
 }
 
@@ -176,8 +176,8 @@ int main(void)
     // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
 
     
-    PWM_1_WritePeriod(PWM_PERIOD);
-    PWM_2_WritePeriod(PWM_PERIOD);
+    PWM_1_WritePeriod(100);
+    PWM_2_WritePeriod(100);
     
     PWM_1_WriteCompare(50);
     PWM_2_WriteCompare(50);
@@ -194,7 +194,7 @@ int main(void)
 //    // Print the path
 //    printPath(endNode);
 //**************************************************    
-    
+    QuadDec_M1_SetCounter(0);
     
     for(;;)
     {
@@ -203,7 +203,7 @@ int main(void)
            //comp3=0 => right
            /* Place your application code here. */
         
-//        if(abs(QuadDec_M1_GetCounter()>873)){
+//        if(abs(QuadDec_M1_GetCounter()>860)){
 //            stop();
 //            break;
 //        }
