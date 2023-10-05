@@ -20,50 +20,52 @@
 #include "cyapicallbacks.h"
 
 //distance calculation paras
-int32 encoderCounts_M1 = 0;  
-int32 encoderCounts_M2 = 0;  
-int32 CPR = 228; 
+volatile int32 encoderCounts_M1 = 0;  
+volatile int32 encoderCounts_M2 = 0;  
+volatile int32 CPR = 228; 
 float wheelCircumference_cm = 20.30725;
 double timeInterval_ms = 0.01;//10.924
-float32  distance_M1 = 0;
-float32  distance_M2 = 0;
-float32  current_distance_M1 = 0;
-float32  current_distance_M2 = 0;
-float32 target_diatance = 0;//cm
-volatile float32 speed_M1 = 0;
-volatile float32 speed_M2 = 0;
-int32 encoder_value_sum_M1 = 0;
-int32 encoder_value_sum_M2 = 0;
-uint8 counter = 1;
-bool isTurning=false;
+volatile float32  distance_Right = 0; //M1
+volatile float32  distance_Left = 0; //M2
+volatile float32  current_distance_Right = 0; //M1
+volatile float32  current_distance_Left = 0; //M2
+volatile float32 target_distance = 0;//cm
+volatile float32 speed_RightWheel = 0; //M1
+volatile float32 speed_LeftWheel = 0; //M2
+volatile int32 encoder_value_sum_RightWheel = 0; //M1
+volatile int32 encoder_value_sum_LeftWheel = 0; //M2
+volatile uint8 counter = 0;
+volatile bool isTurning=false;
 
 CY_ISR(counter_isr_handler){
-    if (counter <= 10){
+    if (counter < 10){
         counter++;
-        //speed_M1 = (encoderCounts_M1/CPR * wheelCircumference_cm)/0.02;
-        //speed_M2 = (encoderCounts_M2/CPR * wheelCircumference_cm)/0.02;
+        //speed_RightWheel = (encoderCounts_M1/CPR * wheelCircumference_cm)/0.001;
+        //speed_LeftWheel = (encoderCounts_M2/CPR * wheelCircumference_cm)/0.001;
     }
     else {
-        counter = 1;
+        counter = 0;
         // Encoder counts (negative due to counterclockwise rotation)
         encoderCounts_M1 = abs(QuadDec_M1_GetCounter());//QuadDec_M1_GetCounter();
         encoderCounts_M2 = abs(QuadDec_M2_GetCounter());
         
         // sum of encodercounts
-        encoder_value_sum_M1 += encoderCounts_M1;
-        encoder_value_sum_M2 += encoderCounts_M2;
+        encoder_value_sum_RightWheel += encoderCounts_M1;
+        encoder_value_sum_LeftWheel += encoderCounts_M2;
         
         
         // distance calculations 
-        distance_M1 = (encoder_value_sum_M1/CPR) * wheelCircumference_cm;
-        distance_M2 = (encoder_value_sum_M2/CPR) * wheelCircumference_cm;
+        distance_Right = (encoder_value_sum_RightWheel/CPR) * wheelCircumference_cm;
+        distance_Left = (encoder_value_sum_LeftWheel/CPR) * wheelCircumference_cm;
         
 
-//        //reset the encoder counters 
+        //reset the encoder counters 
         QuadDec_M1_SetCounter(0);
         QuadDec_M2_SetCounter(0);     
     }
-        Timer_1_ReadStatusRegister();   
+        Timer_1_ReadStatusRegister();  
+        speed_RightWheel = (encoderCounts_M1/CPR * wheelCircumference_cm)/0.001;
+        speed_LeftWheel = (encoderCounts_M2/CPR * wheelCircumference_cm)/0.001;
 }
 
 typedef enum {
@@ -139,30 +141,28 @@ void turnRight(){
        PWM_2_WriteCompare(61);
     }
 }
-    
-
 
 void goStraight(){
     
     if (Sout_MidRight_Read() == 0 && Sout_MidLeft_Read() > 0){
-        if (speed_M1 >= 5){
-            PWM_2_WriteCompare(PWM_2_ReadCompare() -1);
+        if (speed_RightWheel >= 5){
+            while (speed_LeftWheel != speed_RightWheel){
+                PWM_2_WriteCompare(PWM_2_ReadCompare() -1);
+            }
         }
         else {
-         PWM_1_WriteCompare(PWM_1_ReadCompare()+ 1);   
+            while (speed_LeftWheel != speed_RightWheel){
+                PWM_1_WriteCompare(PWM_1_ReadCompare()+ 1); 
+            }
         }
-        speed_M1;
-        speed_M2;
     } else if (Sout_MidRight_Read() > 0 && Sout_MidLeft_Read() == 0){
-        if (speed_M2 >= 5)
+        if (speed_LeftWheel >= 5)
         PWM_1_WriteCompare(PWM_1_ReadCompare() -1);
     }
     else {
          PWM_2_WriteCompare(PWM_2_ReadCompare()+ 1);   
         }
 
-    
-    
 ////    //comp0==>middle left comp1==>middle right
 //    if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
 ////        
@@ -239,12 +239,9 @@ void goStraight(){
 }
      
 void go_distance(float32 distance){
-    distance_M1=0;
-    target_diatance=distance;
+    distance_Right=0;
+    target_distance=distance;
 }
-
-
-
 
 int main(void)
 {
@@ -272,52 +269,52 @@ int main(void)
 
     for(;;)
     {
-        /* Place your application code here. */
-        while(!isTurning){
-          if (((Sout_MidRight_Read() == 0) || (Sout_MidLeft_Read() == 0)) && ((Sout_Left_Read()) > 1 && (Sout_Right_Read() > 0))) {
-            current_state = GO_STRAIGHT;
-        } else if(Sout_Left_Read() == 0){
-            stop();
-            CyDelay(200);
-            if (Sout_Left_Read() == 0){
-                current_state = TURN_LEFT;
-                QuadDec_M1_SetCounter(0);
-                isTurning=true;
-            }
-        } else if (Sout_Right_Read() == 0){
-            stop();
-            CyDelay(200);
-            if(Sout_Right_Read() == 0){
-                current_state = TURN_RIGHT;
-                QuadDec_M2_SetCounter(0);//reset 
-                isTurning=true;
-            }
-        } else {
-           current_state = STOP; 
+    /* Place your application code here. */
+    while(!isTurning){
+      if (((Sout_MidRight_Read() == 0) || (Sout_MidLeft_Read() == 0)) && ((Sout_Left_Read()) > 1 && (Sout_Right_Read() > 0))) {
+        current_state = GO_STRAIGHT;
+    } else if(Sout_Left_Read() == 0){
+        stop();
+        //CyDelay(200);
+        if (Sout_Left_Read() == 0){
+            current_state = TURN_LEFT;
+            QuadDec_M1_SetCounter(0);
+            isTurning=true;
         }
-        
+    } else if (Sout_Right_Read() == 0){
+        stop();
+        //CyDelay(200);
+        if(Sout_Right_Read() == 0){
+            current_state = TURN_RIGHT;
+            QuadDec_M2_SetCounter(0);//reset 
+            isTurning=true;
         }
-        switch (current_state) {
-            case GO_STRAIGHT:
-                goStraight();
-                break;
-            case TURN_LEFT:
-                while(isTurning){//keep turning until QuadDec value reached
-                    turnLeft();
-                };
-                current_state=STOP;
-                break;    
-            case TURN_RIGHT:
-                while(isTurning){
-                    turnRight();
-                };
-                current_state=STOP;
-                break;  
-            case STOP:
-                PWM_1_WriteCompare(50);
-                PWM_2_WriteCompare(50);
-                break;
-        }
+    } else {
+       current_state = STOP; 
+    }
+    
+    }
+    switch (current_state) {
+        case GO_STRAIGHT:
+            goStraight();
+            break;
+        case TURN_LEFT:
+            while(isTurning){//keep turning until QuadDec value reached
+                turnLeft();
+            };
+            current_state=STOP;
+            break;    
+        case TURN_RIGHT:
+            while(isTurning){
+                turnRight();
+            };
+            current_state=STOP;
+            break;  
+        case STOP:
+            PWM_1_WriteCompare(50);
+            PWM_2_WriteCompare(50);
+            break;
+    }
     }
 }
 

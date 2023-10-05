@@ -1,6 +1,6 @@
 // ======================================================================
 // Robot_Line.v generated from TopDesign.cysch
-// 10/04/2023 at 19:21
+// 10/06/2023 at 08:33
 // This file is auto generated. ANY EDITS YOU MAKE MAY BE LOST WHEN THIS FILE IS REGENERATED!!!
 // ======================================================================
 
@@ -1109,57 +1109,58 @@ module top ;
           wire  Net_861;
           wire  Net_277;
           wire  Net_276;
-          wire  Net_1790;
+          wire  Net_1942;
           wire  Net_274;
           wire  Net_273;
-          wire  Net_1789;
-          wire  Net_1788;
-          wire  Net_1787;
-          wire  Net_1786;
-          wire  Net_1785;
-          wire  Net_1784;
-          wire  Net_1783;
-          wire  Net_1782;
-          wire  Net_1781;
-          wire  Net_1780;
+          wire  Net_1941;
+          wire  Net_1940;
+          wire  Net_1939;
+          wire  Net_1938;
+          wire  Net_1937;
+          wire  Net_1936;
+          wire  Net_1935;
+          wire  Net_1934;
+          wire  Net_1933;
+          wire  Net_1932;
           wire  CLK24M;
-          wire  Net_1779;
-          wire  Net_1778;
-          wire  Net_1777;
-          wire  Net_1776;
-          wire  Net_1775;
-          wire  Net_1774;
-          wire  Net_1773;
-          wire  Net_1772;
-          wire  Net_1771;
-          wire  Net_1770;
-          wire  Net_1769;
-          wire  Net_1768;
-          wire  Net_1767;
-          wire  Net_1766;
+          wire  Net_1931;
+          wire  Net_1930;
+          wire  Net_1929;
+          wire  Net_1928;
+          wire  Net_1927;
+          wire  Net_1926;
+          wire  Net_1925;
+          wire  Net_1924;
+          wire  Net_1923;
+          wire  Net_1922;
+          wire  Net_1921;
+          wire  Net_1920;
+          wire  Net_1919;
+          wire  Net_1918;
           wire  Net_176;
           wire  Net_23;
-          wire  Net_1765;
+          wire  Net_1917;
           wire  Net_20;
           wire  Net_19;
           wire  Net_18;
-          wire  Net_1764;
+          wire  Net_1916;
           wire  Net_16;
           wire  Net_15;
           wire  Net_14;
-          wire  Net_1763;
+          wire  Net_1915;
           wire  Net_12;
           wire  Net_11;
           wire  Net_10;
     electrical  Net_9;
-          wire  Net_1762;
-          wire  Net_1761;
+          wire  Net_1914;
+          wire  Net_1913;
           wire  Net_6;
           wire  Net_5;
           wire  Net_4;
           wire  Net_3;
           wire  Net_2;
     electrical  Net_1;
+          wire  Net_8964;
           wire  Net_1645;
           wire  Net_1644;
           wire  Net_1610;
@@ -1179,7 +1180,6 @@ module top ;
           wire  Net_135;
           wire  Net_398;
           wire  Net_403;
-          wire  Net_8964;
           wire  Net_402;
     electrical  Net_1091;
     electrical  Net_1034;
@@ -2252,15 +2252,15 @@ module top ;
         .clock(CLK24M),
         .cmp_sel(1'b0),
         .enable(1'b1),
-        .interrupt(Net_1771),
+        .interrupt(Net_1923),
         .kill(Net_2183),
-        .ph1(Net_1772),
-        .ph2(Net_1773),
+        .ph1(Net_1924),
+        .ph2(Net_1925),
         .pwm(Net_2404),
-        .pwm1(Net_1774),
-        .pwm2(Net_1775),
+        .pwm1(Net_1926),
+        .pwm2(Net_1927),
         .reset(1'b0),
-        .tc(Net_1777),
+        .tc(Net_1929),
         .trigger(1'b0));
     defparam PWM_1.Resolution = 8;
 
@@ -2271,15 +2271,15 @@ module top ;
         .clock(CLK24M),
         .cmp_sel(1'b0),
         .enable(1'b1),
-        .interrupt(Net_1782),
+        .interrupt(Net_1934),
         .kill(Net_2183),
-        .ph1(Net_1783),
-        .ph2(Net_1784),
+        .ph1(Net_1935),
+        .ph2(Net_1936),
         .pwm(Net_509),
-        .pwm1(Net_1785),
-        .pwm2(Net_1786),
+        .pwm1(Net_1937),
+        .pwm2(Net_1938),
         .reset(1'b0),
-        .tc(Net_1788),
+        .tc(Net_1940),
         .trigger(1'b0));
     defparam PWM_2.Resolution = 8;
 
