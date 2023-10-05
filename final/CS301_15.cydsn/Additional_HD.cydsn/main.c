@@ -64,11 +64,7 @@ typedef enum {
 RobotState current_state = STOP;// intialse state
 
 uint32 count = 0;
-uint32 turn_counter = 0;
-bool left_on=false;
-bool right_on;
-bool middle_on;
-bool turn_complete;
+bool isTurning=false;
 
 uint8 comp0_sum;
 uint8 comp1_sum;
@@ -77,6 +73,7 @@ uint8 comp3_sum;
 
 uint8 PWM_R;
 uint8 PWM_L;
+
 
 
 CY_ISR(isr_3_handler) {
@@ -95,34 +92,15 @@ CY_ISR(isr_3_handler) {
         // distance calculations 
         distance_M1 = (encoder_value_sum_M1/CPR) * wheelCircumference_cm;
         distance_M2 = (encoder_value_sum_M2/CPR) * wheelCircumference_cm;
+        
 
-        //reset the encoder counters 
-        QuadDec_M1_SetCounter(0);
-        QuadDec_M2_SetCounter(0);     
+//        //reset the encoder counters 
+//        QuadDec_M1_SetCounter(0);
+//        QuadDec_M2_SetCounter(0);     
     }
         Timer_1_ReadStatusRegister();
 }
 
-
-CY_ISR(isr_2_handler) {
-    //every 1ms 
-    if(left_on==true){
-        if(turn_counter==0){
-            PWM_L=50;
-            PWM_R=80; 
-           // LED_1_Write(1);
-        }
-        turn_counter++;
-        if(turn_counter==650){
-            left_on=false;
-            PWM_L=50;
-            PWM_R=50;
-            turn_counter=0;
-            //LED_1_Write(0);
-        }
-        
-    }
-}
 
 
 CY_ISR(isr_1_handler) {
@@ -136,6 +114,8 @@ CY_ISR(isr_1_handler) {
     
     
     if(count==8){
+        
+
         //reset to check again every 8ms
         comp0_sum=0;
         comp1_sum=0;
@@ -150,27 +130,48 @@ CY_ISR(isr_1_handler) {
 }
 
 void stop(){
-    PWM_R=50;
-    PWM_L=50;
+    PWM_1_WriteCompare(50);
+    PWM_2_WriteCompare(50);
 }
 void turnLeft(){
-    
-    if(turn_complete){
-       left_on=false;
-    }
+    PWM_1_WriteCompare(70);
+    PWM_2_WriteCompare(30);
+    CyDelay(400);
+    isTurning=false;
+//    if(Sout_M1_Read()==0 || Sout_M2_Read()==0){
+//       isTurning=false;
+//       current_state=GO_STRAIGHT;
+//       PWM_1_WriteCompare(70);
+//       PWM_2_WriteCompare(71);
+//    }
     
 }
+void turnRight(){
+    PWM_1_WriteCompare(30);
+    PWM_2_WriteCompare(70);
+    CyDelay(400);
+    isTurning=false;
+//    if(Sout_M1_Read()==0 || Sout_M2_Read()==0){
+//       isTurning=false;
+//       current_state=GO_STRAIGHT;
+//       PWM_1_WriteCompare(70);
+//       PWM_2_WriteCompare(71);
+//    }
+}
+    
+
 
 void goStraight(){
+    
     //comp0==>middle left comp1==>middle right
     if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
-        PWM_L=PWM_L+1;
+        PWM_2_WriteCompare(PWM_2_ReadCompare() +1);
     }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
-        PWM_R=PWM_R+1;
+        PWM_1_WriteCompare(PWM_1_ReadCompare() +1);
         
     }else if(comp1_sum==0 && comp0_sum==0){
-        PWM_R=80;
-        PWM_L=81;
+        PWM_1_WriteCompare(70);
+        PWM_2_WriteCompare(71);
     }
      
 }
@@ -191,7 +192,6 @@ int main(void)
     
     isr_1_StartEx(isr_1_handler);
     isr_3_StartEx(isr_3_handler);
-    isr_2_StartEx(isr_2_handler);
     
     //start comparators
     Comp_0_Start();
@@ -204,17 +204,19 @@ int main(void)
     //Start PWM
     PWM_1_Start();
     PWM_2_Start();
-    
+     
     // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
 
     
     PWM_1_WritePeriod(100);
     PWM_2_WritePeriod(100);
     
+    PWM_1_WriteCompare(70);
+    PWM_2_WriteCompare(30);
     QuadDec_M1_Start();
     QuadDec_M2_Start();
     
-    go_distance(100);
+    
     
     for(;;)
     {
@@ -222,79 +224,61 @@ int main(void)
            //comp2=0 => left
            //comp3=0 => right
            /* Place your application code here. */
-         if(comp1_sum==0 && comp0_sum==0){
-                current_state = GO_STRAIGHT;
-        }else if(comp2_sum == 0) {
-                current_state = TURN_LEFT;
-        }else if(comp3_sum==0){
-                current_state = TURN_RIGHT;
-        }else if(comp0_sum>0 && comp1_sum>0 && comp2_sum>0 && comp3_sum>0){
-                current_state = STOP;
+        
+//        
+        if(!isTurning ){//if not turning check the sensors
+            if(Sout_M1_Read()==0 || Sout_M2_Read()==0){
+                    current_state = GO_STRAIGHT;
+            }else if(Sout_L_Read()==0) {//left on
+                    current_state = TURN_LEFT;
+                    QuadDec_M1_SetCounter(0);
+                    isTurning=true;
+            }else if(Sout_R_Read()==0){//right on
+                    current_state = TURN_RIGHT;
+                    QuadDec_M2_SetCounter(0);//reset 
+                    isTurning=true;
+            }else {
+                    current_state=current_state;
+            }
         }
-        else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
-                current_state = LEFT_ADJUST;
-        }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
-                current_state = RIGHT_ADJUST;
-        }
-     
+        
+        
+
+        
         switch (current_state) {
             case GO_STRAIGHT:
-                PWM_R=86;
-                PWM_L=87; 
+                goStraight();
                 break;
             case TURN_LEFT:
-                PWM_L=0; 
-                PWM_R=90;
+                while(isTurning){//keep turning until QuadDec value reached
+                    turnLeft();
+                }
                 break;    
             case TURN_RIGHT:
-                PWM_L=87;
-                PWM_R=0; 
+                while(isTurning){
+                    turnRight();
+                }
                 break;  
             case STOP:
-                PWM_R=50;
-                PWM_L=50; 
+                PWM_1_WriteCompare(50);
+                PWM_2_WriteCompare(50);
                 break;
+         //LEFT_ADJUST & RIGHT_ADJUST states not used    
             case LEFT_ADJUST:
-                PWM_L=PWM_L+1; 
+                PWM_2_WriteCompare(PWM_2_ReadCompare()+1);//increase left wheel speed
                 break; 
             case RIGHT_ADJUST:
-                PWM_R=PWM_R+1;
+                PWM_1_WriteCompare(PWM_1_ReadCompare()+1);//increase right wheel speed
                 break; 
         }
-        
-//            if(comp2_sum==0){
-//                //left_on=true;
-//                PWM_R=71;
-//                PWM_L=10;  
-//            }else if(comp3_sum==0){
-//                PWM_R=0;
-//                PWM_L=86;  
-//            }else if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
-//                PWM_L=PWM_L+1;
-//            }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
-//                PWM_R=PWM_R+1;    
-//            }else if(comp1_sum==0 && comp0_sum==0){//both sensors on the line
-//                PWM_R=80;
-//                PWM_L=81;
-//            }else if(comp0_sum>0 && comp1_sum>0 && comp2_sum>0 && comp3_sum>0){
-//                PWM_R=50;
-//                PWM_L=50;
-//            }
-        
-
-            if(distance_M1>=target_diatance && target_diatance!=0){
-                LED_1_Write(1);
-                stop();
-            }
-
-        //PWM1 right wheel
-          PWM_1_WriteCompare(PWM_R);
-        //PWM2 corresponds to left wheel
-          PWM_2_WriteCompare(PWM_L);
-              
+             
 
     }
 }
 
 
 /* [] END OF FILE */
+//  if(distance_M1>=target_diatance && target_diatance!=0){
+//                LED_1_Write(1);
+//                stop();
+//            }

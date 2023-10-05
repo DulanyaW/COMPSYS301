@@ -1,6 +1,6 @@
 // ======================================================================
 // Additional_HD.v generated from TopDesign.cysch
-// 10/04/2023 at 12:14
+// 10/05/2023 at 07:34
 // This file is auto generated. ANY EDITS YOU MAKE MAY BE LOST WHEN THIS FILE IS REGENERATED!!!
 // ======================================================================
 
@@ -1266,6 +1266,13 @@ module top ;
 		  .out_reset({1'b0}));
 
 	assign tmpOE__D1_B_net = (`CYDEV_CHIP_MEMBER_USED == `CYDEV_CHIP_MEMBER_3A && `CYDEV_CHIP_REVISION_USED < `CYDEV_CHIP_REVISION_3A_ES3) ? ~{1'b1} : {1'b1};
+
+
+	cy_isr_v1_0
+		#(.int_type(2'b00))
+		isr_1
+		 (.int_signal(Net_8964));
+
 
     Comp_v2_0_0 Comp_3 (
         .clock(Net_402),
@@ -3103,13 +3110,6 @@ module top ;
     defparam CONTROL_ENABLE_0.BusDisplay = 0;
     defparam CONTROL_ENABLE_0.ExtrReset = 0;
     defparam CONTROL_ENABLE_0.NumOutputs = 2;
-
-
-	cy_isr_v1_0
-		#(.int_type(2'b00))
-		isr_3
-		 (.int_signal(Net_8964));
-
 
 	wire [0:0] tmpOE__Sout_M1_net;
 	wire [0:0] tmpFB_0__Sout_M1_net;

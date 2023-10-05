@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <math.h>
+#include "Astar.h"
+#include <math.h> // Include the math.h header
+
 
 #define MAP_ROWS 15
 #define MAP_COLS 19
@@ -10,13 +12,6 @@
 // Create a 2D array to store the path coordinate
 int pathCoordinates[MAX_PATH_LENGTH][2];
 int pathLength=0;
-
-// Define a structure to represent nodes
-typedef struct Node {
-    int x, y;           // Position
-    double g, h;        // Cost from start, heuristic cost
-    struct Node* parent; // Parent node
-} Node;
 
 
 // Define a 2D grid map with '0' for open spaces and '1' for obstacles
@@ -40,8 +35,9 @@ int map[MAP_ROWS][MAP_COLS] = {
 
 // Function to calculate Manhattan distance heuristic
 double heuristic(int x1, int y1, int x2, int y2) {
-    return fabs(x1 - x2) + fabs(y1 - y2);
+    return (abs(x1 - x2) + abs(y1 - y2));
 }
+
 
 // Function to check if a position is valid
 bool isValid(int x, int y) {
@@ -50,12 +46,14 @@ bool isValid(int x, int y) {
 
 // A* algorithm
 Node* AStar(int startX, int startY, int targetX, int targetY) {
+    
     // Initialize open and closed sets
     Node* openSet[MAP_ROWS * MAP_COLS] = {NULL};
     Node* closedSet[MAP_ROWS][MAP_COLS] = {NULL};
-
+    
+   
     // Create the start node
-    Node startNode = {startX, startY, 0.0, heuristic(startX, startY, targetX, targetY), NULL};
+    Node startNode = {startX, startY, 0.0, heuristic(startX, startY, targetX, targetY),NULL};
     openSet[0] = &startNode;
 
     // Main loop
@@ -65,6 +63,7 @@ Node* AStar(int startX, int startY, int targetX, int targetY) {
         int currentIndex = 0;
 
         for (int i = 1; openSet[i] != NULL; i++) {
+            //organise in weights order
             if (openSet[i]->g + openSet[i]->h < current->g + current->h) {
                 current = openSet[i];
                 currentIndex = i;

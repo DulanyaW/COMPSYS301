@@ -562,15 +562,15 @@
 #define Sin_R__SHIFT 3u
 #define Sin_R__SLW CYREG_PRT3_SLW
 
-/* isr_3 */
-#define isr_3__INTC_CLR_EN_REG CYREG_NVIC_CLRENA0
-#define isr_3__INTC_CLR_PD_REG CYREG_NVIC_CLRPEND0
-#define isr_3__INTC_MASK 0x80000u
-#define isr_3__INTC_NUMBER 19u
-#define isr_3__INTC_PRIOR_NUM 7u
-#define isr_3__INTC_PRIOR_REG CYREG_NVIC_PRI_19
-#define isr_3__INTC_SET_EN_REG CYREG_NVIC_SETENA0
-#define isr_3__INTC_SET_PD_REG CYREG_NVIC_SETPEND0
+/* isr_1 */
+#define isr_1__INTC_CLR_EN_REG CYREG_NVIC_CLRENA0
+#define isr_1__INTC_CLR_PD_REG CYREG_NVIC_CLRPEND0
+#define isr_1__INTC_MASK 0x80000u
+#define isr_1__INTC_NUMBER 19u
+#define isr_1__INTC_PRIOR_NUM 7u
+#define isr_1__INTC_PRIOR_REG CYREG_NVIC_PRI_19
+#define isr_1__INTC_SET_EN_REG CYREG_NVIC_SETENA0
+#define isr_1__INTC_SET_PD_REG CYREG_NVIC_SETPEND0
 
 /* Comp_0 */
 #define Comp_0_ctComp__CLK CYREG_CMP0_CLK

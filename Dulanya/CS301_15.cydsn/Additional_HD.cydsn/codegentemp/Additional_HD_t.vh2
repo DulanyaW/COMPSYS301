@@ -1,5 +1,5 @@
 -- Project:   C:\Users\dulan\OneDrive\Desktop\ENGGEN\2023_sem2\301\COMPSYS301\Dulanya\CS301_15.cydsn\Additional_HD.cydsn\Additional_HD.cyprj
--- Generated: 10/04/2023 12:15:04
+-- Generated: 10/05/2023 07:34:28
 -- PSoC Creator  4.4
 
 ENTITY Additional_HD IS
@@ -417,6 +417,7 @@ ARCHITECTURE __DEFAULT__ OF Additional_HD IS
     ATTRIBUTE Location OF Net_2860 : LABEL IS "U(3,1)";
     ATTRIBUTE lib_model OF Net_2986 : LABEL IS "macrocell17";
     ATTRIBUTE Location OF Net_2986 : LABEL IS "U(2,3)";
+    ATTRIBUTE Location OF isr_1 : LABEL IS "[IntrContainer=(0)][IntrId=(19)]";
     ATTRIBUTE Location OF \Comp_3:ctComp\ : LABEL IS "F(Comparator,1)";
     ATTRIBUTE Location OF ENCD_B_2(0)_SYNC : LABEL IS "U(2,5)";
     ATTRIBUTE Location OF \Timer_1:TimerHW\ : LABEL IS "F(Timer,2)";
@@ -484,7 +485,6 @@ ARCHITECTURE __DEFAULT__ OF Additional_HD IS
     ATTRIBUTE Location OF \CONTROL_DISABLE_2:Sync:ctrl_reg\ : LABEL IS "U(3,0)";
     ATTRIBUTE lib_model OF \CONTROL_ENABLE_0:Sync:ctrl_reg\ : LABEL IS "controlcell5";
     ATTRIBUTE Location OF \CONTROL_ENABLE_0:Sync:ctrl_reg\ : LABEL IS "U(2,3)";
-    ATTRIBUTE Location OF isr_3 : LABEL IS "[IntrContainer=(0)][IntrId=(19)]";
     ATTRIBUTE lib_model OF \GlitchFilter_2:genblk2:Counter0:DP:u0\ : LABEL IS "datapathcell5";
     ATTRIBUTE Location OF \GlitchFilter_2:genblk2:Counter0:DP:u0\ : LABEL IS "U(3,3)";
     ATTRIBUTE lib_model OF \GlitchFilter_3:genblk2:Counter0:DP:u0\ : LABEL IS "datapathcell6";
@@ -3365,6 +3365,14 @@ BEGIN
             q => Net_2986,
             main_0 => Net_509);
 
+    isr_1:interrupt
+        GENERIC MAP(
+            int_type => "00",
+            is_nmi => 0)
+        PORT MAP(
+            interrupt => Net_8964,
+            clock => ClockBlock_BUS_CLK);
+
     \Comp_3:ctComp\:comparatorcell
         GENERIC MAP(
             cy_registers => "")
@@ -4011,14 +4019,6 @@ BEGIN
             control_1 => Net_1645,
             control_0 => Net_1644,
             busclk => ClockBlock_BUS_CLK);
-
-    isr_3:interrupt
-        GENERIC MAP(
-            int_type => "00",
-            is_nmi => 0)
-        PORT MAP(
-            interrupt => Net_8964,
-            clock => ClockBlock_BUS_CLK);
 
     \GlitchFilter_2:genblk2:Counter0:DP:u0\:datapathcell
         GENERIC MAP(
