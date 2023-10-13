@@ -1,0 +1,4359 @@
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"main.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.isr_1_handler,"ax",%progbits
+  20              		.align	2
+  21              		.global	isr_1_handler
+  22              		.thumb
+  23              		.thumb_func
+  24              		.type	isr_1_handler, %function
+  25              	isr_1_handler:
+  26              	.LFB65:
+  27              		.file 1 "main.c"
+   1:main.c        **** /* ========================================
+   2:main.c        ****  *
+   3:main.c        ****  * Copyright YOUR COMPANY, THE YEAR
+   4:main.c        ****  * All Rights Reserved
+   5:main.c        ****  * UNPUBLISHED, LICENSED SOFTWARE.
+   6:main.c        ****  *
+   7:main.c        ****  * CONFIDENTIAL AND PROPRIETARY INFORMATION
+   8:main.c        ****  * WHICH IS THE PROPERTY OF your company.
+   9:main.c        ****  *
+  10:main.c        ****  * ========================================
+  11:main.c        **** */
+  12:main.c        **** /* ========================================
+  13:main.c        ****  * Fully working code: 
+  14:main.c        ****  * PWM      : 
+  15:main.c        ****  * Encoder  : 
+  16:main.c        ****  * ADC      :
+  17:main.c        ****  * USB      : port displays speed and position.
+  18:main.c        ****  * CMD: "PW xx"
+  19:main.c        ****  * Copyright Univ of Auckland, 2016
+  20:main.c        ****  * All Rights Reserved
+  21:main.c        ****  * UNPUBLISHED, LICENSED SOFTWARE.
+  22:main.c        ****  *
+  23:main.c        ****  * CONFIDENTIAL AND PROPRIETARY INFORMATION
+  24:main.c        ****  * WHICH IS THE PROPERTY OF Univ of Auckland.
+  25:main.c        ****  *
+  26:main.c        ****  * ========================================
+  27:main.c        **** */
+  28:main.c        **** //WORKS 90% of the time
+  29:main.c        **** #include <stdio.h>
+  30:main.c        **** #include <string.h>
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 2
+
+
+  31:main.c        **** #include <stdlib.h>
+  32:main.c        **** #include <project.h>
+  33:main.c        **** #include <stdbool.h>
+  34:main.c        **** #include <math.h>
+  35:main.c        **** #include <cytypes.h> 
+  36:main.c        **** #include "Astar.h"
+  37:main.c        **** 
+  38:main.c        **** //distance calculation paras
+  39:main.c        **** int32 CPR = 228;  // Adjusted for 4x resolution(228/4)
+  40:main.c        **** float wheelCircumference_cm = (M_PI*64.46)/10;// wheel circumference wheelDiameter_mm = 64.46)
+  41:main.c        **** double timeInterval_s = 10.924;  // Effective time interval( (timer period )2.731*4)
+  42:main.c        **** int path_length=4;
+  43:main.c        **** int counter=1;
+  44:main.c        **** 
+  45:main.c        **** //define wheel speeds
+  46:main.c        **** #define PWM_PERIOD 100
+  47:main.c        **** #define PWM_STRAIGHT_L 131
+  48:main.c        **** #define PWM_STRAIGHT_R 130
+  49:main.c        **** #define PWM_STOP 100
+  50:main.c        **** #define ENC_VALUE_PER_CM 10.5
+  51:main.c        **** #define CM_PER_BLOCK_VERT 5
+  52:main.c        **** #define CM_PER_BLOCK_HORIZ 9
+  53:main.c        **** 
+  54:main.c        **** uint32 count = 0;
+  55:main.c        **** bool isTurning=false;
+  56:main.c        **** 
+  57:main.c        **** uint8 comp0_sum;
+  58:main.c        **** uint8 comp1_sum;
+  59:main.c        **** uint8 comp2_sum;
+  60:main.c        **** uint8 comp3_sum;
+  61:main.c        **** 
+  62:main.c        **** int path_coordinates[MAX_PATH_LENGTH][2];
+  63:main.c        **** 
+  64:main.c        **** typedef struct Movement {
+  65:main.c        ****     int distance;       // Distance to go straight in centimeters
+  66:main.c        ****     char turnDirection; // 'L' for left, 'R' for right, 'N' for no turn
+  67:main.c        **** } Movement;
+  68:main.c        **** 
+  69:main.c        **** //from point 0 to 1
+  70:main.c        **** Movement path[10] = {
+  71:main.c        **** //    {3*CM_PER_BLOCK_VERT, 'R'}, 
+  72:main.c        ****     {3*CM_PER_BLOCK_VERT, 'L'}, 
+  73:main.c        ****     {3*CM_PER_BLOCK_HORIZ, 'R'}, 
+  74:main.c        ****     {3*CM_PER_BLOCK_VERT, 'R'}, 
+  75:main.c        ****     {3*CM_PER_BLOCK_HORIZ, 'L'}, 
+  76:main.c        ****     {5*CM_PER_BLOCK_VERT,  'L'},
+  77:main.c        ****     {3*CM_PER_BLOCK_HORIZ, 'R'}, 
+  78:main.c        ****     {3*CM_PER_BLOCK_VERT, 'L'}, 
+  79:main.c        ****     {3*CM_PER_BLOCK_HORIZ,  'L'},
+  80:main.c        ****     {11*CM_PER_BLOCK_VERT,  'N'},
+  81:main.c        **** };
+  82:main.c        **** typedef enum {
+  83:main.c        ****     NORTH,
+  84:main.c        ****     EAST,
+  85:main.c        ****     SOUTH,
+  86:main.c        ****     WEST
+  87:main.c        **** } RobotDirection;
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 3
+
+
+  88:main.c        **** 
+  89:main.c        **** 
+  90:main.c        **** // Define states for the state machine
+  91:main.c        **** typedef enum {
+  92:main.c        ****     GO_STRAIGHT,
+  93:main.c        ****     TURN_LEFT,
+  94:main.c        ****     TURN_RIGHT,
+  95:main.c        ****     STOP
+  96:main.c        **** } RobotState;
+  97:main.c        **** RobotState current_state = STOP;// intialse state
+  98:main.c        **** 
+  99:main.c        **** void getMovements(int start_row,int start_column,int target_row, int target_column,RobotDirection c
+ 100:main.c        ****     //calculate the path using Astar
+ 101:main.c        ****     //save it to a array of coordinates =>path_coordinates
+ 102:main.c        ****     
+ 103:main.c        ****     int movement_count=0;
+ 104:main.c        ****     int stepCount=0;
+ 105:main.c        ****     char turn='N';
+ 106:main.c        ****     int current_row = start_row;
+ 107:main.c        ****     int current_column = start_column;
+ 108:main.c        ****     
+ 109:main.c        ****     for(int i=0;i<MAX_PATH_LENGTH;i++){//this should only run for number of coordinates
+ 110:main.c        ****         int next_row = path_coordinates[i][0];
+ 111:main.c        ****         int next_column = path_coordinates[i][1];
+ 112:main.c        ****         
+ 113:main.c        ****         if(target_column==next_column && target_row==next_column){
+ 114:main.c        ****             switch (current_direction) {
+ 115:main.c        ****                 case NORTH:
+ 116:main.c        ****                      path[movement_count].distance=stepCount*CM_PER_BLOCK_VERT;
+ 117:main.c        ****                      path[movement_count].turnDirection='N';
+ 118:main.c        ****                      break;
+ 119:main.c        ****                 case SOUTH:
+ 120:main.c        ****                      path[movement_count].distance=stepCount*CM_PER_BLOCK_VERT;
+ 121:main.c        ****                      path[movement_count].turnDirection='N';
+ 122:main.c        ****                     break;
+ 123:main.c        ****                 case EAST:
+ 124:main.c        ****                      path[movement_count].distance=stepCount*CM_PER_BLOCK_HORIZ;
+ 125:main.c        ****                      path[movement_count].turnDirection='N';
+ 126:main.c        ****                     break;
+ 127:main.c        ****                 case WEST:
+ 128:main.c        ****                      path[movement_count].distance=stepCount*CM_PER_BLOCK_HORIZ;
+ 129:main.c        ****                      path[movement_count].turnDirection='N';
+ 130:main.c        ****                     break;
+ 131:main.c        ****             }break;
+ 132:main.c        ****         }
+ 133:main.c        ****         
+ 134:main.c        ****         
+ 135:main.c        ****         
+ 136:main.c        **** 
+ 137:main.c        ****         // Calculate the change in position
+ 138:main.c        ****         int deltaX = next_column - current_column;
+ 139:main.c        ****         int deltaY = next_row - current_row;
+ 140:main.c        ****     
+ 141:main.c        ****          switch (current_direction) {
+ 142:main.c        ****             
+ 143:main.c        ****              case NORTH:
+ 144:main.c        ****                  if (deltaX == 0 && deltaY < 0) {
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 4
+
+
+ 145:main.c        ****                     // Go straight up
+ 146:main.c        ****                     stepCount++;
+ 147:main.c        ****                      // Update currentvalues
+ 148:main.c        ****                     current_row = next_row;
+ 149:main.c        ****                     current_column = next_column;
+ 150:main.c        ****                     continue; // Skip the rest of this iteration and go to the next
+ 151:main.c        ****                 } else if (deltaX > 0 && deltaY == 0) {
+ 152:main.c        ****                     // Turn right
+ 153:main.c        ****                     turn='R';
+ 154:main.c        ****                     current_direction=EAST;
+ 155:main.c        ****                     //set the next state
+ 156:main.c        ****                 } else if (deltaX < 0 && deltaY == 0) {
+ 157:main.c        ****                     // Turn left
+ 158:main.c        ****                     turn='L';
+ 159:main.c        ****                     current_direction=WEST;
+ 160:main.c        ****                 }
+ 161:main.c        ****                 path[movement_count].distance=stepCount*CM_PER_BLOCK_VERT;
+ 162:main.c        ****                 path[movement_count].turnDirection=turn;
+ 163:main.c        ****                 movement_count++;
+ 164:main.c        ****                 break;
+ 165:main.c        ****                     
+ 166:main.c        ****                  
+ 167:main.c        ****              case EAST:
+ 168:main.c        ****                 if (deltaX > 0 && deltaY == 0) {
+ 169:main.c        ****                       // Go straight right
+ 170:main.c        ****                     stepCount++;
+ 171:main.c        ****                      // Update currentvalues
+ 172:main.c        ****                     current_row = next_row;
+ 173:main.c        ****                     current_column = next_column;
+ 174:main.c        ****                     continue; // Skip the rest of this iteration and go to the next
+ 175:main.c        ****                 } else if (deltaX == 0 && deltaY > 0) {
+ 176:main.c        ****                     // Turn right
+ 177:main.c        ****                     turn='R';
+ 178:main.c        ****                     current_direction=SOUTH;
+ 179:main.c        ****                     //set the next state
+ 180:main.c        ****                 } else if (deltaX == 0 && deltaY < 0) {
+ 181:main.c        ****                     // Turn left
+ 182:main.c        ****                     turn='L';
+ 183:main.c        ****                     current_direction=NORTH;
+ 184:main.c        ****                 }
+ 185:main.c        ****                 path[movement_count].distance=stepCount*CM_PER_BLOCK_HORIZ;
+ 186:main.c        ****                 path[movement_count].turnDirection=turn;
+ 187:main.c        ****                 movement_count++;
+ 188:main.c        ****                 break;
+ 189:main.c        **** 
+ 190:main.c        ****             case SOUTH:
+ 191:main.c        ****                 if (deltaX == 0 && deltaY > 0) {
+ 192:main.c        ****                      // Go straight down
+ 193:main.c        ****                     stepCount++;
+ 194:main.c        ****                      // Update currentvalues
+ 195:main.c        ****                     current_row = next_row;
+ 196:main.c        ****                     current_column = next_column;
+ 197:main.c        ****                     continue;
+ 198:main.c        ****                 } else if (deltaX > 0 && deltaY == 0) {
+ 199:main.c        ****                     // Turn right
+ 200:main.c        ****                     turn='R';
+ 201:main.c        ****                     current_direction=EAST;
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 5
+
+
+ 202:main.c        ****                    
+ 203:main.c        ****                 } else if (deltaX< 0 && deltaY == 0) {
+ 204:main.c        ****                      // Turn left
+ 205:main.c        ****                     turn='L';
+ 206:main.c        ****                     current_direction=WEST;
+ 207:main.c        ****                 }
+ 208:main.c        ****                 path[movement_count].distance=stepCount*CM_PER_BLOCK_VERT;
+ 209:main.c        ****                 path[movement_count].turnDirection=turn;
+ 210:main.c        ****                 movement_count++;
+ 211:main.c        ****                 break;
+ 212:main.c        ****                    
+ 213:main.c        ****                    
+ 214:main.c        ****             case WEST:
+ 215:main.c        ****                  if (deltaX <0 && deltaY == 0) {
+ 216:main.c        ****                      // Go straight left
+ 217:main.c        ****                     stepCount++;
+ 218:main.c        ****                      // Update currentvalues
+ 219:main.c        ****                     current_row = next_row;
+ 220:main.c        ****                     current_column = next_column;
+ 221:main.c        ****                     continue;
+ 222:main.c        ****                 } else if (deltaX == 0 && deltaY < 0) {
+ 223:main.c        ****                     // Turn right
+ 224:main.c        ****                     turn='R';
+ 225:main.c        ****                     current_direction=NORTH;
+ 226:main.c        ****                    
+ 227:main.c        ****                 } else if (deltaX == 0 && deltaY > 0) {
+ 228:main.c        ****                      // Turn left
+ 229:main.c        ****                     turn='L';
+ 230:main.c        ****                     current_direction=SOUTH;
+ 231:main.c        ****                 }
+ 232:main.c        ****                 path[movement_count].distance=stepCount*CM_PER_BLOCK_HORIZ;
+ 233:main.c        ****                 path[movement_count].turnDirection=turn;
+ 234:main.c        ****                 movement_count++;
+ 235:main.c        ****                 break;
+ 236:main.c        ****             }
+ 237:main.c        ****         
+ 238:main.c        ****     }
+ 239:main.c        ****     
+ 240:main.c        **** }
+ 241:main.c        **** 
+ 242:main.c        **** 
+ 243:main.c        **** 
+ 244:main.c        **** CY_ISR(isr_1_handler) {
+  28              		.loc 1 244 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 08B5     		push	{r3, lr}
+  33              		.cfi_def_cfa_offset 8
+  34              		.cfi_offset 3, -8
+  35              		.cfi_offset 14, -4
+ 245:main.c        ****         //every 1ms 
+ 246:main.c        ****     
+ 247:main.c        ****     //sum up comp values every 1ms
+ 248:main.c        ****     comp0_sum+=Comp_0_GetCompare();
+  36              		.loc 1 248 0
+  37 0002 FFF7FEFF 		bl	Comp_0_GetCompare
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 6
+
+
+  38              	.LVL0:
+  39 0006 164A     		ldr	r2, .L4
+  40 0008 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+  41 000a 1844     		add	r0, r0, r3
+  42 000c 1070     		strb	r0, [r2]
+ 249:main.c        ****     comp1_sum+=Comp_1_GetCompare();
+  43              		.loc 1 249 0
+  44 000e FFF7FEFF 		bl	Comp_1_GetCompare
+  45              	.LVL1:
+  46 0012 144A     		ldr	r2, .L4+4
+  47 0014 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+  48 0016 1844     		add	r0, r0, r3
+  49 0018 1070     		strb	r0, [r2]
+ 250:main.c        ****     comp2_sum+=Comp_2_GetCompare();
+  50              		.loc 1 250 0
+  51 001a FFF7FEFF 		bl	Comp_2_GetCompare
+  52              	.LVL2:
+  53 001e 124A     		ldr	r2, .L4+8
+  54 0020 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+  55 0022 1844     		add	r0, r0, r3
+  56 0024 1070     		strb	r0, [r2]
+ 251:main.c        ****     comp3_sum+=Comp_3_GetCompare();
+  57              		.loc 1 251 0
+  58 0026 FFF7FEFF 		bl	Comp_3_GetCompare
+  59              	.LVL3:
+  60 002a 104A     		ldr	r2, .L4+12
+  61 002c 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+  62 002e 1844     		add	r0, r0, r3
+  63 0030 1070     		strb	r0, [r2]
+ 252:main.c        ****       
+ 253:main.c        ****     if(count==8){
+  64              		.loc 1 253 0
+  65 0032 0F4B     		ldr	r3, .L4+16
+  66 0034 1B68     		ldr	r3, [r3]
+  67 0036 082B     		cmp	r3, #8
+  68 0038 0AD1     		bne	.L2
+ 254:main.c        ****         //reset to check again every 8ms
+ 255:main.c        ****         comp0_sum=0;
+  69              		.loc 1 255 0
+  70 003a 0023     		movs	r3, #0
+  71 003c 084A     		ldr	r2, .L4
+  72 003e 1370     		strb	r3, [r2]
+ 256:main.c        ****         comp1_sum=0;
+  73              		.loc 1 256 0
+  74 0040 084A     		ldr	r2, .L4+4
+  75 0042 1370     		strb	r3, [r2]
+ 257:main.c        ****         comp2_sum=0;
+  76              		.loc 1 257 0
+  77 0044 084A     		ldr	r2, .L4+8
+  78 0046 1370     		strb	r3, [r2]
+ 258:main.c        ****         comp3_sum=0;
+  79              		.loc 1 258 0
+  80 0048 084A     		ldr	r2, .L4+12
+  81 004a 1370     		strb	r3, [r2]
+ 259:main.c        ****         count=0;
+  82              		.loc 1 259 0
+  83 004c 084A     		ldr	r2, .L4+16
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 7
+
+
+  84 004e 1360     		str	r3, [r2]
+  85              	.L2:
+ 260:main.c        ****     }
+ 261:main.c        ****    
+ 262:main.c        ****     count++;
+  86              		.loc 1 262 0
+  87 0050 074A     		ldr	r2, .L4+16
+  88 0052 1368     		ldr	r3, [r2]
+  89 0054 0133     		adds	r3, r3, #1
+  90 0056 1360     		str	r3, [r2]
+ 263:main.c        ****     Timer_1_ReadStatusRegister();
+  91              		.loc 1 263 0
+  92 0058 FFF7FEFF 		bl	Timer_1_ReadStatusRegister
+  93              	.LVL4:
+  94 005c 08BD     		pop	{r3, pc}
+  95              	.L5:
+  96 005e 00BF     		.align	2
+  97              	.L4:
+  98 0060 00000000 		.word	comp0_sum
+  99 0064 00000000 		.word	comp1_sum
+ 100 0068 00000000 		.word	comp2_sum
+ 101 006c 00000000 		.word	comp3_sum
+ 102 0070 00000000 		.word	.LANCHOR0
+ 103              		.cfi_endproc
+ 104              	.LFE65:
+ 105              		.size	isr_1_handler, .-isr_1_handler
+ 106              		.section	.text.getMovements,"ax",%progbits
+ 107              		.align	2
+ 108              		.global	getMovements
+ 109              		.thumb
+ 110              		.thumb_func
+ 111              		.type	getMovements, %function
+ 112              	getMovements:
+ 113              	.LFB64:
+  99:main.c        ****     //calculate the path using Astar
+ 114              		.loc 1 99 0
+ 115              		.cfi_startproc
+ 116              		@ args = 4, pretend = 0, frame = 0
+ 117              		@ frame_needed = 0, uses_anonymous_args = 0
+ 118              	.LVL5:
+ 119 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 120              		.cfi_def_cfa_offset 36
+ 121              		.cfi_offset 4, -36
+ 122              		.cfi_offset 5, -32
+ 123              		.cfi_offset 6, -28
+ 124              		.cfi_offset 7, -24
+ 125              		.cfi_offset 8, -20
+ 126              		.cfi_offset 9, -16
+ 127              		.cfi_offset 10, -12
+ 128              		.cfi_offset 11, -8
+ 129              		.cfi_offset 14, -4
+ 130 0004 9846     		mov	r8, r3
+ 131 0006 9DF824E0 		ldrb	lr, [sp, #36]	@ zero_extendqisi2
+ 132              	.LVL6:
+ 133              	.LBB2:
+ 109:main.c        ****         int next_row = path_coordinates[i][0];
+ 134              		.loc 1 109 0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 8
+
+
+ 135 000a 0024     		movs	r4, #0
+ 136              	.LBE2:
+ 105:main.c        ****     int current_row = start_row;
+ 137              		.loc 1 105 0
+ 138 000c 4FF04E09 		mov	r9, #78
+ 104:main.c        ****     char turn='N';
+ 139              		.loc 1 104 0
+ 140 0010 A446     		mov	ip, r4
+ 103:main.c        ****     int stepCount=0;
+ 141              		.loc 1 103 0
+ 142 0012 2746     		mov	r7, r4
+ 143              	.LBB4:
+ 109:main.c        ****         int next_row = path_coordinates[i][0];
+ 144              		.loc 1 109 0
+ 145 0014 E6E0     		b	.L7
+ 146              	.LVL7:
+ 147              	.L33:
+ 148              	.LBB3:
+ 110:main.c        ****         int next_column = path_coordinates[i][1];
+ 149              		.loc 1 110 0
+ 150 0016 764D     		ldr	r5, .L43
+ 151 0018 55F83430 		ldr	r3, [r5, r4, lsl #3]
+ 152              	.LVL8:
+ 111:main.c        ****         
+ 153              		.loc 1 111 0
+ 154 001c 05EBC405 		add	r5, r5, r4, lsl #3
+ 155 0020 6D68     		ldr	r5, [r5, #4]
+ 156              	.LVL9:
+ 113:main.c        ****             switch (current_direction) {
+ 157              		.loc 1 113 0
+ 158 0022 4545     		cmp	r5, r8
+ 159 0024 35D1     		bne	.L8
+ 113:main.c        ****             switch (current_direction) {
+ 160              		.loc 1 113 0 is_stmt 0 discriminator 1
+ 161 0026 9542     		cmp	r5, r2
+ 162 0028 33D1     		bne	.L8
+ 114:main.c        ****                 case NORTH:
+ 163              		.loc 1 114 0 is_stmt 1
+ 164 002a BEF1030F 		cmp	lr, #3
+ 165 002e 00F2DC80 		bhi	.L6
+ 166 0032 DFE80EF0 		tbb	[pc, lr]
+ 167              	.LVL10:
+ 168              	.L11:
+ 169 0036 02       		.byte	(.L10-.L11)/2
+ 170 0037 18       		.byte	(.L12-.L11)/2
+ 171 0038 0D       		.byte	(.L13-.L11)/2
+ 172 0039 23       		.byte	(.L14-.L11)/2
+ 173              		.p2align 1
+ 174              	.L10:
+ 116:main.c        ****                      path[movement_count].turnDirection='N';
+ 175              		.loc 1 116 0
+ 176 003a 0CEB8C02 		add	r2, ip, ip, lsl #2
+ 177              	.LVL11:
+ 178 003e 6D4B     		ldr	r3, .L43+4
+ 179 0040 43F83720 		str	r2, [r3, r7, lsl #3]
+ 117:main.c        ****                      break;
+ 180              		.loc 1 117 0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 9
+
+
+ 181 0044 03EBC703 		add	r3, r3, r7, lsl #3
+ 182 0048 4E22     		movs	r2, #78
+ 183 004a 1A71     		strb	r2, [r3, #4]
+ 118:main.c        ****                 case SOUTH:
+ 184              		.loc 1 118 0
+ 185 004c BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 186              	.LVL12:
+ 187              	.L13:
+ 120:main.c        ****                      path[movement_count].turnDirection='N';
+ 188              		.loc 1 120 0
+ 189 0050 0CEB8C02 		add	r2, ip, ip, lsl #2
+ 190              	.LVL13:
+ 191 0054 674B     		ldr	r3, .L43+4
+ 192 0056 43F83720 		str	r2, [r3, r7, lsl #3]
+ 121:main.c        ****                     break;
+ 193              		.loc 1 121 0
+ 194 005a 03EBC703 		add	r3, r3, r7, lsl #3
+ 195 005e 4E22     		movs	r2, #78
+ 196 0060 1A71     		strb	r2, [r3, #4]
+ 122:main.c        ****                 case EAST:
+ 197              		.loc 1 122 0
+ 198 0062 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 199              	.LVL14:
+ 200              	.L12:
+ 124:main.c        ****                      path[movement_count].turnDirection='N';
+ 201              		.loc 1 124 0
+ 202 0066 0CEBCC02 		add	r2, ip, ip, lsl #3
+ 203              	.LVL15:
+ 204 006a 624B     		ldr	r3, .L43+4
+ 205 006c 43F83720 		str	r2, [r3, r7, lsl #3]
+ 125:main.c        ****                     break;
+ 206              		.loc 1 125 0
+ 207 0070 03EBC703 		add	r3, r3, r7, lsl #3
+ 208 0074 4E22     		movs	r2, #78
+ 209 0076 1A71     		strb	r2, [r3, #4]
+ 126:main.c        ****                 case WEST:
+ 210              		.loc 1 126 0
+ 211 0078 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 212              	.LVL16:
+ 213              	.L14:
+ 128:main.c        ****                      path[movement_count].turnDirection='N';
+ 214              		.loc 1 128 0
+ 215 007c 0CEBCC03 		add	r3, ip, ip, lsl #3
+ 216 0080 5C4A     		ldr	r2, .L43+4
+ 217              	.LVL17:
+ 218 0082 42F83730 		str	r3, [r2, r7, lsl #3]
+ 129:main.c        ****                     break;
+ 219              		.loc 1 129 0
+ 220 0086 02EBC702 		add	r2, r2, r7, lsl #3
+ 221 008a 4E23     		movs	r3, #78
+ 222 008c 1371     		strb	r3, [r2, #4]
+ 130:main.c        ****             }break;
+ 223              		.loc 1 130 0
+ 224 008e BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 225              	.LVL18:
+ 226              	.L8:
+ 138:main.c        ****         int deltaY = next_row - current_row;
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 10
+
+
+ 227              		.loc 1 138 0
+ 228 0092 6E1A     		subs	r6, r5, r1
+ 229              	.LVL19:
+ 139:main.c        ****     
+ 230              		.loc 1 139 0
+ 231 0094 C0EB030A 		rsb	r10, r0, r3
+ 232              	.LVL20:
+ 141:main.c        ****             
+ 233              		.loc 1 141 0
+ 234 0098 BEF1030F 		cmp	lr, #3
+ 235 009c 00F2A180 		bhi	.L15
+ 236 00a0 DFE80EF0 		tbb	[pc, lr]
+ 237              	.L17:
+ 238 00a4 02       		.byte	(.L16-.L17)/2
+ 239 00a5 2A       		.byte	(.L18-.L17)/2
+ 240 00a6 51       		.byte	(.L19-.L17)/2
+ 241 00a7 79       		.byte	(.L20-.L17)/2
+ 242              		.p2align 1
+ 243              	.L16:
+ 144:main.c        ****                     // Go straight up
+ 244              		.loc 1 144 0
+ 245 00a8 3EB9     		cbnz	r6, .L21
+ 144:main.c        ****                     // Go straight up
+ 246              		.loc 1 144 0 is_stmt 0 discriminator 1
+ 247 00aa BAF1000F 		cmp	r10, #0
+ 248 00ae 04DA     		bge	.L21
+ 146:main.c        ****                      // Update currentvalues
+ 249              		.loc 1 146 0 is_stmt 1
+ 250 00b0 0CF1010C 		add	ip, ip, #1
+ 251              	.LVL21:
+ 149:main.c        ****                     continue; // Skip the rest of this iteration and go to the next
+ 252              		.loc 1 149 0
+ 253 00b4 2946     		mov	r1, r5
+ 148:main.c        ****                     current_column = next_column;
+ 254              		.loc 1 148 0
+ 255 00b6 1846     		mov	r0, r3
+ 150:main.c        ****                 } else if (deltaX > 0 && deltaY == 0) {
+ 256              		.loc 1 150 0
+ 257 00b8 93E0     		b	.L15
+ 258              	.LVL22:
+ 259              	.L21:
+ 151:main.c        ****                     // Turn right
+ 260              		.loc 1 151 0
+ 261 00ba 002E     		cmp	r6, #0
+ 262 00bc 02DD     		ble	.L22
+ 151:main.c        ****                     // Turn right
+ 263              		.loc 1 151 0 is_stmt 0 discriminator 1
+ 264 00be BAF1000F 		cmp	r10, #0
+ 265 00c2 05D0     		beq	.L34
+ 266              	.L22:
+ 156:main.c        ****                     // Turn left
+ 267              		.loc 1 156 0 is_stmt 1
+ 268 00c4 002E     		cmp	r6, #0
+ 269 00c6 0CDA     		bge	.L23
+ 156:main.c        ****                     // Turn left
+ 270              		.loc 1 156 0 is_stmt 0 discriminator 1
+ 271 00c8 BAF1000F 		cmp	r10, #0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 11
+
+
+ 272 00cc 05D0     		beq	.L35
+ 273 00ce 08E0     		b	.L23
+ 274              	.L34:
+ 153:main.c        ****                     current_direction=EAST;
+ 275              		.loc 1 153 0 is_stmt 1
+ 276 00d0 4FF05209 		mov	r9, #82
+ 277              	.LVL23:
+ 154:main.c        ****                     //set the next state
+ 278              		.loc 1 154 0
+ 279 00d4 4FF0010E 		mov	lr, #1
+ 280              	.LVL24:
+ 281 00d8 03E0     		b	.L23
+ 282              	.LVL25:
+ 283              	.L35:
+ 158:main.c        ****                     current_direction=WEST;
+ 284              		.loc 1 158 0
+ 285 00da 4FF04C09 		mov	r9, #76
+ 286              	.LVL26:
+ 159:main.c        ****                 }
+ 287              		.loc 1 159 0
+ 288 00de 4FF0030E 		mov	lr, #3
+ 289              	.LVL27:
+ 290              	.L23:
+ 161:main.c        ****                 path[movement_count].turnDirection=turn;
+ 291              		.loc 1 161 0
+ 292 00e2 0CEB8C05 		add	r5, ip, ip, lsl #2
+ 293              	.LVL28:
+ 294 00e6 434B     		ldr	r3, .L43+4
+ 295              	.LVL29:
+ 296 00e8 43F83750 		str	r5, [r3, r7, lsl #3]
+ 162:main.c        ****                 movement_count++;
+ 297              		.loc 1 162 0
+ 298 00ec 03EBC703 		add	r3, r3, r7, lsl #3
+ 299 00f0 83F80490 		strb	r9, [r3, #4]
+ 163:main.c        ****                 break;
+ 300              		.loc 1 163 0
+ 301 00f4 0137     		adds	r7, r7, #1
+ 302              	.LVL30:
+ 164:main.c        ****                     
+ 303              		.loc 1 164 0
+ 304 00f6 74E0     		b	.L15
+ 305              	.LVL31:
+ 306              	.L18:
+ 168:main.c        ****                       // Go straight right
+ 307              		.loc 1 168 0
+ 308 00f8 002E     		cmp	r6, #0
+ 309 00fa 07DD     		ble	.L24
+ 168:main.c        ****                       // Go straight right
+ 310              		.loc 1 168 0 is_stmt 0 discriminator 1
+ 311 00fc BAF1000F 		cmp	r10, #0
+ 312 0100 04D1     		bne	.L24
+ 170:main.c        ****                      // Update currentvalues
+ 313              		.loc 1 170 0 is_stmt 1
+ 314 0102 0CF1010C 		add	ip, ip, #1
+ 315              	.LVL32:
+ 173:main.c        ****                     continue; // Skip the rest of this iteration and go to the next
+ 316              		.loc 1 173 0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 12
+
+
+ 317 0106 2946     		mov	r1, r5
+ 172:main.c        ****                     current_column = next_column;
+ 318              		.loc 1 172 0
+ 319 0108 1846     		mov	r0, r3
+ 174:main.c        ****                 } else if (deltaX == 0 && deltaY > 0) {
+ 320              		.loc 1 174 0
+ 321 010a 6AE0     		b	.L15
+ 322              	.LVL33:
+ 323              	.L24:
+ 175:main.c        ****                     // Turn right
+ 324              		.loc 1 175 0
+ 325 010c 16B9     		cbnz	r6, .L25
+ 175:main.c        ****                     // Turn right
+ 326              		.loc 1 175 0 is_stmt 0 discriminator 1
+ 327 010e BAF1000F 		cmp	r10, #0
+ 328 0112 04DC     		bgt	.L36
+ 329              	.L25:
+ 180:main.c        ****                     // Turn left
+ 330              		.loc 1 180 0 is_stmt 1
+ 331 0114 66B9     		cbnz	r6, .L26
+ 180:main.c        ****                     // Turn left
+ 332              		.loc 1 180 0 is_stmt 0 discriminator 1
+ 333 0116 BAF1000F 		cmp	r10, #0
+ 334 011a 09DA     		bge	.L26
+ 335 011c 04E0     		b	.L37
+ 336              	.L36:
+ 177:main.c        ****                     current_direction=SOUTH;
+ 337              		.loc 1 177 0 is_stmt 1
+ 338 011e 4FF05209 		mov	r9, #82
+ 339              	.LVL34:
+ 178:main.c        ****                     //set the next state
+ 340              		.loc 1 178 0
+ 341 0122 4FF0020E 		mov	lr, #2
+ 342              	.LVL35:
+ 343 0126 03E0     		b	.L26
+ 344              	.LVL36:
+ 345              	.L37:
+ 182:main.c        ****                     current_direction=NORTH;
+ 346              		.loc 1 182 0
+ 347 0128 4FF04C09 		mov	r9, #76
+ 348              	.LVL37:
+ 183:main.c        ****                 }
+ 349              		.loc 1 183 0
+ 350 012c 4FF0000E 		mov	lr, #0
+ 351              	.LVL38:
+ 352              	.L26:
+ 185:main.c        ****                 path[movement_count].turnDirection=turn;
+ 353              		.loc 1 185 0
+ 354 0130 0CEBCC05 		add	r5, ip, ip, lsl #3
+ 355              	.LVL39:
+ 356 0134 2F4B     		ldr	r3, .L43+4
+ 357              	.LVL40:
+ 358 0136 43F83750 		str	r5, [r3, r7, lsl #3]
+ 186:main.c        ****                 movement_count++;
+ 359              		.loc 1 186 0
+ 360 013a 03EBC703 		add	r3, r3, r7, lsl #3
+ 361 013e 83F80490 		strb	r9, [r3, #4]
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 13
+
+
+ 187:main.c        ****                 break;
+ 362              		.loc 1 187 0
+ 363 0142 0137     		adds	r7, r7, #1
+ 364              	.LVL41:
+ 188:main.c        **** 
+ 365              		.loc 1 188 0
+ 366 0144 4DE0     		b	.L15
+ 367              	.LVL42:
+ 368              	.L19:
+ 191:main.c        ****                      // Go straight down
+ 369              		.loc 1 191 0
+ 370 0146 3EB9     		cbnz	r6, .L27
+ 191:main.c        ****                      // Go straight down
+ 371              		.loc 1 191 0 is_stmt 0 discriminator 1
+ 372 0148 BAF1000F 		cmp	r10, #0
+ 373 014c 04DD     		ble	.L27
+ 193:main.c        ****                      // Update currentvalues
+ 374              		.loc 1 193 0 is_stmt 1
+ 375 014e 0CF1010C 		add	ip, ip, #1
+ 376              	.LVL43:
+ 196:main.c        ****                     continue;
+ 377              		.loc 1 196 0
+ 378 0152 2946     		mov	r1, r5
+ 195:main.c        ****                     current_column = next_column;
+ 379              		.loc 1 195 0
+ 380 0154 1846     		mov	r0, r3
+ 197:main.c        ****                 } else if (deltaX > 0 && deltaY == 0) {
+ 381              		.loc 1 197 0
+ 382 0156 44E0     		b	.L15
+ 383              	.LVL44:
+ 384              	.L27:
+ 198:main.c        ****                     // Turn right
+ 385              		.loc 1 198 0
+ 386 0158 002E     		cmp	r6, #0
+ 387 015a 02DD     		ble	.L28
+ 198:main.c        ****                     // Turn right
+ 388              		.loc 1 198 0 is_stmt 0 discriminator 1
+ 389 015c BAF1000F 		cmp	r10, #0
+ 390 0160 05D0     		beq	.L38
+ 391              	.L28:
+ 203:main.c        ****                      // Turn left
+ 392              		.loc 1 203 0 is_stmt 1
+ 393 0162 002E     		cmp	r6, #0
+ 394 0164 0CDA     		bge	.L29
+ 203:main.c        ****                      // Turn left
+ 395              		.loc 1 203 0 is_stmt 0 discriminator 1
+ 396 0166 BAF1000F 		cmp	r10, #0
+ 397 016a 05D0     		beq	.L39
+ 398 016c 08E0     		b	.L29
+ 399              	.L38:
+ 200:main.c        ****                     current_direction=EAST;
+ 400              		.loc 1 200 0 is_stmt 1
+ 401 016e 4FF05209 		mov	r9, #82
+ 402              	.LVL45:
+ 201:main.c        ****                    
+ 403              		.loc 1 201 0
+ 404 0172 4FF0010E 		mov	lr, #1
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 14
+
+
+ 405              	.LVL46:
+ 406 0176 03E0     		b	.L29
+ 407              	.LVL47:
+ 408              	.L39:
+ 205:main.c        ****                     current_direction=WEST;
+ 409              		.loc 1 205 0
+ 410 0178 4FF04C09 		mov	r9, #76
+ 411              	.LVL48:
+ 206:main.c        ****                 }
+ 412              		.loc 1 206 0
+ 413 017c 4FF0030E 		mov	lr, #3
+ 414              	.LVL49:
+ 415              	.L29:
+ 208:main.c        ****                 path[movement_count].turnDirection=turn;
+ 416              		.loc 1 208 0
+ 417 0180 0CEB8C05 		add	r5, ip, ip, lsl #2
+ 418              	.LVL50:
+ 419 0184 1B4B     		ldr	r3, .L43+4
+ 420              	.LVL51:
+ 421 0186 43F83750 		str	r5, [r3, r7, lsl #3]
+ 209:main.c        ****                 movement_count++;
+ 422              		.loc 1 209 0
+ 423 018a 03EBC703 		add	r3, r3, r7, lsl #3
+ 424 018e 83F80490 		strb	r9, [r3, #4]
+ 210:main.c        ****                 break;
+ 425              		.loc 1 210 0
+ 426 0192 0137     		adds	r7, r7, #1
+ 427              	.LVL52:
+ 211:main.c        ****                    
+ 428              		.loc 1 211 0
+ 429 0194 25E0     		b	.L15
+ 430              	.LVL53:
+ 431              	.L20:
+ 215:main.c        ****                      // Go straight left
+ 432              		.loc 1 215 0
+ 433 0196 002E     		cmp	r6, #0
+ 434 0198 07DA     		bge	.L30
+ 215:main.c        ****                      // Go straight left
+ 435              		.loc 1 215 0 is_stmt 0 discriminator 1
+ 436 019a BAF1000F 		cmp	r10, #0
+ 437 019e 04D1     		bne	.L30
+ 217:main.c        ****                      // Update currentvalues
+ 438              		.loc 1 217 0 is_stmt 1
+ 439 01a0 0CF1010C 		add	ip, ip, #1
+ 440              	.LVL54:
+ 220:main.c        ****                     continue;
+ 441              		.loc 1 220 0
+ 442 01a4 2946     		mov	r1, r5
+ 219:main.c        ****                     current_column = next_column;
+ 443              		.loc 1 219 0
+ 444 01a6 1846     		mov	r0, r3
+ 221:main.c        ****                 } else if (deltaX == 0 && deltaY < 0) {
+ 445              		.loc 1 221 0
+ 446 01a8 1BE0     		b	.L15
+ 447              	.LVL55:
+ 448              	.L30:
+ 222:main.c        ****                     // Turn right
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 15
+
+
+ 449              		.loc 1 222 0
+ 450 01aa 16B9     		cbnz	r6, .L31
+ 222:main.c        ****                     // Turn right
+ 451              		.loc 1 222 0 is_stmt 0 discriminator 1
+ 452 01ac BAF1000F 		cmp	r10, #0
+ 453 01b0 04DB     		blt	.L40
+ 454              	.L31:
+ 227:main.c        ****                      // Turn left
+ 455              		.loc 1 227 0 is_stmt 1
+ 456 01b2 66B9     		cbnz	r6, .L32
+ 227:main.c        ****                      // Turn left
+ 457              		.loc 1 227 0 is_stmt 0 discriminator 1
+ 458 01b4 BAF1000F 		cmp	r10, #0
+ 459 01b8 05DC     		bgt	.L41
+ 460 01ba 08E0     		b	.L32
+ 461              	.L40:
+ 224:main.c        ****                     current_direction=NORTH;
+ 462              		.loc 1 224 0 is_stmt 1
+ 463 01bc 4FF05209 		mov	r9, #82
+ 464              	.LVL56:
+ 225:main.c        ****                    
+ 465              		.loc 1 225 0
+ 466 01c0 4FF0000E 		mov	lr, #0
+ 467              	.LVL57:
+ 468 01c4 03E0     		b	.L32
+ 469              	.LVL58:
+ 470              	.L41:
+ 229:main.c        ****                     current_direction=SOUTH;
+ 471              		.loc 1 229 0
+ 472 01c6 4FF04C09 		mov	r9, #76
+ 473              	.LVL59:
+ 230:main.c        ****                 }
+ 474              		.loc 1 230 0
+ 475 01ca 4FF0020E 		mov	lr, #2
+ 476              	.LVL60:
+ 477              	.L32:
+ 232:main.c        ****                 path[movement_count].turnDirection=turn;
+ 478              		.loc 1 232 0
+ 479 01ce 0CEBCC05 		add	r5, ip, ip, lsl #3
+ 480              	.LVL61:
+ 481 01d2 084B     		ldr	r3, .L43+4
+ 482              	.LVL62:
+ 483 01d4 43F83750 		str	r5, [r3, r7, lsl #3]
+ 233:main.c        ****                 movement_count++;
+ 484              		.loc 1 233 0
+ 485 01d8 03EBC703 		add	r3, r3, r7, lsl #3
+ 486 01dc 83F80490 		strb	r9, [r3, #4]
+ 234:main.c        ****                 break;
+ 487              		.loc 1 234 0
+ 488 01e0 0137     		adds	r7, r7, #1
+ 489              	.LVL63:
+ 490              	.L15:
+ 491              	.LBE3:
+ 109:main.c        ****         int next_row = path_coordinates[i][0];
+ 492              		.loc 1 109 0 discriminator 2
+ 493 01e2 0134     		adds	r4, r4, #1
+ 494              	.LVL64:
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 16
+
+
+ 495              	.L7:
+ 109:main.c        ****         int next_row = path_coordinates[i][0];
+ 496              		.loc 1 109 0 is_stmt 0 discriminator 1
+ 497 01e4 182C     		cmp	r4, #24
+ 498 01e6 7FF716AF 		ble	.L33
+ 499              	.L6:
+ 500 01ea BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 501              	.LVL65:
+ 502              	.L44:
+ 503 01ee 00BF     		.align	2
+ 504              	.L43:
+ 505 01f0 00000000 		.word	path_coordinates
+ 506 01f4 00000000 		.word	.LANCHOR1
+ 507              	.LBE4:
+ 508              		.cfi_endproc
+ 509              	.LFE64:
+ 510              		.size	getMovements, .-getMovements
+ 511              		.section	.text.stop,"ax",%progbits
+ 512              		.align	2
+ 513              		.global	stop
+ 514              		.thumb
+ 515              		.thumb_func
+ 516              		.type	stop, %function
+ 517              	stop:
+ 518              	.LFB66:
+ 264:main.c        **** }
+ 265:main.c        **** 
+ 266:main.c        **** 
+ 267:main.c        **** void stop(){
+ 519              		.loc 1 267 0 is_stmt 1
+ 520              		.cfi_startproc
+ 521              		@ args = 0, pretend = 0, frame = 0
+ 522              		@ frame_needed = 0, uses_anonymous_args = 0
+ 523 0000 08B5     		push	{r3, lr}
+ 524              		.cfi_def_cfa_offset 8
+ 525              		.cfi_offset 3, -8
+ 526              		.cfi_offset 14, -4
+ 268:main.c        ****     PWM_1_WriteCompare(50);
+ 527              		.loc 1 268 0
+ 528 0002 3220     		movs	r0, #50
+ 529 0004 FFF7FEFF 		bl	PWM_1_WriteCompare
+ 530              	.LVL66:
+ 269:main.c        ****     PWM_2_WriteCompare(50);
+ 531              		.loc 1 269 0
+ 532 0008 3220     		movs	r0, #50
+ 533 000a FFF7FEFF 		bl	PWM_2_WriteCompare
+ 534              	.LVL67:
+ 535 000e 08BD     		pop	{r3, pc}
+ 536              		.cfi_endproc
+ 537              	.LFE66:
+ 538              		.size	stop, .-stop
+ 539              		.section	.text.turnLeft,"ax",%progbits
+ 540              		.align	2
+ 541              		.global	turnLeft
+ 542              		.thumb
+ 543              		.thumb_func
+ 544              		.type	turnLeft, %function
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 17
+
+
+ 545              	turnLeft:
+ 546              	.LFB67:
+ 270:main.c        **** }
+ 271:main.c        **** 
+ 272:main.c        **** void turnLeft(){
+ 547              		.loc 1 272 0
+ 548              		.cfi_startproc
+ 549              		@ args = 0, pretend = 0, frame = 0
+ 550              		@ frame_needed = 0, uses_anonymous_args = 0
+ 551 0000 08B5     		push	{r3, lr}
+ 552              		.cfi_def_cfa_offset 8
+ 553              		.cfi_offset 3, -8
+ 554              		.cfi_offset 14, -4
+ 273:main.c        ****     PWM_1_WriteCompare(68);
+ 555              		.loc 1 273 0
+ 556 0002 4420     		movs	r0, #68
+ 557 0004 FFF7FEFF 		bl	PWM_1_WriteCompare
+ 558              	.LVL68:
+ 274:main.c        ****     PWM_2_WriteCompare(33);
+ 559              		.loc 1 274 0
+ 560 0008 2120     		movs	r0, #33
+ 561 000a FFF7FEFF 		bl	PWM_2_WriteCompare
+ 562              	.LVL69:
+ 563              	.L48:
+ 275:main.c        **** //    CyDelay(350);
+ 276:main.c        ****     while(Sout_L_Read()==0){//wait while left is on line
+ 564              		.loc 1 276 0 discriminator 1
+ 565 000e FFF7FEFF 		bl	Sout_L_Read
+ 566              	.LVL70:
+ 567 0012 0028     		cmp	r0, #0
+ 568 0014 FBD0     		beq	.L48
+ 569              	.L49:
+ 277:main.c        ****        ;;
+ 278:main.c        ****     }
+ 279:main.c        ****     while(!(Sout_M1_Read()==0 &&Sout_M1_Read()==0)){//wait while middle sensors off line
+ 570              		.loc 1 279 0 discriminator 3
+ 571 0016 FFF7FEFF 		bl	Sout_M1_Read
+ 572              	.LVL71:
+ 573 001a 0028     		cmp	r0, #0
+ 574 001c FBD1     		bne	.L49
+ 575              		.loc 1 279 0 is_stmt 0 discriminator 2
+ 576 001e FFF7FEFF 		bl	Sout_M1_Read
+ 577              	.LVL72:
+ 578 0022 0028     		cmp	r0, #0
+ 579 0024 F7D1     		bne	.L49
+ 280:main.c        ****        ;;
+ 281:main.c        ****     }
+ 282:main.c        ****     isTurning=false;
+ 580              		.loc 1 282 0 is_stmt 1
+ 581 0026 0022     		movs	r2, #0
+ 582 0028 044B     		ldr	r3, .L52
+ 583 002a 1A71     		strb	r2, [r3, #4]
+ 283:main.c        ****     PWM_1_WriteCompare(65);
+ 584              		.loc 1 283 0
+ 585 002c 4120     		movs	r0, #65
+ 586 002e FFF7FEFF 		bl	PWM_1_WriteCompare
+ 587              	.LVL73:
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 18
+
+
+ 284:main.c        ****     PWM_2_WriteCompare(66);
+ 588              		.loc 1 284 0
+ 589 0032 4220     		movs	r0, #66
+ 590 0034 FFF7FEFF 		bl	PWM_2_WriteCompare
+ 591              	.LVL74:
+ 592 0038 08BD     		pop	{r3, pc}
+ 593              	.L53:
+ 594 003a 00BF     		.align	2
+ 595              	.L52:
+ 596 003c 00000000 		.word	.LANCHOR0
+ 597              		.cfi_endproc
+ 598              	.LFE67:
+ 599              		.size	turnLeft, .-turnLeft
+ 600              		.section	.text.turnRight,"ax",%progbits
+ 601              		.align	2
+ 602              		.global	turnRight
+ 603              		.thumb
+ 604              		.thumb_func
+ 605              		.type	turnRight, %function
+ 606              	turnRight:
+ 607              	.LFB68:
+ 285:main.c        **** 
+ 286:main.c        **** }
+ 287:main.c        **** 
+ 288:main.c        **** void turnRight(){
+ 608              		.loc 1 288 0
+ 609              		.cfi_startproc
+ 610              		@ args = 0, pretend = 0, frame = 0
+ 611              		@ frame_needed = 0, uses_anonymous_args = 0
+ 612 0000 08B5     		push	{r3, lr}
+ 613              		.cfi_def_cfa_offset 8
+ 614              		.cfi_offset 3, -8
+ 615              		.cfi_offset 14, -4
+ 289:main.c        ****     PWM_1_WriteCompare(33);
+ 616              		.loc 1 289 0
+ 617 0002 2120     		movs	r0, #33
+ 618 0004 FFF7FEFF 		bl	PWM_1_WriteCompare
+ 619              	.LVL75:
+ 290:main.c        ****     PWM_2_WriteCompare(68);
+ 620              		.loc 1 290 0
+ 621 0008 4420     		movs	r0, #68
+ 622 000a FFF7FEFF 		bl	PWM_2_WriteCompare
+ 623              	.LVL76:
+ 624              	.L55:
+ 291:main.c        ****     while(Sout_R_Read()==0){//wait while right is on line
+ 625              		.loc 1 291 0 discriminator 1
+ 626 000e FFF7FEFF 		bl	Sout_R_Read
+ 627              	.LVL77:
+ 628 0012 0028     		cmp	r0, #0
+ 629 0014 FBD0     		beq	.L55
+ 630              	.L56:
+ 292:main.c        ****        ;;
+ 293:main.c        ****     }
+ 294:main.c        ****     while(!(Sout_M1_Read()==0 &&Sout_M1_Read()==0)){//wait while middle sensors off line
+ 631              		.loc 1 294 0 discriminator 3
+ 632 0016 FFF7FEFF 		bl	Sout_M1_Read
+ 633              	.LVL78:
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 19
+
+
+ 634 001a 0028     		cmp	r0, #0
+ 635 001c FBD1     		bne	.L56
+ 636              		.loc 1 294 0 is_stmt 0 discriminator 2
+ 637 001e FFF7FEFF 		bl	Sout_M1_Read
+ 638              	.LVL79:
+ 639 0022 0028     		cmp	r0, #0
+ 640 0024 F7D1     		bne	.L56
+ 295:main.c        ****        ;;
+ 296:main.c        ****     }
+ 297:main.c        ****     isTurning=false;
+ 641              		.loc 1 297 0 is_stmt 1
+ 642 0026 0022     		movs	r2, #0
+ 643 0028 044B     		ldr	r3, .L59
+ 644 002a 1A71     		strb	r2, [r3, #4]
+ 298:main.c        ****     PWM_1_WriteCompare(65);
+ 645              		.loc 1 298 0
+ 646 002c 4120     		movs	r0, #65
+ 647 002e FFF7FEFF 		bl	PWM_1_WriteCompare
+ 648              	.LVL80:
+ 299:main.c        ****     PWM_2_WriteCompare(66);
+ 649              		.loc 1 299 0
+ 650 0032 4220     		movs	r0, #66
+ 651 0034 FFF7FEFF 		bl	PWM_2_WriteCompare
+ 652              	.LVL81:
+ 653 0038 08BD     		pop	{r3, pc}
+ 654              	.L60:
+ 655 003a 00BF     		.align	2
+ 656              	.L59:
+ 657 003c 00000000 		.word	.LANCHOR0
+ 658              		.cfi_endproc
+ 659              	.LFE68:
+ 660              		.size	turnRight, .-turnRight
+ 661              		.section	.text.reverse,"ax",%progbits
+ 662              		.align	2
+ 663              		.global	reverse
+ 664              		.thumb
+ 665              		.thumb_func
+ 666              		.type	reverse, %function
+ 667              	reverse:
+ 668              	.LFB69:
+ 300:main.c        **** }
+ 301:main.c        **** 
+ 302:main.c        **** 
+ 303:main.c        **** void reverse(){
+ 669              		.loc 1 303 0
+ 670              		.cfi_startproc
+ 671              		@ args = 0, pretend = 0, frame = 0
+ 672              		@ frame_needed = 0, uses_anonymous_args = 0
+ 673 0000 08B5     		push	{r3, lr}
+ 674              		.cfi_def_cfa_offset 8
+ 675              		.cfi_offset 3, -8
+ 676              		.cfi_offset 14, -4
+ 304:main.c        ****     PWM_1_WriteCompare(30);
+ 677              		.loc 1 304 0
+ 678 0002 1E20     		movs	r0, #30
+ 679 0004 FFF7FEFF 		bl	PWM_1_WriteCompare
+ 680              	.LVL82:
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 20
+
+
+ 305:main.c        ****     PWM_2_WriteCompare(30);
+ 681              		.loc 1 305 0
+ 682 0008 1E20     		movs	r0, #30
+ 683 000a FFF7FEFF 		bl	PWM_2_WriteCompare
+ 684              	.LVL83:
+ 685 000e 08BD     		pop	{r3, pc}
+ 686              		.cfi_endproc
+ 687              	.LFE69:
+ 688              		.size	reverse, .-reverse
+ 689              		.global	__aeabi_i2d
+ 690              		.global	__aeabi_dmul
+ 691              		.global	__aeabi_dcmplt
+ 692              		.section	.text.goStraight_cm,"ax",%progbits
+ 693              		.align	2
+ 694              		.global	goStraight_cm
+ 695              		.thumb
+ 696              		.thumb_func
+ 697              		.type	goStraight_cm, %function
+ 698              	goStraight_cm:
+ 699              	.LFB70:
+ 306:main.c        **** }
+ 307:main.c        **** 
+ 308:main.c        **** void goStraight_cm(int distance){
+ 700              		.loc 1 308 0
+ 701              		.cfi_startproc
+ 702              		@ args = 0, pretend = 0, frame = 0
+ 703              		@ frame_needed = 0, uses_anonymous_args = 0
+ 704              	.LVL84:
+ 705 0000 70B5     		push	{r4, r5, r6, lr}
+ 706              		.cfi_def_cfa_offset 16
+ 707              		.cfi_offset 4, -16
+ 708              		.cfi_offset 5, -12
+ 709              		.cfi_offset 6, -8
+ 710              		.cfi_offset 14, -4
+ 711 0002 0646     		mov	r6, r0
+ 309:main.c        ****     
+ 310:main.c        ****     QuadDec_M1_SetCounter(0);
+ 712              		.loc 1 310 0
+ 713 0004 0020     		movs	r0, #0
+ 714              	.LVL85:
+ 715 0006 FFF7FEFF 		bl	QuadDec_M1_SetCounter
+ 716              	.LVL86:
+ 311:main.c        ****     
+ 312:main.c        ****     while(QuadDec_M1_GetCounter()<(distance*ENC_VALUE_PER_CM)){
+ 717              		.loc 1 312 0
+ 718 000a 24E0     		b	.L64
+ 719              	.L69:
+ 313:main.c        ****             //comp0==>middle left comp1==>middle right
+ 314:main.c        ****         if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
+ 720              		.loc 1 314 0
+ 721 000c 1E4B     		ldr	r3, .L71
+ 722 000e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 723 0010 4BB1     		cbz	r3, .L65
+ 724              		.loc 1 314 0 is_stmt 0 discriminator 1
+ 725 0012 1E4A     		ldr	r2, .L71+4
+ 726 0014 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 727 0016 32B9     		cbnz	r2, .L65
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 21
+
+
+ 315:main.c        ****             PWM_2_WriteCompare(PWM_2_ReadCompare() +1);
+ 728              		.loc 1 315 0 is_stmt 1
+ 729 0018 FFF7FEFF 		bl	PWM_2_ReadCompare
+ 730              	.LVL87:
+ 731 001c 0130     		adds	r0, r0, #1
+ 732 001e C0B2     		uxtb	r0, r0
+ 733 0020 FFF7FEFF 		bl	PWM_2_WriteCompare
+ 734              	.LVL88:
+ 735 0024 17E0     		b	.L64
+ 736              	.L65:
+ 316:main.c        ****         }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
+ 737              		.loc 1 316 0
+ 738 0026 4BB9     		cbnz	r3, .L67
+ 739              		.loc 1 316 0 is_stmt 0 discriminator 1
+ 740 0028 184A     		ldr	r2, .L71+4
+ 741 002a 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 742 002c 32B1     		cbz	r2, .L67
+ 317:main.c        ****             PWM_1_WriteCompare(PWM_1_ReadCompare() +1);
+ 743              		.loc 1 317 0 is_stmt 1
+ 744 002e FFF7FEFF 		bl	PWM_1_ReadCompare
+ 745              	.LVL89:
+ 746 0032 0130     		adds	r0, r0, #1
+ 747 0034 C0B2     		uxtb	r0, r0
+ 748 0036 FFF7FEFF 		bl	PWM_1_WriteCompare
+ 749              	.LVL90:
+ 750 003a 0CE0     		b	.L64
+ 751              	.L67:
+ 318:main.c        ****             
+ 319:main.c        ****         }else if(comp1_sum==0 && comp0_sum==0){
+ 752              		.loc 1 319 0
+ 753 003c 134A     		ldr	r2, .L71+4
+ 754 003e 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 755 0040 3AB9     		cbnz	r2, .L68
+ 756              		.loc 1 319 0 is_stmt 0 discriminator 1
+ 757 0042 33B9     		cbnz	r3, .L68
+ 320:main.c        ****             PWM_1_WriteCompare(68);
+ 758              		.loc 1 320 0 is_stmt 1
+ 759 0044 4420     		movs	r0, #68
+ 760 0046 FFF7FEFF 		bl	PWM_1_WriteCompare
+ 761              	.LVL91:
+ 321:main.c        ****             PWM_2_WriteCompare(69);
+ 762              		.loc 1 321 0
+ 763 004a 4520     		movs	r0, #69
+ 764 004c FFF7FEFF 		bl	PWM_2_WriteCompare
+ 765              	.LVL92:
+ 766 0050 01E0     		b	.L64
+ 767              	.L68:
+ 322:main.c        ****         }else{
+ 323:main.c        ****             reverse();
+ 768              		.loc 1 323 0
+ 769 0052 FFF7FEFF 		bl	reverse
+ 770              	.LVL93:
+ 771              	.L64:
+ 312:main.c        ****             //comp0==>middle left comp1==>middle right
+ 772              		.loc 1 312 0
+ 773 0056 FFF7FEFF 		bl	QuadDec_M1_GetCounter
+ 774              	.LVL94:
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 22
+
+
+ 775 005a FFF7FEFF 		bl	__aeabi_i2d
+ 776              	.LVL95:
+ 777 005e 0446     		mov	r4, r0
+ 778 0060 0D46     		mov	r5, r1
+ 779 0062 3046     		mov	r0, r6
+ 780 0064 FFF7FEFF 		bl	__aeabi_i2d
+ 781              	.LVL96:
+ 782 0068 0022     		movs	r2, #0
+ 783 006a 094B     		ldr	r3, .L71+8
+ 784 006c FFF7FEFF 		bl	__aeabi_dmul
+ 785              	.LVL97:
+ 786 0070 0246     		mov	r2, r0
+ 787 0072 0B46     		mov	r3, r1
+ 788 0074 2046     		mov	r0, r4
+ 789 0076 2946     		mov	r1, r5
+ 790 0078 FFF7FEFF 		bl	__aeabi_dcmplt
+ 791              	.LVL98:
+ 792 007c 0028     		cmp	r0, #0
+ 793 007e C5D1     		bne	.L69
+ 324:main.c        ****         }
+ 325:main.c        ****     }
+ 326:main.c        ****     stop();
+ 794              		.loc 1 326 0
+ 795 0080 FFF7FEFF 		bl	stop
+ 796              	.LVL99:
+ 797 0084 70BD     		pop	{r4, r5, r6, pc}
+ 798              	.LVL100:
+ 799              	.L72:
+ 800 0086 00BF     		.align	2
+ 801              	.L71:
+ 802 0088 00000000 		.word	comp0_sum
+ 803 008c 00000000 		.word	comp1_sum
+ 804 0090 00002540 		.word	1076166656
+ 805              		.cfi_endproc
+ 806              	.LFE70:
+ 807              		.size	goStraight_cm, .-goStraight_cm
+ 808              		.section	.text.goStraight,"ax",%progbits
+ 809              		.align	2
+ 810              		.global	goStraight
+ 811              		.thumb
+ 812              		.thumb_func
+ 813              		.type	goStraight, %function
+ 814              	goStraight:
+ 815              	.LFB71:
+ 327:main.c        ****     
+ 328:main.c        **** }
+ 329:main.c        **** 
+ 330:main.c        **** void goStraight(){
+ 816              		.loc 1 330 0
+ 817              		.cfi_startproc
+ 818              		@ args = 0, pretend = 0, frame = 0
+ 819              		@ frame_needed = 0, uses_anonymous_args = 0
+ 820 0000 08B5     		push	{r3, lr}
+ 821              		.cfi_def_cfa_offset 8
+ 822              		.cfi_offset 3, -8
+ 823              		.cfi_offset 14, -4
+ 331:main.c        ****     
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 23
+
+
+ 332:main.c        ****         //comp0==>middle left comp1==>middle right
+ 333:main.c        ****     if(comp0_sum>0 && comp1_sum==0){//s_ML out of line
+ 824              		.loc 1 333 0
+ 825 0002 134B     		ldr	r3, .L79
+ 826 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 827 0006 4BB1     		cbz	r3, .L74
+ 828              		.loc 1 333 0 is_stmt 0 discriminator 1
+ 829 0008 124A     		ldr	r2, .L79+4
+ 830 000a 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 831 000c 32B9     		cbnz	r2, .L74
+ 334:main.c        ****         PWM_2_WriteCompare(PWM_2_ReadCompare() +1);
+ 832              		.loc 1 334 0 is_stmt 1
+ 833 000e FFF7FEFF 		bl	PWM_2_ReadCompare
+ 834              	.LVL101:
+ 835 0012 0130     		adds	r0, r0, #1
+ 836 0014 C0B2     		uxtb	r0, r0
+ 837 0016 FFF7FEFF 		bl	PWM_2_WriteCompare
+ 838              	.LVL102:
+ 839 001a 08BD     		pop	{r3, pc}
+ 840              	.L74:
+ 335:main.c        ****     }else if(comp0_sum==0 && comp1_sum>0){//s_MR out of line
+ 841              		.loc 1 335 0
+ 842 001c 4BB9     		cbnz	r3, .L76
+ 843              		.loc 1 335 0 is_stmt 0 discriminator 1
+ 844 001e 0D4A     		ldr	r2, .L79+4
+ 845 0020 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 846 0022 32B1     		cbz	r2, .L76
+ 336:main.c        ****         PWM_1_WriteCompare(PWM_1_ReadCompare() +1);
+ 847              		.loc 1 336 0 is_stmt 1
+ 848 0024 FFF7FEFF 		bl	PWM_1_ReadCompare
+ 849              	.LVL103:
+ 850 0028 0130     		adds	r0, r0, #1
+ 851 002a C0B2     		uxtb	r0, r0
+ 852 002c FFF7FEFF 		bl	PWM_1_WriteCompare
+ 853              	.LVL104:
+ 854 0030 08BD     		pop	{r3, pc}
+ 855              	.L76:
+ 337:main.c        ****         
+ 338:main.c        ****     }else if(comp1_sum==0 && comp0_sum==0){
+ 856              		.loc 1 338 0
+ 857 0032 084A     		ldr	r2, .L79+4
+ 858 0034 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 859 0036 3AB9     		cbnz	r2, .L77
+ 860              		.loc 1 338 0 is_stmt 0 discriminator 1
+ 861 0038 33B9     		cbnz	r3, .L77
+ 339:main.c        ****         PWM_1_WriteCompare(68);
+ 862              		.loc 1 339 0 is_stmt 1
+ 863 003a 4420     		movs	r0, #68
+ 864 003c FFF7FEFF 		bl	PWM_1_WriteCompare
+ 865              	.LVL105:
+ 340:main.c        ****         PWM_2_WriteCompare(69);
+ 866              		.loc 1 340 0
+ 867 0040 4520     		movs	r0, #69
+ 868 0042 FFF7FEFF 		bl	PWM_2_WriteCompare
+ 869              	.LVL106:
+ 870 0046 08BD     		pop	{r3, pc}
+ 871              	.L77:
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 24
+
+
+ 341:main.c        ****     }else{
+ 342:main.c        ****         reverse();
+ 872              		.loc 1 342 0
+ 873 0048 FFF7FEFF 		bl	reverse
+ 874              	.LVL107:
+ 875 004c 08BD     		pop	{r3, pc}
+ 876              	.L80:
+ 877 004e 00BF     		.align	2
+ 878              	.L79:
+ 879 0050 00000000 		.word	comp0_sum
+ 880 0054 00000000 		.word	comp1_sum
+ 881              		.cfi_endproc
+ 882              	.LFE71:
+ 883              		.size	goStraight, .-goStraight
+ 884              		.section	.text.main,"ax",%progbits
+ 885              		.align	2
+ 886              		.global	main
+ 887              		.thumb
+ 888              		.thumb_func
+ 889              		.type	main, %function
+ 890              	main:
+ 891              	.LFB72:
+ 343:main.c        ****     }
+ 344:main.c        ****     
+ 345:main.c        ****     
+ 346:main.c        **** }
+ 347:main.c        **** 
+ 348:main.c        **** int main(void)
+ 349:main.c        **** {
+ 892              		.loc 1 349 0
+ 893              		.cfi_startproc
+ 894              		@ args = 0, pretend = 0, frame = 0
+ 895              		@ frame_needed = 0, uses_anonymous_args = 0
+ 896 0000 10B5     		push	{r4, lr}
+ 897              		.cfi_def_cfa_offset 8
+ 898              		.cfi_offset 4, -8
+ 899              		.cfi_offset 14, -4
+ 350:main.c        ****     CyGlobalIntEnable; /* Enable global interrupts. */
+ 900              		.loc 1 350 0
+ 901              		.syntax unified
+ 902              	@ 350 "main.c" 1
+ 903 0002 62B6     		CPSIE   i
+ 904              	@ 0 "" 2
+ 351:main.c        **** 
+ 352:main.c        ****     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
+ 353:main.c        ****     Timer_1_Start();
+ 905              		.loc 1 353 0
+ 906              		.thumb
+ 907              		.syntax unified
+ 908 0004 FFF7FEFF 		bl	Timer_1_Start
+ 909              	.LVL108:
+ 354:main.c        ****     
+ 355:main.c        ****     isr_1_StartEx(isr_1_handler);
+ 910              		.loc 1 355 0
+ 911 0008 2B48     		ldr	r0, .L98
+ 912 000a FFF7FEFF 		bl	isr_1_StartEx
+ 913              	.LVL109:
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 25
+
+
+ 356:main.c        ****     
+ 357:main.c        ****     //start comparators
+ 358:main.c        ****     Comp_0_Start();
+ 914              		.loc 1 358 0
+ 915 000e FFF7FEFF 		bl	Comp_0_Start
+ 916              	.LVL110:
+ 359:main.c        ****     Comp_1_Start();
+ 917              		.loc 1 359 0
+ 918 0012 FFF7FEFF 		bl	Comp_1_Start
+ 919              	.LVL111:
+ 360:main.c        ****     Comp_2_Start();
+ 920              		.loc 1 360 0
+ 921 0016 FFF7FEFF 		bl	Comp_2_Start
+ 922              	.LVL112:
+ 361:main.c        ****     Comp_3_Start();
+ 923              		.loc 1 361 0
+ 924 001a FFF7FEFF 		bl	Comp_3_Start
+ 925              	.LVL113:
+ 362:main.c        ****     
+ 363:main.c        ****     /*Start PWM Clk*/
+ 364:main.c        ****     Clock_PWM_Start(); 
+ 926              		.loc 1 364 0
+ 927 001e FFF7FEFF 		bl	Clock_PWM_Start
+ 928              	.LVL114:
+ 365:main.c        ****     //Start PWM
+ 366:main.c        ****     PWM_1_Start();
+ 929              		.loc 1 366 0
+ 930 0022 FFF7FEFF 		bl	PWM_1_Start
+ 931              	.LVL115:
+ 367:main.c        ****     PWM_2_Start();
+ 932              		.loc 1 367 0
+ 933 0026 FFF7FEFF 		bl	PWM_2_Start
+ 934              	.LVL116:
+ 368:main.c        ****      
+ 369:main.c        ****     // write comparision int for MC33926 duty cycle must me larger than 10% and less than 90%
+ 370:main.c        **** 
+ 371:main.c        ****     
+ 372:main.c        ****     PWM_1_WritePeriod(100);
+ 935              		.loc 1 372 0
+ 936 002a 6420     		movs	r0, #100
+ 937 002c FFF7FEFF 		bl	PWM_1_WritePeriod
+ 938              	.LVL117:
+ 373:main.c        ****     PWM_2_WritePeriod(100);
+ 939              		.loc 1 373 0
+ 940 0030 6420     		movs	r0, #100
+ 941 0032 FFF7FEFF 		bl	PWM_2_WritePeriod
+ 942              	.LVL118:
+ 374:main.c        ****     
+ 375:main.c        ****     PWM_1_WriteCompare(50);
+ 943              		.loc 1 375 0
+ 944 0036 3220     		movs	r0, #50
+ 945 0038 FFF7FEFF 		bl	PWM_1_WriteCompare
+ 946              	.LVL119:
+ 376:main.c        ****     PWM_2_WriteCompare(50);
+ 947              		.loc 1 376 0
+ 948 003c 3220     		movs	r0, #50
+ 949 003e FFF7FEFF 		bl	PWM_2_WriteCompare
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 26
+
+
+ 950              	.LVL120:
+ 377:main.c        ****     QuadDec_M1_Start();
+ 951              		.loc 1 377 0
+ 952 0042 FFF7FEFF 		bl	QuadDec_M1_Start
+ 953              	.LVL121:
+ 378:main.c        ****     QuadDec_M2_Start();
+ 954              		.loc 1 378 0
+ 955 0046 FFF7FEFF 		bl	QuadDec_M2_Start
+ 956              	.LVL122:
+ 957              	.LBB5:
+ 379:main.c        ****     
+ 380:main.c        ****     
+ 381:main.c        **** //**********************************calculate path    
+ 382:main.c        **** //    int startX = 0, startY = 0;
+ 383:main.c        **** //    int targetX = 4, targetY = 4;
+ 384:main.c        **** //
+ 385:main.c        **** //    Node* endNode = AStar(startX, startY, targetX, targetY);
+ 386:main.c        **** //
+ 387:main.c        **** //    // Print the path
+ 388:main.c        **** //    printPath(endNode);
+ 389:main.c        **** //**************************************************    
+ 390:main.c        ****     
+ 391:main.c        ****     
+ 392:main.c        ****     //this loops through all the movement required in the path
+ 393:main.c        ****     //movement contains distance for going straight and a turn
+ 394:main.c        ****     for(int i=0; i<11;i++){//length should be how many movements there should be
+ 958              		.loc 1 394 0
+ 959 004a 0024     		movs	r4, #0
+ 960 004c 2EE0     		b	.L82
+ 961              	.LVL123:
+ 962              	.L93:
+ 395:main.c        ****         if(i!=0){
+ 963              		.loc 1 395 0
+ 964 004e 34B1     		cbz	r4, .L83
+ 396:main.c        ****             goStraight_cm(path[i].distance-10);//if not the first movement remove 5 cm as turn move
+ 965              		.loc 1 396 0
+ 966 0050 1A4B     		ldr	r3, .L98+4
+ 967 0052 53F83400 		ldr	r0, [r3, r4, lsl #3]
+ 968 0056 0A38     		subs	r0, r0, #10
+ 969 0058 FFF7FEFF 		bl	goStraight_cm
+ 970              	.LVL124:
+ 971 005c 04E0     		b	.L84
+ 972              	.L83:
+ 397:main.c        ****         }else{
+ 398:main.c        ****             goStraight_cm(path[i].distance);
+ 973              		.loc 1 398 0
+ 974 005e 174B     		ldr	r3, .L98+4
+ 975 0060 53F83400 		ldr	r0, [r3, r4, lsl #3]
+ 976 0064 FFF7FEFF 		bl	goStraight_cm
+ 977              	.LVL125:
+ 978              	.L84:
+ 399:main.c        ****         }
+ 400:main.c        ****         if(path[i].turnDirection=='R'){
+ 979              		.loc 1 400 0
+ 980 0068 144B     		ldr	r3, .L98+4
+ 981 006a 03EBC403 		add	r3, r3, r4, lsl #3
+ 982 006e 1B79     		ldrb	r3, [r3, #4]	@ zero_extendqisi2
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 27
+
+
+ 983 0070 522B     		cmp	r3, #82
+ 984 0072 09D1     		bne	.L95
+ 985 0074 01E0     		b	.L85
+ 986              	.L87:
+ 401:main.c        ****            while(Sout_R_Read()!=0){
+ 402:main.c        ****              goStraight();
+ 987              		.loc 1 402 0
+ 988 0076 FFF7FEFF 		bl	goStraight
+ 989              	.LVL126:
+ 990              	.L85:
+ 401:main.c        ****            while(Sout_R_Read()!=0){
+ 991              		.loc 1 401 0
+ 992 007a FFF7FEFF 		bl	Sout_R_Read
+ 993              	.LVL127:
+ 994 007e 0028     		cmp	r0, #0
+ 995 0080 F9D1     		bne	.L87
+ 403:main.c        ****            }
+ 404:main.c        ****            turnRight();
+ 996              		.loc 1 404 0
+ 997 0082 FFF7FEFF 		bl	turnRight
+ 998              	.LVL128:
+ 999 0086 10E0     		b	.L88
+ 1000              	.L95:
+ 405:main.c        ****         }else if(path[i].turnDirection=='L'){
+ 1001              		.loc 1 405 0
+ 1002 0088 4C2B     		cmp	r3, #76
+ 1003 008a 09D1     		bne	.L96
+ 1004 008c 01E0     		b	.L89
+ 1005              	.L91:
+ 406:main.c        ****            while(Sout_L_Read()!=0){
+ 407:main.c        ****              goStraight();
+ 1006              		.loc 1 407 0
+ 1007 008e FFF7FEFF 		bl	goStraight
+ 1008              	.LVL129:
+ 1009              	.L89:
+ 406:main.c        ****            while(Sout_L_Read()!=0){
+ 1010              		.loc 1 406 0
+ 1011 0092 FFF7FEFF 		bl	Sout_L_Read
+ 1012              	.LVL130:
+ 1013 0096 0028     		cmp	r0, #0
+ 1014 0098 F9D1     		bne	.L91
+ 408:main.c        ****            }
+ 409:main.c        ****            turnLeft();
+ 1015              		.loc 1 409 0
+ 1016 009a FFF7FEFF 		bl	turnLeft
+ 1017              	.LVL131:
+ 1018 009e 04E0     		b	.L88
+ 1019              	.L96:
+ 410:main.c        ****         }else if(path[i].turnDirection=='N'){
+ 1020              		.loc 1 410 0
+ 1021 00a0 4E2B     		cmp	r3, #78
+ 1022 00a2 02D1     		bne	.L88
+ 411:main.c        ****             stop();
+ 1023              		.loc 1 411 0
+ 1024 00a4 FFF7FEFF 		bl	stop
+ 1025              	.LVL132:
+ 412:main.c        ****             break;
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 28
+
+
+ 1026              		.loc 1 412 0
+ 1027 00a8 02E0     		b	.L92
+ 1028              	.L88:
+ 394:main.c        ****         if(i!=0){
+ 1029              		.loc 1 394 0 discriminator 2
+ 1030 00aa 0134     		adds	r4, r4, #1
+ 1031              	.LVL133:
+ 1032              	.L82:
+ 394:main.c        ****         if(i!=0){
+ 1033              		.loc 1 394 0 is_stmt 0 discriminator 1
+ 1034 00ac 0A2C     		cmp	r4, #10
+ 1035 00ae CEDD     		ble	.L93
+ 1036              	.L92:
+ 1037              	.LBE5:
+ 413:main.c        ****         }
+ 414:main.c        ****     }
+ 415:main.c        ****    
+ 416:main.c        ****     stop();
+ 1038              		.loc 1 416 0 is_stmt 1
+ 1039 00b0 FFF7FEFF 		bl	stop
+ 1040              	.LVL134:
+ 1041              	.L94:
+ 1042 00b4 FEE7     		b	.L94
+ 1043              	.L99:
+ 1044 00b6 00BF     		.align	2
+ 1045              	.L98:
+ 1046 00b8 00000000 		.word	isr_1_handler
+ 1047 00bc 00000000 		.word	.LANCHOR1
+ 1048              		.cfi_endproc
+ 1049              	.LFE72:
+ 1050              		.size	main, .-main
+ 1051              		.global	current_state
+ 1052              		.global	path
+ 1053              		.comm	path_coordinates,200,4
+ 1054              		.comm	comp3_sum,1,1
+ 1055              		.comm	comp2_sum,1,1
+ 1056              		.comm	comp1_sum,1,1
+ 1057              		.comm	comp0_sum,1,1
+ 1058              		.global	isTurning
+ 1059              		.global	count
+ 1060              		.global	counter
+ 1061              		.global	path_length
+ 1062              		.global	timeInterval_s
+ 1063              		.global	wheelCircumference_cm
+ 1064              		.global	CPR
+ 1065              		.data
+ 1066              		.align	3
+ 1067              		.set	.LANCHOR1,. + 0
+ 1068              		.type	path, %object
+ 1069              		.size	path, 80
+ 1070              	path:
+ 1071 0000 0F000000 		.word	15
+ 1072 0004 4C       		.byte	76
+ 1073 0005 000000   		.space	3
+ 1074 0008 1B000000 		.word	27
+ 1075 000c 52       		.byte	82
+ 1076 000d 000000   		.space	3
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 29
+
+
+ 1077 0010 0F000000 		.word	15
+ 1078 0014 52       		.byte	82
+ 1079 0015 000000   		.space	3
+ 1080 0018 1B000000 		.word	27
+ 1081 001c 4C       		.byte	76
+ 1082 001d 000000   		.space	3
+ 1083 0020 19000000 		.word	25
+ 1084 0024 4C       		.byte	76
+ 1085 0025 000000   		.space	3
+ 1086 0028 1B000000 		.word	27
+ 1087 002c 52       		.byte	82
+ 1088 002d 000000   		.space	3
+ 1089 0030 0F000000 		.word	15
+ 1090 0034 4C       		.byte	76
+ 1091 0035 000000   		.space	3
+ 1092 0038 1B000000 		.word	27
+ 1093 003c 4C       		.byte	76
+ 1094 003d 000000   		.space	3
+ 1095 0040 37000000 		.word	55
+ 1096 0044 4E       		.byte	78
+ 1097 0045 000000   		.space	3
+ 1098 0048 00000000 		.space	8
+ 1098      00000000 
+ 1099              		.type	current_state, %object
+ 1100              		.size	current_state, 1
+ 1101              	current_state:
+ 1102 0050 03       		.byte	3
+ 1103 0051 000000   		.space	3
+ 1104              		.type	counter, %object
+ 1105              		.size	counter, 4
+ 1106              	counter:
+ 1107 0054 01000000 		.word	1
+ 1108              		.type	path_length, %object
+ 1109              		.size	path_length, 4
+ 1110              	path_length:
+ 1111 0058 04000000 		.word	4
+ 1112 005c 00000000 		.space	4
+ 1113              		.type	timeInterval_s, %object
+ 1114              		.size	timeInterval_s, 8
+ 1115              	timeInterval_s:
+ 1116 0060 0C022B87 		.word	-2027224564
+ 1117 0064 16D92540 		.word	1076222230
+ 1118              		.type	wheelCircumference_cm, %object
+ 1119              		.size	wheelCircumference_cm, 4
+ 1120              	wheelCircumference_cm:
+ 1121 0068 7201A241 		.word	1101136242
+ 1122              		.type	CPR, %object
+ 1123              		.size	CPR, 4
+ 1124              	CPR:
+ 1125 006c E4000000 		.word	228
+ 1126              		.bss
+ 1127              		.align	2
+ 1128              		.set	.LANCHOR0,. + 0
+ 1129              		.type	count, %object
+ 1130              		.size	count, 4
+ 1131              	count:
+ 1132 0000 00000000 		.space	4
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 30
+
+
+ 1133              		.type	isTurning, %object
+ 1134              		.size	isTurning, 1
+ 1135              	isTurning:
+ 1136 0004 00       		.space	1
+ 1137              		.text
+ 1138              	.Letext0:
+ 1139              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 1140              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 1141              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+ 1142              		.file 5 "Generated_Source\\PSoC5/core_cm3.h"
+ 1143              		.file 6 "Generated_Source\\PSoC5/Comp_0.h"
+ 1144              		.file 7 "Generated_Source\\PSoC5/Comp_1.h"
+ 1145              		.file 8 "Generated_Source\\PSoC5/Comp_2.h"
+ 1146              		.file 9 "Generated_Source\\PSoC5/Comp_3.h"
+ 1147              		.file 10 "Generated_Source\\PSoC5/Timer_1.h"
+ 1148              		.file 11 "Generated_Source\\PSoC5/PWM_1.h"
+ 1149              		.file 12 "Generated_Source\\PSoC5/PWM_2.h"
+ 1150              		.file 13 "Generated_Source\\PSoC5/Sout_L.h"
+ 1151              		.file 14 "Generated_Source\\PSoC5/Sout_M1.h"
+ 1152              		.file 15 "Generated_Source\\PSoC5/Sout_R.h"
+ 1153              		.file 16 "Generated_Source\\PSoC5/QuadDec_M1.h"
+ 1154              		.file 17 "Generated_Source\\PSoC5/isr_1.h"
+ 1155              		.file 18 "Generated_Source\\PSoC5/Clock_PWM.h"
+ 1156              		.file 19 "Generated_Source\\PSoC5/QuadDec_M2.h"
+ 1157              		.section	.debug_info,"",%progbits
+ 1158              	.Ldebug_info0:
+ 1159 0000 C1080000 		.4byte	0x8c1
+ 1160 0004 0400     		.2byte	0x4
+ 1161 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 1162 000a 04       		.byte	0x4
+ 1163 000b 01       		.uleb128 0x1
+ 1164 000c 64040000 		.4byte	.LASF96
+ 1165 0010 0C       		.byte	0xc
+ 1166 0011 87030000 		.4byte	.LASF97
+ 1167 0015 01050000 		.4byte	.LASF98
+ 1168 0019 18000000 		.4byte	.Ldebug_ranges0+0x18
+ 1169 001d 00000000 		.4byte	0
+ 1170 0021 00000000 		.4byte	.Ldebug_line0
+ 1171 0025 02       		.uleb128 0x2
+ 1172 0026 01       		.byte	0x1
+ 1173 0027 06       		.byte	0x6
+ 1174 0028 FB000000 		.4byte	.LASF0
+ 1175 002c 02       		.uleb128 0x2
+ 1176 002d 01       		.byte	0x1
+ 1177 002e 08       		.byte	0x8
+ 1178 002f 0F020000 		.4byte	.LASF1
+ 1179 0033 02       		.uleb128 0x2
+ 1180 0034 02       		.byte	0x2
+ 1181 0035 05       		.byte	0x5
+ 1182 0036 B7000000 		.4byte	.LASF2
+ 1183 003a 02       		.uleb128 0x2
+ 1184 003b 02       		.byte	0x2
+ 1185 003c 07       		.byte	0x7
+ 1186 003d EB020000 		.4byte	.LASF3
+ 1187 0041 03       		.uleb128 0x3
+ 1188 0042 E8030000 		.4byte	.LASF12
+ 1189 0046 02       		.byte	0x2
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 31
+
+
+ 1190 0047 3F       		.byte	0x3f
+ 1191 0048 4C000000 		.4byte	0x4c
+ 1192 004c 02       		.uleb128 0x2
+ 1193 004d 04       		.byte	0x4
+ 1194 004e 05       		.byte	0x5
+ 1195 004f 91010000 		.4byte	.LASF4
+ 1196 0053 02       		.uleb128 0x2
+ 1197 0054 04       		.byte	0x4
+ 1198 0055 07       		.byte	0x7
+ 1199 0056 8E030000 		.4byte	.LASF5
+ 1200 005a 02       		.uleb128 0x2
+ 1201 005b 08       		.byte	0x8
+ 1202 005c 05       		.byte	0x5
+ 1203 005d 59010000 		.4byte	.LASF6
+ 1204 0061 02       		.uleb128 0x2
+ 1205 0062 08       		.byte	0x8
+ 1206 0063 07       		.byte	0x7
+ 1207 0064 5F020000 		.4byte	.LASF7
+ 1208 0068 04       		.uleb128 0x4
+ 1209 0069 04       		.byte	0x4
+ 1210 006a 05       		.byte	0x5
+ 1211 006b 696E7400 		.ascii	"int\000"
+ 1212 006f 02       		.uleb128 0x2
+ 1213 0070 04       		.byte	0x4
+ 1214 0071 07       		.byte	0x7
+ 1215 0072 8B020000 		.4byte	.LASF8
+ 1216 0076 02       		.uleb128 0x2
+ 1217 0077 08       		.byte	0x8
+ 1218 0078 04       		.byte	0x4
+ 1219 0079 F6010000 		.4byte	.LASF9
+ 1220 007d 02       		.uleb128 0x2
+ 1221 007e 04       		.byte	0x4
+ 1222 007f 07       		.byte	0x7
+ 1223 0080 72000000 		.4byte	.LASF10
+ 1224 0084 02       		.uleb128 0x2
+ 1225 0085 01       		.byte	0x1
+ 1226 0086 08       		.byte	0x8
+ 1227 0087 83010000 		.4byte	.LASF11
+ 1228 008b 03       		.uleb128 0x3
+ 1229 008c 34030000 		.4byte	.LASF13
+ 1230 0090 03       		.byte	0x3
+ 1231 0091 2C       		.byte	0x2c
+ 1232 0092 41000000 		.4byte	0x41
+ 1233 0096 05       		.uleb128 0x5
+ 1234 0097 F5000000 		.4byte	.LASF14
+ 1235 009b 04       		.byte	0x4
+ 1236 009c E901     		.2byte	0x1e9
+ 1237 009e 2C000000 		.4byte	0x2c
+ 1238 00a2 05       		.uleb128 0x5
+ 1239 00a3 80030000 		.4byte	.LASF15
+ 1240 00a7 04       		.byte	0x4
+ 1241 00a8 EB01     		.2byte	0x1eb
+ 1242 00aa 53000000 		.4byte	0x53
+ 1243 00ae 05       		.uleb128 0x5
+ 1244 00af A0030000 		.4byte	.LASF16
+ 1245 00b3 04       		.byte	0x4
+ 1246 00b4 EE01     		.2byte	0x1ee
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 32
+
+
+ 1247 00b6 4C000000 		.4byte	0x4c
+ 1248 00ba 02       		.uleb128 0x2
+ 1249 00bb 04       		.byte	0x4
+ 1250 00bc 04       		.byte	0x4
+ 1251 00bd 42010000 		.4byte	.LASF17
+ 1252 00c1 02       		.uleb128 0x2
+ 1253 00c2 08       		.byte	0x8
+ 1254 00c3 04       		.byte	0x4
+ 1255 00c4 A6030000 		.4byte	.LASF18
+ 1256 00c8 06       		.uleb128 0x6
+ 1257 00c9 88010000 		.4byte	.LASF21
+ 1258 00cd 08       		.byte	0x8
+ 1259 00ce 01       		.byte	0x1
+ 1260 00cf 40       		.byte	0x40
+ 1261 00d0 ED000000 		.4byte	0xed
+ 1262 00d4 07       		.uleb128 0x7
+ 1263 00d5 14030000 		.4byte	.LASF19
+ 1264 00d9 01       		.byte	0x1
+ 1265 00da 41       		.byte	0x41
+ 1266 00db 68000000 		.4byte	0x68
+ 1267 00df 00       		.byte	0
+ 1268 00e0 07       		.uleb128 0x7
+ 1269 00e1 7B000000 		.4byte	.LASF20
+ 1270 00e5 01       		.byte	0x1
+ 1271 00e6 42       		.byte	0x42
+ 1272 00e7 84000000 		.4byte	0x84
+ 1273 00eb 04       		.byte	0x4
+ 1274 00ec 00       		.byte	0
+ 1275 00ed 03       		.uleb128 0x3
+ 1276 00ee 88010000 		.4byte	.LASF21
+ 1277 00f2 01       		.byte	0x1
+ 1278 00f3 43       		.byte	0x43
+ 1279 00f4 C8000000 		.4byte	0xc8
+ 1280 00f8 08       		.uleb128 0x8
+ 1281 00f9 01       		.byte	0x1
+ 1282 00fa 2C000000 		.4byte	0x2c
+ 1283 00fe 01       		.byte	0x1
+ 1284 00ff 52       		.byte	0x52
+ 1285 0100 1D010000 		.4byte	0x11d
+ 1286 0104 09       		.uleb128 0x9
+ 1287 0105 4C000000 		.4byte	.LASF22
+ 1288 0109 00       		.byte	0
+ 1289 010a 09       		.uleb128 0x9
+ 1290 010b 4E020000 		.4byte	.LASF23
+ 1291 010f 01       		.byte	0x1
+ 1292 0110 09       		.uleb128 0x9
+ 1293 0111 DD010000 		.4byte	.LASF24
+ 1294 0115 02       		.byte	0x2
+ 1295 0116 09       		.uleb128 0x9
+ 1296 0117 69030000 		.4byte	.LASF25
+ 1297 011b 03       		.byte	0x3
+ 1298 011c 00       		.byte	0
+ 1299 011d 03       		.uleb128 0x3
+ 1300 011e 36020000 		.4byte	.LASF26
+ 1301 0122 01       		.byte	0x1
+ 1302 0123 57       		.byte	0x57
+ 1303 0124 F8000000 		.4byte	0xf8
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 33
+
+
+ 1304 0128 08       		.uleb128 0x8
+ 1305 0129 01       		.byte	0x1
+ 1306 012a 2C000000 		.4byte	0x2c
+ 1307 012e 01       		.byte	0x1
+ 1308 012f 5B       		.byte	0x5b
+ 1309 0130 4D010000 		.4byte	0x14d
+ 1310 0134 09       		.uleb128 0x9
+ 1311 0135 0B000000 		.4byte	.LASF27
+ 1312 0139 00       		.byte	0
+ 1313 013a 09       		.uleb128 0x9
+ 1314 013b 79010000 		.4byte	.LASF28
+ 1315 013f 01       		.byte	0x1
+ 1316 0140 09       		.uleb128 0x9
+ 1317 0141 9A010000 		.4byte	.LASF29
+ 1318 0145 02       		.byte	0x2
+ 1319 0146 09       		.uleb128 0x9
+ 1320 0147 20040000 		.4byte	.LASF30
+ 1321 014b 03       		.byte	0x3
+ 1322 014c 00       		.byte	0
+ 1323 014d 03       		.uleb128 0x3
+ 1324 014e C1000000 		.4byte	.LASF31
+ 1325 0152 01       		.byte	0x1
+ 1326 0153 60       		.byte	0x60
+ 1327 0154 28010000 		.4byte	0x128
+ 1328 0158 0A       		.uleb128 0xa
+ 1329 0159 AF020000 		.4byte	.LASF32
+ 1330 015d 01       		.byte	0x1
+ 1331 015e F4       		.byte	0xf4
+ 1332 015f 00000000 		.4byte	.LFB65
+ 1333 0163 74000000 		.4byte	.LFE65-.LFB65
+ 1334 0167 01       		.uleb128 0x1
+ 1335 0168 9C       		.byte	0x9c
+ 1336 0169 9B010000 		.4byte	0x19b
+ 1337 016d 0B       		.uleb128 0xb
+ 1338 016e 06000000 		.4byte	.LVL0
+ 1339 0172 9B070000 		.4byte	0x79b
+ 1340 0176 0B       		.uleb128 0xb
+ 1341 0177 12000000 		.4byte	.LVL1
+ 1342 017b A6070000 		.4byte	0x7a6
+ 1343 017f 0B       		.uleb128 0xb
+ 1344 0180 1E000000 		.4byte	.LVL2
+ 1345 0184 B1070000 		.4byte	0x7b1
+ 1346 0188 0B       		.uleb128 0xb
+ 1347 0189 2A000000 		.4byte	.LVL3
+ 1348 018d BC070000 		.4byte	0x7bc
+ 1349 0191 0B       		.uleb128 0xb
+ 1350 0192 5C000000 		.4byte	.LVL4
+ 1351 0196 C7070000 		.4byte	0x7c7
+ 1352 019a 00       		.byte	0
+ 1353 019b 0A       		.uleb128 0xa
+ 1354 019c 02020000 		.4byte	.LASF33
+ 1355 01a0 01       		.byte	0x1
+ 1356 01a1 63       		.byte	0x63
+ 1357 01a2 00000000 		.4byte	.LFB64
+ 1358 01a6 F8010000 		.4byte	.LFE64-.LFB64
+ 1359 01aa 01       		.uleb128 0x1
+ 1360 01ab 9C       		.byte	0x9c
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 34
+
+
+ 1361 01ac A0020000 		.4byte	0x2a0
+ 1362 01b0 0C       		.uleb128 0xc
+ 1363 01b1 8E000000 		.4byte	.LASF34
+ 1364 01b5 01       		.byte	0x1
+ 1365 01b6 63       		.byte	0x63
+ 1366 01b7 68000000 		.4byte	0x68
+ 1367 01bb 00000000 		.4byte	.LLST0
+ 1368 01bf 0C       		.uleb128 0xc
+ 1369 01c0 17000000 		.4byte	.LASF35
+ 1370 01c4 01       		.byte	0x1
+ 1371 01c5 63       		.byte	0x63
+ 1372 01c6 68000000 		.4byte	0x68
+ 1373 01ca 21000000 		.4byte	.LLST1
+ 1374 01ce 0C       		.uleb128 0xc
+ 1375 01cf B3010000 		.4byte	.LASF36
+ 1376 01d3 01       		.byte	0x1
+ 1377 01d4 63       		.byte	0x63
+ 1378 01d5 68000000 		.4byte	0x68
+ 1379 01d9 42000000 		.4byte	.LLST2
+ 1380 01dd 0C       		.uleb128 0xc
+ 1381 01de 3E000000 		.4byte	.LASF37
+ 1382 01e2 01       		.byte	0x1
+ 1383 01e3 63       		.byte	0x63
+ 1384 01e4 68000000 		.4byte	0x68
+ 1385 01e8 B9000000 		.4byte	.LLST3
+ 1386 01ec 0C       		.uleb128 0xc
+ 1387 01ed A5000000 		.4byte	.LASF38
+ 1388 01f1 01       		.byte	0x1
+ 1389 01f2 63       		.byte	0x63
+ 1390 01f3 1D010000 		.4byte	0x11d
+ 1391 01f7 E5000000 		.4byte	.LLST4
+ 1392 01fb 0D       		.uleb128 0xd
+ 1393 01fc 25040000 		.4byte	.LASF39
+ 1394 0200 01       		.byte	0x1
+ 1395 0201 67       		.byte	0x67
+ 1396 0202 68000000 		.4byte	0x68
+ 1397 0206 30010000 		.4byte	.LLST5
+ 1398 020a 0D       		.uleb128 0xd
+ 1399 020b 51030000 		.4byte	.LASF40
+ 1400 020f 01       		.byte	0x1
+ 1401 0210 68       		.byte	0x68
+ 1402 0211 68000000 		.4byte	0x68
+ 1403 0215 4F010000 		.4byte	.LLST6
+ 1404 0219 0D       		.uleb128 0xd
+ 1405 021a BD020000 		.4byte	.LASF41
+ 1406 021e 01       		.byte	0x1
+ 1407 021f 69       		.byte	0x69
+ 1408 0220 84000000 		.4byte	0x84
+ 1409 0224 6E010000 		.4byte	.LLST7
+ 1410 0228 0D       		.uleb128 0xd
+ 1411 0229 DF020000 		.4byte	.LASF42
+ 1412 022d 01       		.byte	0x1
+ 1413 022e 6A       		.byte	0x6a
+ 1414 022f 68000000 		.4byte	0x68
+ 1415 0233 E6010000 		.4byte	.LLST8
+ 1416 0237 0D       		.uleb128 0xd
+ 1417 0238 F2040000 		.4byte	.LASF43
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 35
+
+
+ 1418 023c 01       		.byte	0x1
+ 1419 023d 6B       		.byte	0x6b
+ 1420 023e 68000000 		.4byte	0x68
+ 1421 0242 51020000 		.4byte	.LLST9
+ 1422 0246 0E       		.uleb128 0xe
+ 1423 0247 00000000 		.4byte	.Ldebug_ranges0+0
+ 1424 024b 0F       		.uleb128 0xf
+ 1425 024c 6900     		.ascii	"i\000"
+ 1426 024e 01       		.byte	0x1
+ 1427 024f 6D       		.byte	0x6d
+ 1428 0250 68000000 		.4byte	0x68
+ 1429 0254 BC020000 		.4byte	.LLST10
+ 1430 0258 10       		.uleb128 0x10
+ 1431 0259 16000000 		.4byte	.LBB3
+ 1432 025d CC010000 		.4byte	.LBE3-.LBB3
+ 1433 0261 0D       		.uleb128 0xd
+ 1434 0262 82020000 		.4byte	.LASF44
+ 1435 0266 01       		.byte	0x1
+ 1436 0267 6E       		.byte	0x6e
+ 1437 0268 68000000 		.4byte	0x68
+ 1438 026c DB020000 		.4byte	.LLST11
+ 1439 0270 0D       		.uleb128 0xd
+ 1440 0271 76020000 		.4byte	.LASF45
+ 1441 0275 01       		.byte	0x1
+ 1442 0276 6F       		.byte	0x6f
+ 1443 0277 68000000 		.4byte	0x68
+ 1444 027b 7E030000 		.4byte	.LLST12
+ 1445 027f 0D       		.uleb128 0xd
+ 1446 0280 19040000 		.4byte	.LASF46
+ 1447 0284 01       		.byte	0x1
+ 1448 0285 8A       		.byte	0x8a
+ 1449 0286 68000000 		.4byte	0x68
+ 1450 028a 02040000 		.4byte	.LLST13
+ 1451 028e 0D       		.uleb128 0xd
+ 1452 028f C2020000 		.4byte	.LASF47
+ 1453 0293 01       		.byte	0x1
+ 1454 0294 8B       		.byte	0x8b
+ 1455 0295 68000000 		.4byte	0x68
+ 1456 0299 15040000 		.4byte	.LLST14
+ 1457 029d 00       		.byte	0
+ 1458 029e 00       		.byte	0
+ 1459 029f 00       		.byte	0
+ 1460 02a0 11       		.uleb128 0x11
+ 1461 02a1 1D030000 		.4byte	.LASF48
+ 1462 02a5 01       		.byte	0x1
+ 1463 02a6 0B01     		.2byte	0x10b
+ 1464 02a8 00000000 		.4byte	.LFB66
+ 1465 02ac 10000000 		.4byte	.LFE66-.LFB66
+ 1466 02b0 01       		.uleb128 0x1
+ 1467 02b1 9C       		.byte	0x9c
+ 1468 02b2 DB020000 		.4byte	0x2db
+ 1469 02b6 12       		.uleb128 0x12
+ 1470 02b7 08000000 		.4byte	.LVL66
+ 1471 02bb D2070000 		.4byte	0x7d2
+ 1472 02bf CA020000 		.4byte	0x2ca
+ 1473 02c3 13       		.uleb128 0x13
+ 1474 02c4 01       		.uleb128 0x1
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 36
+
+
+ 1475 02c5 50       		.byte	0x50
+ 1476 02c6 02       		.uleb128 0x2
+ 1477 02c7 08       		.byte	0x8
+ 1478 02c8 32       		.byte	0x32
+ 1479 02c9 00       		.byte	0
+ 1480 02ca 14       		.uleb128 0x14
+ 1481 02cb 0E000000 		.4byte	.LVL67
+ 1482 02cf DD070000 		.4byte	0x7dd
+ 1483 02d3 13       		.uleb128 0x13
+ 1484 02d4 01       		.uleb128 0x1
+ 1485 02d5 50       		.byte	0x50
+ 1486 02d6 02       		.uleb128 0x2
+ 1487 02d7 08       		.byte	0x8
+ 1488 02d8 32       		.byte	0x32
+ 1489 02d9 00       		.byte	0
+ 1490 02da 00       		.byte	0
+ 1491 02db 11       		.uleb128 0x11
+ 1492 02dc 45020000 		.4byte	.LASF49
+ 1493 02e0 01       		.byte	0x1
+ 1494 02e1 1001     		.2byte	0x110
+ 1495 02e3 00000000 		.4byte	.LFB67
+ 1496 02e7 40000000 		.4byte	.LFE67-.LFB67
+ 1497 02eb 01       		.uleb128 0x1
+ 1498 02ec 9C       		.byte	0x9c
+ 1499 02ed 59030000 		.4byte	0x359
+ 1500 02f1 12       		.uleb128 0x12
+ 1501 02f2 08000000 		.4byte	.LVL68
+ 1502 02f6 D2070000 		.4byte	0x7d2
+ 1503 02fa 05030000 		.4byte	0x305
+ 1504 02fe 13       		.uleb128 0x13
+ 1505 02ff 01       		.uleb128 0x1
+ 1506 0300 50       		.byte	0x50
+ 1507 0301 02       		.uleb128 0x2
+ 1508 0302 08       		.byte	0x8
+ 1509 0303 44       		.byte	0x44
+ 1510 0304 00       		.byte	0
+ 1511 0305 12       		.uleb128 0x12
+ 1512 0306 0E000000 		.4byte	.LVL69
+ 1513 030a DD070000 		.4byte	0x7dd
+ 1514 030e 19030000 		.4byte	0x319
+ 1515 0312 13       		.uleb128 0x13
+ 1516 0313 01       		.uleb128 0x1
+ 1517 0314 50       		.byte	0x50
+ 1518 0315 02       		.uleb128 0x2
+ 1519 0316 08       		.byte	0x8
+ 1520 0317 21       		.byte	0x21
+ 1521 0318 00       		.byte	0
+ 1522 0319 0B       		.uleb128 0xb
+ 1523 031a 12000000 		.4byte	.LVL70
+ 1524 031e E8070000 		.4byte	0x7e8
+ 1525 0322 0B       		.uleb128 0xb
+ 1526 0323 1A000000 		.4byte	.LVL71
+ 1527 0327 F3070000 		.4byte	0x7f3
+ 1528 032b 0B       		.uleb128 0xb
+ 1529 032c 22000000 		.4byte	.LVL72
+ 1530 0330 F3070000 		.4byte	0x7f3
+ 1531 0334 12       		.uleb128 0x12
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 37
+
+
+ 1532 0335 32000000 		.4byte	.LVL73
+ 1533 0339 D2070000 		.4byte	0x7d2
+ 1534 033d 48030000 		.4byte	0x348
+ 1535 0341 13       		.uleb128 0x13
+ 1536 0342 01       		.uleb128 0x1
+ 1537 0343 50       		.byte	0x50
+ 1538 0344 02       		.uleb128 0x2
+ 1539 0345 08       		.byte	0x8
+ 1540 0346 41       		.byte	0x41
+ 1541 0347 00       		.byte	0
+ 1542 0348 14       		.uleb128 0x14
+ 1543 0349 38000000 		.4byte	.LVL74
+ 1544 034d DD070000 		.4byte	0x7dd
+ 1545 0351 13       		.uleb128 0x13
+ 1546 0352 01       		.uleb128 0x1
+ 1547 0353 50       		.byte	0x50
+ 1548 0354 02       		.uleb128 0x2
+ 1549 0355 08       		.byte	0x8
+ 1550 0356 42       		.byte	0x42
+ 1551 0357 00       		.byte	0
+ 1552 0358 00       		.byte	0
+ 1553 0359 11       		.uleb128 0x11
+ 1554 035a 7E050000 		.4byte	.LASF50
+ 1555 035e 01       		.byte	0x1
+ 1556 035f 2001     		.2byte	0x120
+ 1557 0361 00000000 		.4byte	.LFB68
+ 1558 0365 40000000 		.4byte	.LFE68-.LFB68
+ 1559 0369 01       		.uleb128 0x1
+ 1560 036a 9C       		.byte	0x9c
+ 1561 036b D7030000 		.4byte	0x3d7
+ 1562 036f 12       		.uleb128 0x12
+ 1563 0370 08000000 		.4byte	.LVL75
+ 1564 0374 D2070000 		.4byte	0x7d2
+ 1565 0378 83030000 		.4byte	0x383
+ 1566 037c 13       		.uleb128 0x13
+ 1567 037d 01       		.uleb128 0x1
+ 1568 037e 50       		.byte	0x50
+ 1569 037f 02       		.uleb128 0x2
+ 1570 0380 08       		.byte	0x8
+ 1571 0381 21       		.byte	0x21
+ 1572 0382 00       		.byte	0
+ 1573 0383 12       		.uleb128 0x12
+ 1574 0384 0E000000 		.4byte	.LVL76
+ 1575 0388 DD070000 		.4byte	0x7dd
+ 1576 038c 97030000 		.4byte	0x397
+ 1577 0390 13       		.uleb128 0x13
+ 1578 0391 01       		.uleb128 0x1
+ 1579 0392 50       		.byte	0x50
+ 1580 0393 02       		.uleb128 0x2
+ 1581 0394 08       		.byte	0x8
+ 1582 0395 44       		.byte	0x44
+ 1583 0396 00       		.byte	0
+ 1584 0397 0B       		.uleb128 0xb
+ 1585 0398 12000000 		.4byte	.LVL77
+ 1586 039c FE070000 		.4byte	0x7fe
+ 1587 03a0 0B       		.uleb128 0xb
+ 1588 03a1 1A000000 		.4byte	.LVL78
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 38
+
+
+ 1589 03a5 F3070000 		.4byte	0x7f3
+ 1590 03a9 0B       		.uleb128 0xb
+ 1591 03aa 22000000 		.4byte	.LVL79
+ 1592 03ae F3070000 		.4byte	0x7f3
+ 1593 03b2 12       		.uleb128 0x12
+ 1594 03b3 32000000 		.4byte	.LVL80
+ 1595 03b7 D2070000 		.4byte	0x7d2
+ 1596 03bb C6030000 		.4byte	0x3c6
+ 1597 03bf 13       		.uleb128 0x13
+ 1598 03c0 01       		.uleb128 0x1
+ 1599 03c1 50       		.byte	0x50
+ 1600 03c2 02       		.uleb128 0x2
+ 1601 03c3 08       		.byte	0x8
+ 1602 03c4 41       		.byte	0x41
+ 1603 03c5 00       		.byte	0
+ 1604 03c6 14       		.uleb128 0x14
+ 1605 03c7 38000000 		.4byte	.LVL81
+ 1606 03cb DD070000 		.4byte	0x7dd
+ 1607 03cf 13       		.uleb128 0x13
+ 1608 03d0 01       		.uleb128 0x1
+ 1609 03d1 50       		.byte	0x50
+ 1610 03d2 02       		.uleb128 0x2
+ 1611 03d3 08       		.byte	0x8
+ 1612 03d4 42       		.byte	0x42
+ 1613 03d5 00       		.byte	0
+ 1614 03d6 00       		.byte	0
+ 1615 03d7 11       		.uleb128 0x11
+ 1616 03d8 22030000 		.4byte	.LASF51
+ 1617 03dc 01       		.byte	0x1
+ 1618 03dd 2F01     		.2byte	0x12f
+ 1619 03df 00000000 		.4byte	.LFB69
+ 1620 03e3 10000000 		.4byte	.LFE69-.LFB69
+ 1621 03e7 01       		.uleb128 0x1
+ 1622 03e8 9C       		.byte	0x9c
+ 1623 03e9 10040000 		.4byte	0x410
+ 1624 03ed 12       		.uleb128 0x12
+ 1625 03ee 08000000 		.4byte	.LVL82
+ 1626 03f2 D2070000 		.4byte	0x7d2
+ 1627 03f6 00040000 		.4byte	0x400
+ 1628 03fa 13       		.uleb128 0x13
+ 1629 03fb 01       		.uleb128 0x1
+ 1630 03fc 50       		.byte	0x50
+ 1631 03fd 01       		.uleb128 0x1
+ 1632 03fe 4E       		.byte	0x4e
+ 1633 03ff 00       		.byte	0
+ 1634 0400 14       		.uleb128 0x14
+ 1635 0401 0E000000 		.4byte	.LVL83
+ 1636 0405 DD070000 		.4byte	0x7dd
+ 1637 0409 13       		.uleb128 0x13
+ 1638 040a 01       		.uleb128 0x1
+ 1639 040b 50       		.byte	0x50
+ 1640 040c 01       		.uleb128 0x1
+ 1641 040d 4E       		.byte	0x4e
+ 1642 040e 00       		.byte	0
+ 1643 040f 00       		.byte	0
+ 1644 0410 15       		.uleb128 0x15
+ 1645 0411 CC000000 		.4byte	.LASF52
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 39
+
+
+ 1646 0415 01       		.byte	0x1
+ 1647 0416 3401     		.2byte	0x134
+ 1648 0418 00000000 		.4byte	.LFB70
+ 1649 041c 94000000 		.4byte	.LFE70-.LFB70
+ 1650 0420 01       		.uleb128 0x1
+ 1651 0421 9C       		.byte	0x9c
+ 1652 0422 B1040000 		.4byte	0x4b1
+ 1653 0426 16       		.uleb128 0x16
+ 1654 0427 14030000 		.4byte	.LASF19
+ 1655 042b 01       		.byte	0x1
+ 1656 042c 3401     		.2byte	0x134
+ 1657 042e 68000000 		.4byte	0x68
+ 1658 0432 28040000 		.4byte	.LLST15
+ 1659 0436 12       		.uleb128 0x12
+ 1660 0437 0A000000 		.4byte	.LVL86
+ 1661 043b 09080000 		.4byte	0x809
+ 1662 043f 49040000 		.4byte	0x449
+ 1663 0443 13       		.uleb128 0x13
+ 1664 0444 01       		.uleb128 0x1
+ 1665 0445 50       		.byte	0x50
+ 1666 0446 01       		.uleb128 0x1
+ 1667 0447 30       		.byte	0x30
+ 1668 0448 00       		.byte	0
+ 1669 0449 0B       		.uleb128 0xb
+ 1670 044a 1C000000 		.4byte	.LVL87
+ 1671 044e 14080000 		.4byte	0x814
+ 1672 0452 0B       		.uleb128 0xb
+ 1673 0453 24000000 		.4byte	.LVL88
+ 1674 0457 DD070000 		.4byte	0x7dd
+ 1675 045b 0B       		.uleb128 0xb
+ 1676 045c 32000000 		.4byte	.LVL89
+ 1677 0460 1F080000 		.4byte	0x81f
+ 1678 0464 0B       		.uleb128 0xb
+ 1679 0465 3A000000 		.4byte	.LVL90
+ 1680 0469 D2070000 		.4byte	0x7d2
+ 1681 046d 12       		.uleb128 0x12
+ 1682 046e 4A000000 		.4byte	.LVL91
+ 1683 0472 D2070000 		.4byte	0x7d2
+ 1684 0476 81040000 		.4byte	0x481
+ 1685 047a 13       		.uleb128 0x13
+ 1686 047b 01       		.uleb128 0x1
+ 1687 047c 50       		.byte	0x50
+ 1688 047d 02       		.uleb128 0x2
+ 1689 047e 08       		.byte	0x8
+ 1690 047f 44       		.byte	0x44
+ 1691 0480 00       		.byte	0
+ 1692 0481 12       		.uleb128 0x12
+ 1693 0482 50000000 		.4byte	.LVL92
+ 1694 0486 DD070000 		.4byte	0x7dd
+ 1695 048a 95040000 		.4byte	0x495
+ 1696 048e 13       		.uleb128 0x13
+ 1697 048f 01       		.uleb128 0x1
+ 1698 0490 50       		.byte	0x50
+ 1699 0491 02       		.uleb128 0x2
+ 1700 0492 08       		.byte	0x8
+ 1701 0493 45       		.byte	0x45
+ 1702 0494 00       		.byte	0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 40
+
+
+ 1703 0495 0B       		.uleb128 0xb
+ 1704 0496 56000000 		.4byte	.LVL93
+ 1705 049a D7030000 		.4byte	0x3d7
+ 1706 049e 0B       		.uleb128 0xb
+ 1707 049f 5A000000 		.4byte	.LVL94
+ 1708 04a3 2A080000 		.4byte	0x82a
+ 1709 04a7 0B       		.uleb128 0xb
+ 1710 04a8 84000000 		.4byte	.LVL99
+ 1711 04ac A0020000 		.4byte	0x2a0
+ 1712 04b0 00       		.byte	0
+ 1713 04b1 11       		.uleb128 0x11
+ 1714 04b2 00000000 		.4byte	.LASF53
+ 1715 04b6 01       		.byte	0x1
+ 1716 04b7 4A01     		.2byte	0x14a
+ 1717 04b9 00000000 		.4byte	.LFB71
+ 1718 04bd 58000000 		.4byte	.LFE71-.LFB71
+ 1719 04c1 01       		.uleb128 0x1
+ 1720 04c2 9C       		.byte	0x9c
+ 1721 04c3 1D050000 		.4byte	0x51d
+ 1722 04c7 0B       		.uleb128 0xb
+ 1723 04c8 12000000 		.4byte	.LVL101
+ 1724 04cc 14080000 		.4byte	0x814
+ 1725 04d0 0B       		.uleb128 0xb
+ 1726 04d1 1A000000 		.4byte	.LVL102
+ 1727 04d5 DD070000 		.4byte	0x7dd
+ 1728 04d9 0B       		.uleb128 0xb
+ 1729 04da 28000000 		.4byte	.LVL103
+ 1730 04de 1F080000 		.4byte	0x81f
+ 1731 04e2 0B       		.uleb128 0xb
+ 1732 04e3 30000000 		.4byte	.LVL104
+ 1733 04e7 D2070000 		.4byte	0x7d2
+ 1734 04eb 12       		.uleb128 0x12
+ 1735 04ec 40000000 		.4byte	.LVL105
+ 1736 04f0 D2070000 		.4byte	0x7d2
+ 1737 04f4 FF040000 		.4byte	0x4ff
+ 1738 04f8 13       		.uleb128 0x13
+ 1739 04f9 01       		.uleb128 0x1
+ 1740 04fa 50       		.byte	0x50
+ 1741 04fb 02       		.uleb128 0x2
+ 1742 04fc 08       		.byte	0x8
+ 1743 04fd 44       		.byte	0x44
+ 1744 04fe 00       		.byte	0
+ 1745 04ff 12       		.uleb128 0x12
+ 1746 0500 46000000 		.4byte	.LVL106
+ 1747 0504 DD070000 		.4byte	0x7dd
+ 1748 0508 13050000 		.4byte	0x513
+ 1749 050c 13       		.uleb128 0x13
+ 1750 050d 01       		.uleb128 0x1
+ 1751 050e 50       		.byte	0x50
+ 1752 050f 02       		.uleb128 0x2
+ 1753 0510 08       		.byte	0x8
+ 1754 0511 45       		.byte	0x45
+ 1755 0512 00       		.byte	0
+ 1756 0513 0B       		.uleb128 0xb
+ 1757 0514 4C000000 		.4byte	.LVL107
+ 1758 0518 D7030000 		.4byte	0x3d7
+ 1759 051c 00       		.byte	0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 41
+
+
+ 1760 051d 17       		.uleb128 0x17
+ 1761 051e 89000000 		.4byte	.LASF99
+ 1762 0522 01       		.byte	0x1
+ 1763 0523 5C01     		.2byte	0x15c
+ 1764 0525 68000000 		.4byte	0x68
+ 1765 0529 00000000 		.4byte	.LFB72
+ 1766 052d C0000000 		.4byte	.LFE72-.LFB72
+ 1767 0531 01       		.uleb128 0x1
+ 1768 0532 9C       		.byte	0x9c
+ 1769 0533 6F060000 		.4byte	0x66f
+ 1770 0537 18       		.uleb128 0x18
+ 1771 0538 4A000000 		.4byte	.LBB5
+ 1772 053c 66000000 		.4byte	.LBE5-.LBB5
+ 1773 0540 A4050000 		.4byte	0x5a4
+ 1774 0544 19       		.uleb128 0x19
+ 1775 0545 6900     		.ascii	"i\000"
+ 1776 0547 01       		.byte	0x1
+ 1777 0548 8A01     		.2byte	0x18a
+ 1778 054a 68000000 		.4byte	0x68
+ 1779 054e 54040000 		.4byte	.LLST16
+ 1780 0552 0B       		.uleb128 0xb
+ 1781 0553 5C000000 		.4byte	.LVL124
+ 1782 0557 10040000 		.4byte	0x410
+ 1783 055b 0B       		.uleb128 0xb
+ 1784 055c 68000000 		.4byte	.LVL125
+ 1785 0560 10040000 		.4byte	0x410
+ 1786 0564 0B       		.uleb128 0xb
+ 1787 0565 7A000000 		.4byte	.LVL126
+ 1788 0569 B1040000 		.4byte	0x4b1
+ 1789 056d 0B       		.uleb128 0xb
+ 1790 056e 7E000000 		.4byte	.LVL127
+ 1791 0572 FE070000 		.4byte	0x7fe
+ 1792 0576 0B       		.uleb128 0xb
+ 1793 0577 86000000 		.4byte	.LVL128
+ 1794 057b 59030000 		.4byte	0x359
+ 1795 057f 0B       		.uleb128 0xb
+ 1796 0580 92000000 		.4byte	.LVL129
+ 1797 0584 B1040000 		.4byte	0x4b1
+ 1798 0588 0B       		.uleb128 0xb
+ 1799 0589 96000000 		.4byte	.LVL130
+ 1800 058d E8070000 		.4byte	0x7e8
+ 1801 0591 0B       		.uleb128 0xb
+ 1802 0592 9E000000 		.4byte	.LVL131
+ 1803 0596 DB020000 		.4byte	0x2db
+ 1804 059a 0B       		.uleb128 0xb
+ 1805 059b A8000000 		.4byte	.LVL132
+ 1806 059f A0020000 		.4byte	0x2a0
+ 1807 05a3 00       		.byte	0
+ 1808 05a4 0B       		.uleb128 0xb
+ 1809 05a5 08000000 		.4byte	.LVL108
+ 1810 05a9 35080000 		.4byte	0x835
+ 1811 05ad 12       		.uleb128 0x12
+ 1812 05ae 0E000000 		.4byte	.LVL109
+ 1813 05b2 40080000 		.4byte	0x840
+ 1814 05b6 C4050000 		.4byte	0x5c4
+ 1815 05ba 13       		.uleb128 0x13
+ 1816 05bb 01       		.uleb128 0x1
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 42
+
+
+ 1817 05bc 50       		.byte	0x50
+ 1818 05bd 05       		.uleb128 0x5
+ 1819 05be 03       		.byte	0x3
+ 1820 05bf 00000000 		.4byte	isr_1_handler
+ 1821 05c3 00       		.byte	0
+ 1822 05c4 0B       		.uleb128 0xb
+ 1823 05c5 12000000 		.4byte	.LVL110
+ 1824 05c9 4B080000 		.4byte	0x84b
+ 1825 05cd 0B       		.uleb128 0xb
+ 1826 05ce 16000000 		.4byte	.LVL111
+ 1827 05d2 56080000 		.4byte	0x856
+ 1828 05d6 0B       		.uleb128 0xb
+ 1829 05d7 1A000000 		.4byte	.LVL112
+ 1830 05db 61080000 		.4byte	0x861
+ 1831 05df 0B       		.uleb128 0xb
+ 1832 05e0 1E000000 		.4byte	.LVL113
+ 1833 05e4 6C080000 		.4byte	0x86c
+ 1834 05e8 0B       		.uleb128 0xb
+ 1835 05e9 22000000 		.4byte	.LVL114
+ 1836 05ed 77080000 		.4byte	0x877
+ 1837 05f1 0B       		.uleb128 0xb
+ 1838 05f2 26000000 		.4byte	.LVL115
+ 1839 05f6 82080000 		.4byte	0x882
+ 1840 05fa 0B       		.uleb128 0xb
+ 1841 05fb 2A000000 		.4byte	.LVL116
+ 1842 05ff 8D080000 		.4byte	0x88d
+ 1843 0603 12       		.uleb128 0x12
+ 1844 0604 30000000 		.4byte	.LVL117
+ 1845 0608 98080000 		.4byte	0x898
+ 1846 060c 17060000 		.4byte	0x617
+ 1847 0610 13       		.uleb128 0x13
+ 1848 0611 01       		.uleb128 0x1
+ 1849 0612 50       		.byte	0x50
+ 1850 0613 02       		.uleb128 0x2
+ 1851 0614 08       		.byte	0x8
+ 1852 0615 64       		.byte	0x64
+ 1853 0616 00       		.byte	0
+ 1854 0617 12       		.uleb128 0x12
+ 1855 0618 36000000 		.4byte	.LVL118
+ 1856 061c A3080000 		.4byte	0x8a3
+ 1857 0620 2B060000 		.4byte	0x62b
+ 1858 0624 13       		.uleb128 0x13
+ 1859 0625 01       		.uleb128 0x1
+ 1860 0626 50       		.byte	0x50
+ 1861 0627 02       		.uleb128 0x2
+ 1862 0628 08       		.byte	0x8
+ 1863 0629 64       		.byte	0x64
+ 1864 062a 00       		.byte	0
+ 1865 062b 12       		.uleb128 0x12
+ 1866 062c 3C000000 		.4byte	.LVL119
+ 1867 0630 D2070000 		.4byte	0x7d2
+ 1868 0634 3F060000 		.4byte	0x63f
+ 1869 0638 13       		.uleb128 0x13
+ 1870 0639 01       		.uleb128 0x1
+ 1871 063a 50       		.byte	0x50
+ 1872 063b 02       		.uleb128 0x2
+ 1873 063c 08       		.byte	0x8
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 43
+
+
+ 1874 063d 32       		.byte	0x32
+ 1875 063e 00       		.byte	0
+ 1876 063f 12       		.uleb128 0x12
+ 1877 0640 42000000 		.4byte	.LVL120
+ 1878 0644 DD070000 		.4byte	0x7dd
+ 1879 0648 53060000 		.4byte	0x653
+ 1880 064c 13       		.uleb128 0x13
+ 1881 064d 01       		.uleb128 0x1
+ 1882 064e 50       		.byte	0x50
+ 1883 064f 02       		.uleb128 0x2
+ 1884 0650 08       		.byte	0x8
+ 1885 0651 32       		.byte	0x32
+ 1886 0652 00       		.byte	0
+ 1887 0653 0B       		.uleb128 0xb
+ 1888 0654 46000000 		.4byte	.LVL121
+ 1889 0658 AE080000 		.4byte	0x8ae
+ 1890 065c 0B       		.uleb128 0xb
+ 1891 065d 4A000000 		.4byte	.LVL122
+ 1892 0661 B9080000 		.4byte	0x8b9
+ 1893 0665 0B       		.uleb128 0xb
+ 1894 0666 B4000000 		.4byte	.LVL134
+ 1895 066a A0020000 		.4byte	0x2a0
+ 1896 066e 00       		.byte	0
+ 1897 066f 1A       		.uleb128 0x1a
+ 1898 0670 BE030000 		.4byte	.LASF54
+ 1899 0674 05       		.byte	0x5
+ 1900 0675 1207     		.2byte	0x712
+ 1901 0677 7B060000 		.4byte	0x67b
+ 1902 067b 1B       		.uleb128 0x1b
+ 1903 067c 8B000000 		.4byte	0x8b
+ 1904 0680 1C       		.uleb128 0x1c
+ 1905 0681 43505200 		.ascii	"CPR\000"
+ 1906 0685 01       		.byte	0x1
+ 1907 0686 27       		.byte	0x27
+ 1908 0687 AE000000 		.4byte	0xae
+ 1909 068b 05       		.uleb128 0x5
+ 1910 068c 03       		.byte	0x3
+ 1911 068d 00000000 		.4byte	CPR
+ 1912 0691 1D       		.uleb128 0x1d
+ 1913 0692 5C000000 		.4byte	.LASF55
+ 1914 0696 01       		.byte	0x1
+ 1915 0697 28       		.byte	0x28
+ 1916 0698 BA000000 		.4byte	0xba
+ 1917 069c 05       		.uleb128 0x5
+ 1918 069d 03       		.byte	0x3
+ 1919 069e 00000000 		.4byte	wheelCircumference_cm
+ 1920 06a2 1D       		.uleb128 0x1d
+ 1921 06a3 3C030000 		.4byte	.LASF56
+ 1922 06a7 01       		.byte	0x1
+ 1923 06a8 29       		.byte	0x29
+ 1924 06a9 C1000000 		.4byte	0xc1
+ 1925 06ad 05       		.uleb128 0x5
+ 1926 06ae 03       		.byte	0x3
+ 1927 06af 00000000 		.4byte	timeInterval_s
+ 1928 06b3 1D       		.uleb128 0x1d
+ 1929 06b4 34040000 		.4byte	.LASF57
+ 1930 06b8 01       		.byte	0x1
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 44
+
+
+ 1931 06b9 2A       		.byte	0x2a
+ 1932 06ba 68000000 		.4byte	0x68
+ 1933 06be 05       		.uleb128 0x5
+ 1934 06bf 03       		.byte	0x3
+ 1935 06c0 00000000 		.4byte	path_length
+ 1936 06c4 1D       		.uleb128 0x1d
+ 1937 06c5 1D020000 		.4byte	.LASF58
+ 1938 06c9 01       		.byte	0x1
+ 1939 06ca 2B       		.byte	0x2b
+ 1940 06cb 68000000 		.4byte	0x68
+ 1941 06cf 05       		.uleb128 0x5
+ 1942 06d0 03       		.byte	0x3
+ 1943 06d1 00000000 		.4byte	counter
+ 1944 06d5 1D       		.uleb128 0x1d
+ 1945 06d6 E2030000 		.4byte	.LASF59
+ 1946 06da 01       		.byte	0x1
+ 1947 06db 36       		.byte	0x36
+ 1948 06dc A2000000 		.4byte	0xa2
+ 1949 06e0 05       		.uleb128 0x5
+ 1950 06e1 03       		.byte	0x3
+ 1951 06e2 00000000 		.4byte	count
+ 1952 06e6 1D       		.uleb128 0x1d
+ 1953 06e7 D8030000 		.4byte	.LASF60
+ 1954 06eb 01       		.byte	0x1
+ 1955 06ec 37       		.byte	0x37
+ 1956 06ed F7060000 		.4byte	0x6f7
+ 1957 06f1 05       		.uleb128 0x5
+ 1958 06f2 03       		.byte	0x3
+ 1959 06f3 00000000 		.4byte	isTurning
+ 1960 06f7 02       		.uleb128 0x2
+ 1961 06f8 01       		.byte	0x1
+ 1962 06f9 02       		.byte	0x2
+ 1963 06fa 4B030000 		.4byte	.LASF61
+ 1964 06fe 1D       		.uleb128 0x1d
+ 1965 06ff C9020000 		.4byte	.LASF62
+ 1966 0703 01       		.byte	0x1
+ 1967 0704 39       		.byte	0x39
+ 1968 0705 96000000 		.4byte	0x96
+ 1969 0709 05       		.uleb128 0x5
+ 1970 070a 03       		.byte	0x3
+ 1971 070b 00000000 		.4byte	comp0_sum
+ 1972 070f 1D       		.uleb128 0x1d
+ 1973 0710 52000000 		.4byte	.LASF63
+ 1974 0714 01       		.byte	0x1
+ 1975 0715 3A       		.byte	0x3a
+ 1976 0716 96000000 		.4byte	0x96
+ 1977 071a 05       		.uleb128 0x5
+ 1978 071b 03       		.byte	0x3
+ 1979 071c 00000000 		.4byte	comp1_sum
+ 1980 0720 1D       		.uleb128 0x1d
+ 1981 0721 2A030000 		.4byte	.LASF64
+ 1982 0725 01       		.byte	0x1
+ 1983 0726 3B       		.byte	0x3b
+ 1984 0727 96000000 		.4byte	0x96
+ 1985 072b 05       		.uleb128 0x5
+ 1986 072c 03       		.byte	0x3
+ 1987 072d 00000000 		.4byte	comp2_sum
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 45
+
+
+ 1988 0731 1D       		.uleb128 0x1d
+ 1989 0732 A5020000 		.4byte	.LASF65
+ 1990 0736 01       		.byte	0x1
+ 1991 0737 3C       		.byte	0x3c
+ 1992 0738 96000000 		.4byte	0x96
+ 1993 073c 05       		.uleb128 0x5
+ 1994 073d 03       		.byte	0x3
+ 1995 073e 00000000 		.4byte	comp3_sum
+ 1996 0742 1E       		.uleb128 0x1e
+ 1997 0743 68000000 		.4byte	0x68
+ 1998 0747 58070000 		.4byte	0x758
+ 1999 074b 1F       		.uleb128 0x1f
+ 2000 074c 7D000000 		.4byte	0x7d
+ 2001 0750 18       		.byte	0x18
+ 2002 0751 1F       		.uleb128 0x1f
+ 2003 0752 7D000000 		.4byte	0x7d
+ 2004 0756 01       		.byte	0x1
+ 2005 0757 00       		.byte	0
+ 2006 0758 1D       		.uleb128 0x1d
+ 2007 0759 25020000 		.4byte	.LASF66
+ 2008 075d 01       		.byte	0x1
+ 2009 075e 3E       		.byte	0x3e
+ 2010 075f 42070000 		.4byte	0x742
+ 2011 0763 05       		.uleb128 0x5
+ 2012 0764 03       		.byte	0x3
+ 2013 0765 00000000 		.4byte	path_coordinates
+ 2014 0769 1E       		.uleb128 0x1e
+ 2015 076a ED000000 		.4byte	0xed
+ 2016 076e 79070000 		.4byte	0x779
+ 2017 0772 1F       		.uleb128 0x1f
+ 2018 0773 7D000000 		.4byte	0x7d
+ 2019 0777 09       		.byte	0x9
+ 2020 0778 00       		.byte	0
+ 2021 0779 1D       		.uleb128 0x1d
+ 2022 077a 02040000 		.4byte	.LASF67
+ 2023 077e 01       		.byte	0x1
+ 2024 077f 46       		.byte	0x46
+ 2025 0780 69070000 		.4byte	0x769
+ 2026 0784 05       		.uleb128 0x5
+ 2027 0785 03       		.byte	0x3
+ 2028 0786 00000000 		.4byte	path
+ 2029 078a 1D       		.uleb128 0x1d
+ 2030 078b 30000000 		.4byte	.LASF68
+ 2031 078f 01       		.byte	0x1
+ 2032 0790 61       		.byte	0x61
+ 2033 0791 4D010000 		.4byte	0x14d
+ 2034 0795 05       		.uleb128 0x5
+ 2035 0796 03       		.byte	0x3
+ 2036 0797 00000000 		.4byte	current_state
+ 2037 079b 20       		.uleb128 0x20
+ 2038 079c 07040000 		.4byte	.LASF69
+ 2039 07a0 07040000 		.4byte	.LASF69
+ 2040 07a4 06       		.byte	0x6
+ 2041 07a5 42       		.byte	0x42
+ 2042 07a6 20       		.uleb128 0x20
+ 2043 07a7 40040000 		.4byte	.LASF70
+ 2044 07ab 40040000 		.4byte	.LASF70
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 46
+
+
+ 2045 07af 07       		.byte	0x7
+ 2046 07b0 42       		.byte	0x42
+ 2047 07b1 20       		.uleb128 0x20
+ 2048 07b2 52040000 		.4byte	.LASF71
+ 2049 07b6 52040000 		.4byte	.LASF71
+ 2050 07ba 08       		.byte	0x8
+ 2051 07bb 42       		.byte	0x42
+ 2052 07bc 20       		.uleb128 0x20
+ 2053 07bd 60050000 		.4byte	.LASF72
+ 2054 07c1 60050000 		.4byte	.LASF72
+ 2055 07c5 09       		.byte	0x9
+ 2056 07c6 42       		.byte	0x42
+ 2057 07c7 20       		.uleb128 0x20
+ 2058 07c8 DA000000 		.4byte	.LASF73
+ 2059 07cc DA000000 		.4byte	.LASF73
+ 2060 07d0 0A       		.byte	0xa
+ 2061 07d1 5E       		.byte	0x5e
+ 2062 07d2 20       		.uleb128 0x20
+ 2063 07d3 E3010000 		.4byte	.LASF74
+ 2064 07d7 E3010000 		.4byte	.LASF74
+ 2065 07db 0B       		.byte	0xb
+ 2066 07dc C3       		.byte	0xc3
+ 2067 07dd 20       		.uleb128 0x20
+ 2068 07de 2F010000 		.4byte	.LASF75
+ 2069 07e2 2F010000 		.4byte	.LASF75
+ 2070 07e6 0C       		.byte	0xc
+ 2071 07e7 C3       		.byte	0xc3
+ 2072 07e8 20       		.uleb128 0x20
+ 2073 07e9 72050000 		.4byte	.LASF76
+ 2074 07ed 72050000 		.4byte	.LASF76
+ 2075 07f1 0D       		.byte	0xd
+ 2076 07f2 29       		.byte	0x29
+ 2077 07f3 20       		.uleb128 0x20
+ 2078 07f4 CB030000 		.4byte	.LASF77
+ 2079 07f8 CB030000 		.4byte	.LASF77
+ 2080 07fc 0E       		.byte	0xe
+ 2081 07fd 29       		.byte	0x29
+ 2082 07fe 20       		.uleb128 0x20
+ 2083 07ff 53020000 		.4byte	.LASF78
+ 2084 0803 53020000 		.4byte	.LASF78
+ 2085 0807 0F       		.byte	0xf
+ 2086 0808 29       		.byte	0x29
+ 2087 0809 20       		.uleb128 0x20
+ 2088 080a FE020000 		.4byte	.LASF79
+ 2089 080e FE020000 		.4byte	.LASF79
+ 2090 0812 10       		.byte	0x10
+ 2091 0813 4F       		.byte	0x4f
+ 2092 0814 20       		.uleb128 0x20
+ 2093 0815 67010000 		.4byte	.LASF80
+ 2094 0819 67010000 		.4byte	.LASF80
+ 2095 081d 0C       		.byte	0xc
+ 2096 081e C5       		.byte	0xc5
+ 2097 081f 20       		.uleb128 0x20
+ 2098 0820 1D010000 		.4byte	.LASF81
+ 2099 0824 1D010000 		.4byte	.LASF81
+ 2100 0828 0B       		.byte	0xb
+ 2101 0829 C5       		.byte	0xc5
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 47
+
+
+ 2102 082a 20       		.uleb128 0x20
+ 2103 082b 07010000 		.4byte	.LASF82
+ 2104 082f 07010000 		.4byte	.LASF82
+ 2105 0833 10       		.byte	0x10
+ 2106 0834 4E       		.byte	0x4e
+ 2107 0835 20       		.uleb128 0x20
+ 2108 0836 5B030000 		.4byte	.LASF83
+ 2109 083a 5B030000 		.4byte	.LASF83
+ 2110 083e 0A       		.byte	0xa
+ 2111 083f 5A       		.byte	0x5a
+ 2112 0840 20       		.uleb128 0x20
+ 2113 0841 A5010000 		.4byte	.LASF84
+ 2114 0845 A5010000 		.4byte	.LASF84
+ 2115 0849 11       		.byte	0x11
+ 2116 084a 18       		.byte	0x18
+ 2117 084b 20       		.uleb128 0x20
+ 2118 084c 98020000 		.4byte	.LASF85
+ 2119 0850 98020000 		.4byte	.LASF85
+ 2120 0854 06       		.byte	0x6
+ 2121 0855 3F       		.byte	0x3f
+ 2122 0856 20       		.uleb128 0x20
+ 2123 0857 88050000 		.4byte	.LASF86
+ 2124 085b 88050000 		.4byte	.LASF86
+ 2125 085f 07       		.byte	0x7
+ 2126 0860 3F       		.byte	0x3f
+ 2127 0861 20       		.uleb128 0x20
+ 2128 0862 BE010000 		.4byte	.LASF87
+ 2129 0866 BE010000 		.4byte	.LASF87
+ 2130 086a 08       		.byte	0x8
+ 2131 086b 3F       		.byte	0x3f
+ 2132 086c 20       		.uleb128 0x20
+ 2133 086d 98000000 		.4byte	.LASF88
+ 2134 0871 98000000 		.4byte	.LASF88
+ 2135 0875 09       		.byte	0x9
+ 2136 0876 3F       		.byte	0x3f
+ 2137 0877 20       		.uleb128 0x20
+ 2138 0878 F2030000 		.4byte	.LASF89
+ 2139 087c F2030000 		.4byte	.LASF89
+ 2140 0880 12       		.byte	0x12
+ 2141 0881 27       		.byte	0x27
+ 2142 0882 20       		.uleb128 0x20
+ 2143 0883 24000000 		.4byte	.LASF90
+ 2144 0887 24000000 		.4byte	.LASF90
+ 2145 088b 0B       		.byte	0xb
+ 2146 088c 92       		.byte	0x92
+ 2147 088d 20       		.uleb128 0x20
+ 2148 088e D3020000 		.4byte	.LASF91
+ 2149 0892 D3020000 		.4byte	.LASF91
+ 2150 0896 0C       		.byte	0xc
+ 2151 0897 92       		.byte	0x92
+ 2152 0898 20       		.uleb128 0x20
+ 2153 0899 6E030000 		.4byte	.LASF92
+ 2154 089d 6E030000 		.4byte	.LASF92
+ 2155 08a1 0B       		.byte	0xb
+ 2156 08a2 BE       		.byte	0xbe
+ 2157 08a3 20       		.uleb128 0x20
+ 2158 08a4 CB010000 		.4byte	.LASF93
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 48
+
+
+ 2159 08a8 CB010000 		.4byte	.LASF93
+ 2160 08ac 0C       		.byte	0xc
+ 2161 08ad BE       		.byte	0xbe
+ 2162 08ae 20       		.uleb128 0x20
+ 2163 08af AD030000 		.4byte	.LASF94
+ 2164 08b3 AD030000 		.4byte	.LASF94
+ 2165 08b7 10       		.byte	0x10
+ 2166 08b8 48       		.byte	0x48
+ 2167 08b9 20       		.uleb128 0x20
+ 2168 08ba 48010000 		.4byte	.LASF95
+ 2169 08be 48010000 		.4byte	.LASF95
+ 2170 08c2 13       		.byte	0x13
+ 2171 08c3 48       		.byte	0x48
+ 2172 08c4 00       		.byte	0
+ 2173              		.section	.debug_abbrev,"",%progbits
+ 2174              	.Ldebug_abbrev0:
+ 2175 0000 01       		.uleb128 0x1
+ 2176 0001 11       		.uleb128 0x11
+ 2177 0002 01       		.byte	0x1
+ 2178 0003 25       		.uleb128 0x25
+ 2179 0004 0E       		.uleb128 0xe
+ 2180 0005 13       		.uleb128 0x13
+ 2181 0006 0B       		.uleb128 0xb
+ 2182 0007 03       		.uleb128 0x3
+ 2183 0008 0E       		.uleb128 0xe
+ 2184 0009 1B       		.uleb128 0x1b
+ 2185 000a 0E       		.uleb128 0xe
+ 2186 000b 55       		.uleb128 0x55
+ 2187 000c 17       		.uleb128 0x17
+ 2188 000d 11       		.uleb128 0x11
+ 2189 000e 01       		.uleb128 0x1
+ 2190 000f 10       		.uleb128 0x10
+ 2191 0010 17       		.uleb128 0x17
+ 2192 0011 00       		.byte	0
+ 2193 0012 00       		.byte	0
+ 2194 0013 02       		.uleb128 0x2
+ 2195 0014 24       		.uleb128 0x24
+ 2196 0015 00       		.byte	0
+ 2197 0016 0B       		.uleb128 0xb
+ 2198 0017 0B       		.uleb128 0xb
+ 2199 0018 3E       		.uleb128 0x3e
+ 2200 0019 0B       		.uleb128 0xb
+ 2201 001a 03       		.uleb128 0x3
+ 2202 001b 0E       		.uleb128 0xe
+ 2203 001c 00       		.byte	0
+ 2204 001d 00       		.byte	0
+ 2205 001e 03       		.uleb128 0x3
+ 2206 001f 16       		.uleb128 0x16
+ 2207 0020 00       		.byte	0
+ 2208 0021 03       		.uleb128 0x3
+ 2209 0022 0E       		.uleb128 0xe
+ 2210 0023 3A       		.uleb128 0x3a
+ 2211 0024 0B       		.uleb128 0xb
+ 2212 0025 3B       		.uleb128 0x3b
+ 2213 0026 0B       		.uleb128 0xb
+ 2214 0027 49       		.uleb128 0x49
+ 2215 0028 13       		.uleb128 0x13
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 49
+
+
+ 2216 0029 00       		.byte	0
+ 2217 002a 00       		.byte	0
+ 2218 002b 04       		.uleb128 0x4
+ 2219 002c 24       		.uleb128 0x24
+ 2220 002d 00       		.byte	0
+ 2221 002e 0B       		.uleb128 0xb
+ 2222 002f 0B       		.uleb128 0xb
+ 2223 0030 3E       		.uleb128 0x3e
+ 2224 0031 0B       		.uleb128 0xb
+ 2225 0032 03       		.uleb128 0x3
+ 2226 0033 08       		.uleb128 0x8
+ 2227 0034 00       		.byte	0
+ 2228 0035 00       		.byte	0
+ 2229 0036 05       		.uleb128 0x5
+ 2230 0037 16       		.uleb128 0x16
+ 2231 0038 00       		.byte	0
+ 2232 0039 03       		.uleb128 0x3
+ 2233 003a 0E       		.uleb128 0xe
+ 2234 003b 3A       		.uleb128 0x3a
+ 2235 003c 0B       		.uleb128 0xb
+ 2236 003d 3B       		.uleb128 0x3b
+ 2237 003e 05       		.uleb128 0x5
+ 2238 003f 49       		.uleb128 0x49
+ 2239 0040 13       		.uleb128 0x13
+ 2240 0041 00       		.byte	0
+ 2241 0042 00       		.byte	0
+ 2242 0043 06       		.uleb128 0x6
+ 2243 0044 13       		.uleb128 0x13
+ 2244 0045 01       		.byte	0x1
+ 2245 0046 03       		.uleb128 0x3
+ 2246 0047 0E       		.uleb128 0xe
+ 2247 0048 0B       		.uleb128 0xb
+ 2248 0049 0B       		.uleb128 0xb
+ 2249 004a 3A       		.uleb128 0x3a
+ 2250 004b 0B       		.uleb128 0xb
+ 2251 004c 3B       		.uleb128 0x3b
+ 2252 004d 0B       		.uleb128 0xb
+ 2253 004e 01       		.uleb128 0x1
+ 2254 004f 13       		.uleb128 0x13
+ 2255 0050 00       		.byte	0
+ 2256 0051 00       		.byte	0
+ 2257 0052 07       		.uleb128 0x7
+ 2258 0053 0D       		.uleb128 0xd
+ 2259 0054 00       		.byte	0
+ 2260 0055 03       		.uleb128 0x3
+ 2261 0056 0E       		.uleb128 0xe
+ 2262 0057 3A       		.uleb128 0x3a
+ 2263 0058 0B       		.uleb128 0xb
+ 2264 0059 3B       		.uleb128 0x3b
+ 2265 005a 0B       		.uleb128 0xb
+ 2266 005b 49       		.uleb128 0x49
+ 2267 005c 13       		.uleb128 0x13
+ 2268 005d 38       		.uleb128 0x38
+ 2269 005e 0B       		.uleb128 0xb
+ 2270 005f 00       		.byte	0
+ 2271 0060 00       		.byte	0
+ 2272 0061 08       		.uleb128 0x8
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 50
+
+
+ 2273 0062 04       		.uleb128 0x4
+ 2274 0063 01       		.byte	0x1
+ 2275 0064 0B       		.uleb128 0xb
+ 2276 0065 0B       		.uleb128 0xb
+ 2277 0066 49       		.uleb128 0x49
+ 2278 0067 13       		.uleb128 0x13
+ 2279 0068 3A       		.uleb128 0x3a
+ 2280 0069 0B       		.uleb128 0xb
+ 2281 006a 3B       		.uleb128 0x3b
+ 2282 006b 0B       		.uleb128 0xb
+ 2283 006c 01       		.uleb128 0x1
+ 2284 006d 13       		.uleb128 0x13
+ 2285 006e 00       		.byte	0
+ 2286 006f 00       		.byte	0
+ 2287 0070 09       		.uleb128 0x9
+ 2288 0071 28       		.uleb128 0x28
+ 2289 0072 00       		.byte	0
+ 2290 0073 03       		.uleb128 0x3
+ 2291 0074 0E       		.uleb128 0xe
+ 2292 0075 1C       		.uleb128 0x1c
+ 2293 0076 0B       		.uleb128 0xb
+ 2294 0077 00       		.byte	0
+ 2295 0078 00       		.byte	0
+ 2296 0079 0A       		.uleb128 0xa
+ 2297 007a 2E       		.uleb128 0x2e
+ 2298 007b 01       		.byte	0x1
+ 2299 007c 3F       		.uleb128 0x3f
+ 2300 007d 19       		.uleb128 0x19
+ 2301 007e 03       		.uleb128 0x3
+ 2302 007f 0E       		.uleb128 0xe
+ 2303 0080 3A       		.uleb128 0x3a
+ 2304 0081 0B       		.uleb128 0xb
+ 2305 0082 3B       		.uleb128 0x3b
+ 2306 0083 0B       		.uleb128 0xb
+ 2307 0084 27       		.uleb128 0x27
+ 2308 0085 19       		.uleb128 0x19
+ 2309 0086 11       		.uleb128 0x11
+ 2310 0087 01       		.uleb128 0x1
+ 2311 0088 12       		.uleb128 0x12
+ 2312 0089 06       		.uleb128 0x6
+ 2313 008a 40       		.uleb128 0x40
+ 2314 008b 18       		.uleb128 0x18
+ 2315 008c 9742     		.uleb128 0x2117
+ 2316 008e 19       		.uleb128 0x19
+ 2317 008f 01       		.uleb128 0x1
+ 2318 0090 13       		.uleb128 0x13
+ 2319 0091 00       		.byte	0
+ 2320 0092 00       		.byte	0
+ 2321 0093 0B       		.uleb128 0xb
+ 2322 0094 898201   		.uleb128 0x4109
+ 2323 0097 00       		.byte	0
+ 2324 0098 11       		.uleb128 0x11
+ 2325 0099 01       		.uleb128 0x1
+ 2326 009a 31       		.uleb128 0x31
+ 2327 009b 13       		.uleb128 0x13
+ 2328 009c 00       		.byte	0
+ 2329 009d 00       		.byte	0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 51
+
+
+ 2330 009e 0C       		.uleb128 0xc
+ 2331 009f 05       		.uleb128 0x5
+ 2332 00a0 00       		.byte	0
+ 2333 00a1 03       		.uleb128 0x3
+ 2334 00a2 0E       		.uleb128 0xe
+ 2335 00a3 3A       		.uleb128 0x3a
+ 2336 00a4 0B       		.uleb128 0xb
+ 2337 00a5 3B       		.uleb128 0x3b
+ 2338 00a6 0B       		.uleb128 0xb
+ 2339 00a7 49       		.uleb128 0x49
+ 2340 00a8 13       		.uleb128 0x13
+ 2341 00a9 02       		.uleb128 0x2
+ 2342 00aa 17       		.uleb128 0x17
+ 2343 00ab 00       		.byte	0
+ 2344 00ac 00       		.byte	0
+ 2345 00ad 0D       		.uleb128 0xd
+ 2346 00ae 34       		.uleb128 0x34
+ 2347 00af 00       		.byte	0
+ 2348 00b0 03       		.uleb128 0x3
+ 2349 00b1 0E       		.uleb128 0xe
+ 2350 00b2 3A       		.uleb128 0x3a
+ 2351 00b3 0B       		.uleb128 0xb
+ 2352 00b4 3B       		.uleb128 0x3b
+ 2353 00b5 0B       		.uleb128 0xb
+ 2354 00b6 49       		.uleb128 0x49
+ 2355 00b7 13       		.uleb128 0x13
+ 2356 00b8 02       		.uleb128 0x2
+ 2357 00b9 17       		.uleb128 0x17
+ 2358 00ba 00       		.byte	0
+ 2359 00bb 00       		.byte	0
+ 2360 00bc 0E       		.uleb128 0xe
+ 2361 00bd 0B       		.uleb128 0xb
+ 2362 00be 01       		.byte	0x1
+ 2363 00bf 55       		.uleb128 0x55
+ 2364 00c0 17       		.uleb128 0x17
+ 2365 00c1 00       		.byte	0
+ 2366 00c2 00       		.byte	0
+ 2367 00c3 0F       		.uleb128 0xf
+ 2368 00c4 34       		.uleb128 0x34
+ 2369 00c5 00       		.byte	0
+ 2370 00c6 03       		.uleb128 0x3
+ 2371 00c7 08       		.uleb128 0x8
+ 2372 00c8 3A       		.uleb128 0x3a
+ 2373 00c9 0B       		.uleb128 0xb
+ 2374 00ca 3B       		.uleb128 0x3b
+ 2375 00cb 0B       		.uleb128 0xb
+ 2376 00cc 49       		.uleb128 0x49
+ 2377 00cd 13       		.uleb128 0x13
+ 2378 00ce 02       		.uleb128 0x2
+ 2379 00cf 17       		.uleb128 0x17
+ 2380 00d0 00       		.byte	0
+ 2381 00d1 00       		.byte	0
+ 2382 00d2 10       		.uleb128 0x10
+ 2383 00d3 0B       		.uleb128 0xb
+ 2384 00d4 01       		.byte	0x1
+ 2385 00d5 11       		.uleb128 0x11
+ 2386 00d6 01       		.uleb128 0x1
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 52
+
+
+ 2387 00d7 12       		.uleb128 0x12
+ 2388 00d8 06       		.uleb128 0x6
+ 2389 00d9 00       		.byte	0
+ 2390 00da 00       		.byte	0
+ 2391 00db 11       		.uleb128 0x11
+ 2392 00dc 2E       		.uleb128 0x2e
+ 2393 00dd 01       		.byte	0x1
+ 2394 00de 3F       		.uleb128 0x3f
+ 2395 00df 19       		.uleb128 0x19
+ 2396 00e0 03       		.uleb128 0x3
+ 2397 00e1 0E       		.uleb128 0xe
+ 2398 00e2 3A       		.uleb128 0x3a
+ 2399 00e3 0B       		.uleb128 0xb
+ 2400 00e4 3B       		.uleb128 0x3b
+ 2401 00e5 05       		.uleb128 0x5
+ 2402 00e6 11       		.uleb128 0x11
+ 2403 00e7 01       		.uleb128 0x1
+ 2404 00e8 12       		.uleb128 0x12
+ 2405 00e9 06       		.uleb128 0x6
+ 2406 00ea 40       		.uleb128 0x40
+ 2407 00eb 18       		.uleb128 0x18
+ 2408 00ec 9742     		.uleb128 0x2117
+ 2409 00ee 19       		.uleb128 0x19
+ 2410 00ef 01       		.uleb128 0x1
+ 2411 00f0 13       		.uleb128 0x13
+ 2412 00f1 00       		.byte	0
+ 2413 00f2 00       		.byte	0
+ 2414 00f3 12       		.uleb128 0x12
+ 2415 00f4 898201   		.uleb128 0x4109
+ 2416 00f7 01       		.byte	0x1
+ 2417 00f8 11       		.uleb128 0x11
+ 2418 00f9 01       		.uleb128 0x1
+ 2419 00fa 31       		.uleb128 0x31
+ 2420 00fb 13       		.uleb128 0x13
+ 2421 00fc 01       		.uleb128 0x1
+ 2422 00fd 13       		.uleb128 0x13
+ 2423 00fe 00       		.byte	0
+ 2424 00ff 00       		.byte	0
+ 2425 0100 13       		.uleb128 0x13
+ 2426 0101 8A8201   		.uleb128 0x410a
+ 2427 0104 00       		.byte	0
+ 2428 0105 02       		.uleb128 0x2
+ 2429 0106 18       		.uleb128 0x18
+ 2430 0107 9142     		.uleb128 0x2111
+ 2431 0109 18       		.uleb128 0x18
+ 2432 010a 00       		.byte	0
+ 2433 010b 00       		.byte	0
+ 2434 010c 14       		.uleb128 0x14
+ 2435 010d 898201   		.uleb128 0x4109
+ 2436 0110 01       		.byte	0x1
+ 2437 0111 11       		.uleb128 0x11
+ 2438 0112 01       		.uleb128 0x1
+ 2439 0113 31       		.uleb128 0x31
+ 2440 0114 13       		.uleb128 0x13
+ 2441 0115 00       		.byte	0
+ 2442 0116 00       		.byte	0
+ 2443 0117 15       		.uleb128 0x15
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 53
+
+
+ 2444 0118 2E       		.uleb128 0x2e
+ 2445 0119 01       		.byte	0x1
+ 2446 011a 3F       		.uleb128 0x3f
+ 2447 011b 19       		.uleb128 0x19
+ 2448 011c 03       		.uleb128 0x3
+ 2449 011d 0E       		.uleb128 0xe
+ 2450 011e 3A       		.uleb128 0x3a
+ 2451 011f 0B       		.uleb128 0xb
+ 2452 0120 3B       		.uleb128 0x3b
+ 2453 0121 05       		.uleb128 0x5
+ 2454 0122 27       		.uleb128 0x27
+ 2455 0123 19       		.uleb128 0x19
+ 2456 0124 11       		.uleb128 0x11
+ 2457 0125 01       		.uleb128 0x1
+ 2458 0126 12       		.uleb128 0x12
+ 2459 0127 06       		.uleb128 0x6
+ 2460 0128 40       		.uleb128 0x40
+ 2461 0129 18       		.uleb128 0x18
+ 2462 012a 9642     		.uleb128 0x2116
+ 2463 012c 19       		.uleb128 0x19
+ 2464 012d 01       		.uleb128 0x1
+ 2465 012e 13       		.uleb128 0x13
+ 2466 012f 00       		.byte	0
+ 2467 0130 00       		.byte	0
+ 2468 0131 16       		.uleb128 0x16
+ 2469 0132 05       		.uleb128 0x5
+ 2470 0133 00       		.byte	0
+ 2471 0134 03       		.uleb128 0x3
+ 2472 0135 0E       		.uleb128 0xe
+ 2473 0136 3A       		.uleb128 0x3a
+ 2474 0137 0B       		.uleb128 0xb
+ 2475 0138 3B       		.uleb128 0x3b
+ 2476 0139 05       		.uleb128 0x5
+ 2477 013a 49       		.uleb128 0x49
+ 2478 013b 13       		.uleb128 0x13
+ 2479 013c 02       		.uleb128 0x2
+ 2480 013d 17       		.uleb128 0x17
+ 2481 013e 00       		.byte	0
+ 2482 013f 00       		.byte	0
+ 2483 0140 17       		.uleb128 0x17
+ 2484 0141 2E       		.uleb128 0x2e
+ 2485 0142 01       		.byte	0x1
+ 2486 0143 3F       		.uleb128 0x3f
+ 2487 0144 19       		.uleb128 0x19
+ 2488 0145 03       		.uleb128 0x3
+ 2489 0146 0E       		.uleb128 0xe
+ 2490 0147 3A       		.uleb128 0x3a
+ 2491 0148 0B       		.uleb128 0xb
+ 2492 0149 3B       		.uleb128 0x3b
+ 2493 014a 05       		.uleb128 0x5
+ 2494 014b 27       		.uleb128 0x27
+ 2495 014c 19       		.uleb128 0x19
+ 2496 014d 49       		.uleb128 0x49
+ 2497 014e 13       		.uleb128 0x13
+ 2498 014f 8701     		.uleb128 0x87
+ 2499 0151 19       		.uleb128 0x19
+ 2500 0152 11       		.uleb128 0x11
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 54
+
+
+ 2501 0153 01       		.uleb128 0x1
+ 2502 0154 12       		.uleb128 0x12
+ 2503 0155 06       		.uleb128 0x6
+ 2504 0156 40       		.uleb128 0x40
+ 2505 0157 18       		.uleb128 0x18
+ 2506 0158 9742     		.uleb128 0x2117
+ 2507 015a 19       		.uleb128 0x19
+ 2508 015b 01       		.uleb128 0x1
+ 2509 015c 13       		.uleb128 0x13
+ 2510 015d 00       		.byte	0
+ 2511 015e 00       		.byte	0
+ 2512 015f 18       		.uleb128 0x18
+ 2513 0160 0B       		.uleb128 0xb
+ 2514 0161 01       		.byte	0x1
+ 2515 0162 11       		.uleb128 0x11
+ 2516 0163 01       		.uleb128 0x1
+ 2517 0164 12       		.uleb128 0x12
+ 2518 0165 06       		.uleb128 0x6
+ 2519 0166 01       		.uleb128 0x1
+ 2520 0167 13       		.uleb128 0x13
+ 2521 0168 00       		.byte	0
+ 2522 0169 00       		.byte	0
+ 2523 016a 19       		.uleb128 0x19
+ 2524 016b 34       		.uleb128 0x34
+ 2525 016c 00       		.byte	0
+ 2526 016d 03       		.uleb128 0x3
+ 2527 016e 08       		.uleb128 0x8
+ 2528 016f 3A       		.uleb128 0x3a
+ 2529 0170 0B       		.uleb128 0xb
+ 2530 0171 3B       		.uleb128 0x3b
+ 2531 0172 05       		.uleb128 0x5
+ 2532 0173 49       		.uleb128 0x49
+ 2533 0174 13       		.uleb128 0x13
+ 2534 0175 02       		.uleb128 0x2
+ 2535 0176 17       		.uleb128 0x17
+ 2536 0177 00       		.byte	0
+ 2537 0178 00       		.byte	0
+ 2538 0179 1A       		.uleb128 0x1a
+ 2539 017a 34       		.uleb128 0x34
+ 2540 017b 00       		.byte	0
+ 2541 017c 03       		.uleb128 0x3
+ 2542 017d 0E       		.uleb128 0xe
+ 2543 017e 3A       		.uleb128 0x3a
+ 2544 017f 0B       		.uleb128 0xb
+ 2545 0180 3B       		.uleb128 0x3b
+ 2546 0181 05       		.uleb128 0x5
+ 2547 0182 49       		.uleb128 0x49
+ 2548 0183 13       		.uleb128 0x13
+ 2549 0184 3F       		.uleb128 0x3f
+ 2550 0185 19       		.uleb128 0x19
+ 2551 0186 3C       		.uleb128 0x3c
+ 2552 0187 19       		.uleb128 0x19
+ 2553 0188 00       		.byte	0
+ 2554 0189 00       		.byte	0
+ 2555 018a 1B       		.uleb128 0x1b
+ 2556 018b 35       		.uleb128 0x35
+ 2557 018c 00       		.byte	0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 55
+
+
+ 2558 018d 49       		.uleb128 0x49
+ 2559 018e 13       		.uleb128 0x13
+ 2560 018f 00       		.byte	0
+ 2561 0190 00       		.byte	0
+ 2562 0191 1C       		.uleb128 0x1c
+ 2563 0192 34       		.uleb128 0x34
+ 2564 0193 00       		.byte	0
+ 2565 0194 03       		.uleb128 0x3
+ 2566 0195 08       		.uleb128 0x8
+ 2567 0196 3A       		.uleb128 0x3a
+ 2568 0197 0B       		.uleb128 0xb
+ 2569 0198 3B       		.uleb128 0x3b
+ 2570 0199 0B       		.uleb128 0xb
+ 2571 019a 49       		.uleb128 0x49
+ 2572 019b 13       		.uleb128 0x13
+ 2573 019c 3F       		.uleb128 0x3f
+ 2574 019d 19       		.uleb128 0x19
+ 2575 019e 02       		.uleb128 0x2
+ 2576 019f 18       		.uleb128 0x18
+ 2577 01a0 00       		.byte	0
+ 2578 01a1 00       		.byte	0
+ 2579 01a2 1D       		.uleb128 0x1d
+ 2580 01a3 34       		.uleb128 0x34
+ 2581 01a4 00       		.byte	0
+ 2582 01a5 03       		.uleb128 0x3
+ 2583 01a6 0E       		.uleb128 0xe
+ 2584 01a7 3A       		.uleb128 0x3a
+ 2585 01a8 0B       		.uleb128 0xb
+ 2586 01a9 3B       		.uleb128 0x3b
+ 2587 01aa 0B       		.uleb128 0xb
+ 2588 01ab 49       		.uleb128 0x49
+ 2589 01ac 13       		.uleb128 0x13
+ 2590 01ad 3F       		.uleb128 0x3f
+ 2591 01ae 19       		.uleb128 0x19
+ 2592 01af 02       		.uleb128 0x2
+ 2593 01b0 18       		.uleb128 0x18
+ 2594 01b1 00       		.byte	0
+ 2595 01b2 00       		.byte	0
+ 2596 01b3 1E       		.uleb128 0x1e
+ 2597 01b4 01       		.uleb128 0x1
+ 2598 01b5 01       		.byte	0x1
+ 2599 01b6 49       		.uleb128 0x49
+ 2600 01b7 13       		.uleb128 0x13
+ 2601 01b8 01       		.uleb128 0x1
+ 2602 01b9 13       		.uleb128 0x13
+ 2603 01ba 00       		.byte	0
+ 2604 01bb 00       		.byte	0
+ 2605 01bc 1F       		.uleb128 0x1f
+ 2606 01bd 21       		.uleb128 0x21
+ 2607 01be 00       		.byte	0
+ 2608 01bf 49       		.uleb128 0x49
+ 2609 01c0 13       		.uleb128 0x13
+ 2610 01c1 2F       		.uleb128 0x2f
+ 2611 01c2 0B       		.uleb128 0xb
+ 2612 01c3 00       		.byte	0
+ 2613 01c4 00       		.byte	0
+ 2614 01c5 20       		.uleb128 0x20
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 56
+
+
+ 2615 01c6 2E       		.uleb128 0x2e
+ 2616 01c7 00       		.byte	0
+ 2617 01c8 3F       		.uleb128 0x3f
+ 2618 01c9 19       		.uleb128 0x19
+ 2619 01ca 3C       		.uleb128 0x3c
+ 2620 01cb 19       		.uleb128 0x19
+ 2621 01cc 6E       		.uleb128 0x6e
+ 2622 01cd 0E       		.uleb128 0xe
+ 2623 01ce 03       		.uleb128 0x3
+ 2624 01cf 0E       		.uleb128 0xe
+ 2625 01d0 3A       		.uleb128 0x3a
+ 2626 01d1 0B       		.uleb128 0xb
+ 2627 01d2 3B       		.uleb128 0x3b
+ 2628 01d3 0B       		.uleb128 0xb
+ 2629 01d4 00       		.byte	0
+ 2630 01d5 00       		.byte	0
+ 2631 01d6 00       		.byte	0
+ 2632              		.section	.debug_loc,"",%progbits
+ 2633              	.Ldebug_loc0:
+ 2634              	.LLST0:
+ 2635 0000 00000000 		.4byte	.LVL5
+ 2636 0004 16000000 		.4byte	.LVL7
+ 2637 0008 0100     		.2byte	0x1
+ 2638 000a 50       		.byte	0x50
+ 2639 000b 16000000 		.4byte	.LVL7
+ 2640 000f F8010000 		.4byte	.LFE64
+ 2641 0013 0400     		.2byte	0x4
+ 2642 0015 F3       		.byte	0xf3
+ 2643 0016 01       		.uleb128 0x1
+ 2644 0017 50       		.byte	0x50
+ 2645 0018 9F       		.byte	0x9f
+ 2646 0019 00000000 		.4byte	0
+ 2647 001d 00000000 		.4byte	0
+ 2648              	.LLST1:
+ 2649 0021 00000000 		.4byte	.LVL5
+ 2650 0025 16000000 		.4byte	.LVL7
+ 2651 0029 0100     		.2byte	0x1
+ 2652 002b 51       		.byte	0x51
+ 2653 002c 16000000 		.4byte	.LVL7
+ 2654 0030 F8010000 		.4byte	.LFE64
+ 2655 0034 0400     		.2byte	0x4
+ 2656 0036 F3       		.byte	0xf3
+ 2657 0037 01       		.uleb128 0x1
+ 2658 0038 51       		.byte	0x51
+ 2659 0039 9F       		.byte	0x9f
+ 2660 003a 00000000 		.4byte	0
+ 2661 003e 00000000 		.4byte	0
+ 2662              	.LLST2:
+ 2663 0042 00000000 		.4byte	.LVL5
+ 2664 0046 3E000000 		.4byte	.LVL11
+ 2665 004a 0100     		.2byte	0x1
+ 2666 004c 52       		.byte	0x52
+ 2667 004d 3E000000 		.4byte	.LVL11
+ 2668 0051 50000000 		.4byte	.LVL12
+ 2669 0055 0400     		.2byte	0x4
+ 2670 0057 F3       		.byte	0xf3
+ 2671 0058 01       		.uleb128 0x1
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 57
+
+
+ 2672 0059 52       		.byte	0x52
+ 2673 005a 9F       		.byte	0x9f
+ 2674 005b 50000000 		.4byte	.LVL12
+ 2675 005f 54000000 		.4byte	.LVL13
+ 2676 0063 0100     		.2byte	0x1
+ 2677 0065 52       		.byte	0x52
+ 2678 0066 54000000 		.4byte	.LVL13
+ 2679 006a 66000000 		.4byte	.LVL14
+ 2680 006e 0400     		.2byte	0x4
+ 2681 0070 F3       		.byte	0xf3
+ 2682 0071 01       		.uleb128 0x1
+ 2683 0072 52       		.byte	0x52
+ 2684 0073 9F       		.byte	0x9f
+ 2685 0074 66000000 		.4byte	.LVL14
+ 2686 0078 6A000000 		.4byte	.LVL15
+ 2687 007c 0100     		.2byte	0x1
+ 2688 007e 52       		.byte	0x52
+ 2689 007f 6A000000 		.4byte	.LVL15
+ 2690 0083 7C000000 		.4byte	.LVL16
+ 2691 0087 0400     		.2byte	0x4
+ 2692 0089 F3       		.byte	0xf3
+ 2693 008a 01       		.uleb128 0x1
+ 2694 008b 52       		.byte	0x52
+ 2695 008c 9F       		.byte	0x9f
+ 2696 008d 7C000000 		.4byte	.LVL16
+ 2697 0091 82000000 		.4byte	.LVL17
+ 2698 0095 0100     		.2byte	0x1
+ 2699 0097 52       		.byte	0x52
+ 2700 0098 82000000 		.4byte	.LVL17
+ 2701 009c 92000000 		.4byte	.LVL18
+ 2702 00a0 0400     		.2byte	0x4
+ 2703 00a2 F3       		.byte	0xf3
+ 2704 00a3 01       		.uleb128 0x1
+ 2705 00a4 52       		.byte	0x52
+ 2706 00a5 9F       		.byte	0x9f
+ 2707 00a6 92000000 		.4byte	.LVL18
+ 2708 00aa F8010000 		.4byte	.LFE64
+ 2709 00ae 0100     		.2byte	0x1
+ 2710 00b0 52       		.byte	0x52
+ 2711 00b1 00000000 		.4byte	0
+ 2712 00b5 00000000 		.4byte	0
+ 2713              	.LLST3:
+ 2714 00b9 00000000 		.4byte	.LVL5
+ 2715 00bd 16000000 		.4byte	.LVL7
+ 2716 00c1 0100     		.2byte	0x1
+ 2717 00c3 53       		.byte	0x53
+ 2718 00c4 16000000 		.4byte	.LVL7
+ 2719 00c8 EE010000 		.4byte	.LVL65
+ 2720 00cc 0100     		.2byte	0x1
+ 2721 00ce 58       		.byte	0x58
+ 2722 00cf EE010000 		.4byte	.LVL65
+ 2723 00d3 F8010000 		.4byte	.LFE64
+ 2724 00d7 0400     		.2byte	0x4
+ 2725 00d9 F3       		.byte	0xf3
+ 2726 00da 01       		.uleb128 0x1
+ 2727 00db 53       		.byte	0x53
+ 2728 00dc 9F       		.byte	0x9f
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 58
+
+
+ 2729 00dd 00000000 		.4byte	0
+ 2730 00e1 00000000 		.4byte	0
+ 2731              	.LLST4:
+ 2732 00e5 00000000 		.4byte	.LVL5
+ 2733 00e9 16000000 		.4byte	.LVL7
+ 2734 00ed 0200     		.2byte	0x2
+ 2735 00ef 91       		.byte	0x91
+ 2736 00f0 00       		.sleb128 0
+ 2737 00f1 16000000 		.4byte	.LVL7
+ 2738 00f5 D8000000 		.4byte	.LVL24
+ 2739 00f9 0100     		.2byte	0x1
+ 2740 00fb 5E       		.byte	0x5e
+ 2741 00fc DA000000 		.4byte	.LVL25
+ 2742 0100 26010000 		.4byte	.LVL35
+ 2743 0104 0100     		.2byte	0x1
+ 2744 0106 5E       		.byte	0x5e
+ 2745 0107 28010000 		.4byte	.LVL36
+ 2746 010b 76010000 		.4byte	.LVL46
+ 2747 010f 0100     		.2byte	0x1
+ 2748 0111 5E       		.byte	0x5e
+ 2749 0112 78010000 		.4byte	.LVL47
+ 2750 0116 C4010000 		.4byte	.LVL57
+ 2751 011a 0100     		.2byte	0x1
+ 2752 011c 5E       		.byte	0x5e
+ 2753 011d C6010000 		.4byte	.LVL58
+ 2754 0121 F8010000 		.4byte	.LFE64
+ 2755 0125 0100     		.2byte	0x1
+ 2756 0127 5E       		.byte	0x5e
+ 2757 0128 00000000 		.4byte	0
+ 2758 012c 00000000 		.4byte	0
+ 2759              	.LLST5:
+ 2760 0130 0A000000 		.4byte	.LVL6
+ 2761 0134 16000000 		.4byte	.LVL7
+ 2762 0138 0200     		.2byte	0x2
+ 2763 013a 30       		.byte	0x30
+ 2764 013b 9F       		.byte	0x9f
+ 2765 013c 16000000 		.4byte	.LVL7
+ 2766 0140 EE010000 		.4byte	.LVL65
+ 2767 0144 0100     		.2byte	0x1
+ 2768 0146 57       		.byte	0x57
+ 2769 0147 00000000 		.4byte	0
+ 2770 014b 00000000 		.4byte	0
+ 2771              	.LLST6:
+ 2772 014f 0A000000 		.4byte	.LVL6
+ 2773 0153 16000000 		.4byte	.LVL7
+ 2774 0157 0200     		.2byte	0x2
+ 2775 0159 30       		.byte	0x30
+ 2776 015a 9F       		.byte	0x9f
+ 2777 015b 16000000 		.4byte	.LVL7
+ 2778 015f F8010000 		.4byte	.LFE64
+ 2779 0163 0100     		.2byte	0x1
+ 2780 0165 5C       		.byte	0x5c
+ 2781 0166 00000000 		.4byte	0
+ 2782 016a 00000000 		.4byte	0
+ 2783              	.LLST7:
+ 2784 016e 0A000000 		.4byte	.LVL6
+ 2785 0172 16000000 		.4byte	.LVL7
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 59
+
+
+ 2786 0176 0300     		.2byte	0x3
+ 2787 0178 08       		.byte	0x8
+ 2788 0179 4E       		.byte	0x4e
+ 2789 017a 9F       		.byte	0x9f
+ 2790 017b 16000000 		.4byte	.LVL7
+ 2791 017f D4000000 		.4byte	.LVL23
+ 2792 0183 0100     		.2byte	0x1
+ 2793 0185 59       		.byte	0x59
+ 2794 0186 DA000000 		.4byte	.LVL25
+ 2795 018a DE000000 		.4byte	.LVL26
+ 2796 018e 0100     		.2byte	0x1
+ 2797 0190 59       		.byte	0x59
+ 2798 0191 E2000000 		.4byte	.LVL27
+ 2799 0195 22010000 		.4byte	.LVL34
+ 2800 0199 0100     		.2byte	0x1
+ 2801 019b 59       		.byte	0x59
+ 2802 019c 28010000 		.4byte	.LVL36
+ 2803 01a0 2C010000 		.4byte	.LVL37
+ 2804 01a4 0100     		.2byte	0x1
+ 2805 01a6 59       		.byte	0x59
+ 2806 01a7 30010000 		.4byte	.LVL38
+ 2807 01ab 72010000 		.4byte	.LVL45
+ 2808 01af 0100     		.2byte	0x1
+ 2809 01b1 59       		.byte	0x59
+ 2810 01b2 78010000 		.4byte	.LVL47
+ 2811 01b6 7C010000 		.4byte	.LVL48
+ 2812 01ba 0100     		.2byte	0x1
+ 2813 01bc 59       		.byte	0x59
+ 2814 01bd 80010000 		.4byte	.LVL49
+ 2815 01c1 C0010000 		.4byte	.LVL56
+ 2816 01c5 0100     		.2byte	0x1
+ 2817 01c7 59       		.byte	0x59
+ 2818 01c8 C6010000 		.4byte	.LVL58
+ 2819 01cc CA010000 		.4byte	.LVL59
+ 2820 01d0 0100     		.2byte	0x1
+ 2821 01d2 59       		.byte	0x59
+ 2822 01d3 CE010000 		.4byte	.LVL60
+ 2823 01d7 EE010000 		.4byte	.LVL65
+ 2824 01db 0100     		.2byte	0x1
+ 2825 01dd 59       		.byte	0x59
+ 2826 01de 00000000 		.4byte	0
+ 2827 01e2 00000000 		.4byte	0
+ 2828              	.LLST8:
+ 2829 01e6 0A000000 		.4byte	.LVL6
+ 2830 01ea B4000000 		.4byte	.LVL21
+ 2831 01ee 0100     		.2byte	0x1
+ 2832 01f0 50       		.byte	0x50
+ 2833 01f1 B4000000 		.4byte	.LVL21
+ 2834 01f5 BA000000 		.4byte	.LVL22
+ 2835 01f9 0100     		.2byte	0x1
+ 2836 01fb 53       		.byte	0x53
+ 2837 01fc BA000000 		.4byte	.LVL22
+ 2838 0200 06010000 		.4byte	.LVL32
+ 2839 0204 0100     		.2byte	0x1
+ 2840 0206 50       		.byte	0x50
+ 2841 0207 06010000 		.4byte	.LVL32
+ 2842 020b 0C010000 		.4byte	.LVL33
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 60
+
+
+ 2843 020f 0100     		.2byte	0x1
+ 2844 0211 53       		.byte	0x53
+ 2845 0212 0C010000 		.4byte	.LVL33
+ 2846 0216 52010000 		.4byte	.LVL43
+ 2847 021a 0100     		.2byte	0x1
+ 2848 021c 50       		.byte	0x50
+ 2849 021d 52010000 		.4byte	.LVL43
+ 2850 0221 58010000 		.4byte	.LVL44
+ 2851 0225 0100     		.2byte	0x1
+ 2852 0227 53       		.byte	0x53
+ 2853 0228 58010000 		.4byte	.LVL44
+ 2854 022c A4010000 		.4byte	.LVL54
+ 2855 0230 0100     		.2byte	0x1
+ 2856 0232 50       		.byte	0x50
+ 2857 0233 A4010000 		.4byte	.LVL54
+ 2858 0237 AA010000 		.4byte	.LVL55
+ 2859 023b 0100     		.2byte	0x1
+ 2860 023d 53       		.byte	0x53
+ 2861 023e AA010000 		.4byte	.LVL55
+ 2862 0242 F8010000 		.4byte	.LFE64
+ 2863 0246 0100     		.2byte	0x1
+ 2864 0248 50       		.byte	0x50
+ 2865 0249 00000000 		.4byte	0
+ 2866 024d 00000000 		.4byte	0
+ 2867              	.LLST9:
+ 2868 0251 0A000000 		.4byte	.LVL6
+ 2869 0255 B4000000 		.4byte	.LVL21
+ 2870 0259 0100     		.2byte	0x1
+ 2871 025b 51       		.byte	0x51
+ 2872 025c B4000000 		.4byte	.LVL21
+ 2873 0260 BA000000 		.4byte	.LVL22
+ 2874 0264 0100     		.2byte	0x1
+ 2875 0266 55       		.byte	0x55
+ 2876 0267 BA000000 		.4byte	.LVL22
+ 2877 026b 06010000 		.4byte	.LVL32
+ 2878 026f 0100     		.2byte	0x1
+ 2879 0271 51       		.byte	0x51
+ 2880 0272 06010000 		.4byte	.LVL32
+ 2881 0276 0C010000 		.4byte	.LVL33
+ 2882 027a 0100     		.2byte	0x1
+ 2883 027c 55       		.byte	0x55
+ 2884 027d 0C010000 		.4byte	.LVL33
+ 2885 0281 52010000 		.4byte	.LVL43
+ 2886 0285 0100     		.2byte	0x1
+ 2887 0287 51       		.byte	0x51
+ 2888 0288 52010000 		.4byte	.LVL43
+ 2889 028c 58010000 		.4byte	.LVL44
+ 2890 0290 0100     		.2byte	0x1
+ 2891 0292 55       		.byte	0x55
+ 2892 0293 58010000 		.4byte	.LVL44
+ 2893 0297 A4010000 		.4byte	.LVL54
+ 2894 029b 0100     		.2byte	0x1
+ 2895 029d 51       		.byte	0x51
+ 2896 029e A4010000 		.4byte	.LVL54
+ 2897 02a2 AA010000 		.4byte	.LVL55
+ 2898 02a6 0100     		.2byte	0x1
+ 2899 02a8 55       		.byte	0x55
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 61
+
+
+ 2900 02a9 AA010000 		.4byte	.LVL55
+ 2901 02ad F8010000 		.4byte	.LFE64
+ 2902 02b1 0100     		.2byte	0x1
+ 2903 02b3 51       		.byte	0x51
+ 2904 02b4 00000000 		.4byte	0
+ 2905 02b8 00000000 		.4byte	0
+ 2906              	.LLST10:
+ 2907 02bc 0A000000 		.4byte	.LVL6
+ 2908 02c0 16000000 		.4byte	.LVL7
+ 2909 02c4 0200     		.2byte	0x2
+ 2910 02c6 30       		.byte	0x30
+ 2911 02c7 9F       		.byte	0x9f
+ 2912 02c8 16000000 		.4byte	.LVL7
+ 2913 02cc EE010000 		.4byte	.LVL65
+ 2914 02d0 0100     		.2byte	0x1
+ 2915 02d2 54       		.byte	0x54
+ 2916 02d3 00000000 		.4byte	0
+ 2917 02d7 00000000 		.4byte	0
+ 2918              	.LLST11:
+ 2919 02db 1C000000 		.4byte	.LVL8
+ 2920 02df 36000000 		.4byte	.LVL10
+ 2921 02e3 0100     		.2byte	0x1
+ 2922 02e5 53       		.byte	0x53
+ 2923 02e6 36000000 		.4byte	.LVL10
+ 2924 02ea 92000000 		.4byte	.LVL18
+ 2925 02ee 0A00     		.2byte	0xa
+ 2926 02f0 74       		.byte	0x74
+ 2927 02f1 00       		.sleb128 0
+ 2928 02f2 33       		.byte	0x33
+ 2929 02f3 24       		.byte	0x24
+ 2930 02f4 03       		.byte	0x3
+ 2931 02f5 00000000 		.4byte	path_coordinates
+ 2932 02f9 22       		.byte	0x22
+ 2933 02fa 92000000 		.4byte	.LVL18
+ 2934 02fe E8000000 		.4byte	.LVL29
+ 2935 0302 0100     		.2byte	0x1
+ 2936 0304 53       		.byte	0x53
+ 2937 0305 E8000000 		.4byte	.LVL29
+ 2938 0309 F8000000 		.4byte	.LVL31
+ 2939 030d 0A00     		.2byte	0xa
+ 2940 030f 74       		.byte	0x74
+ 2941 0310 00       		.sleb128 0
+ 2942 0311 33       		.byte	0x33
+ 2943 0312 24       		.byte	0x24
+ 2944 0313 03       		.byte	0x3
+ 2945 0314 00000000 		.4byte	path_coordinates
+ 2946 0318 22       		.byte	0x22
+ 2947 0319 F8000000 		.4byte	.LVL31
+ 2948 031d 36010000 		.4byte	.LVL40
+ 2949 0321 0100     		.2byte	0x1
+ 2950 0323 53       		.byte	0x53
+ 2951 0324 36010000 		.4byte	.LVL40
+ 2952 0328 46010000 		.4byte	.LVL42
+ 2953 032c 0A00     		.2byte	0xa
+ 2954 032e 74       		.byte	0x74
+ 2955 032f 00       		.sleb128 0
+ 2956 0330 33       		.byte	0x33
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 62
+
+
+ 2957 0331 24       		.byte	0x24
+ 2958 0332 03       		.byte	0x3
+ 2959 0333 00000000 		.4byte	path_coordinates
+ 2960 0337 22       		.byte	0x22
+ 2961 0338 46010000 		.4byte	.LVL42
+ 2962 033c 86010000 		.4byte	.LVL51
+ 2963 0340 0100     		.2byte	0x1
+ 2964 0342 53       		.byte	0x53
+ 2965 0343 86010000 		.4byte	.LVL51
+ 2966 0347 96010000 		.4byte	.LVL53
+ 2967 034b 0A00     		.2byte	0xa
+ 2968 034d 74       		.byte	0x74
+ 2969 034e 00       		.sleb128 0
+ 2970 034f 33       		.byte	0x33
+ 2971 0350 24       		.byte	0x24
+ 2972 0351 03       		.byte	0x3
+ 2973 0352 00000000 		.4byte	path_coordinates
+ 2974 0356 22       		.byte	0x22
+ 2975 0357 96010000 		.4byte	.LVL53
+ 2976 035b D4010000 		.4byte	.LVL62
+ 2977 035f 0100     		.2byte	0x1
+ 2978 0361 53       		.byte	0x53
+ 2979 0362 D4010000 		.4byte	.LVL62
+ 2980 0366 E4010000 		.4byte	.LVL64
+ 2981 036a 0A00     		.2byte	0xa
+ 2982 036c 74       		.byte	0x74
+ 2983 036d 00       		.sleb128 0
+ 2984 036e 33       		.byte	0x33
+ 2985 036f 24       		.byte	0x24
+ 2986 0370 03       		.byte	0x3
+ 2987 0371 00000000 		.4byte	path_coordinates
+ 2988 0375 22       		.byte	0x22
+ 2989 0376 00000000 		.4byte	0
+ 2990 037a 00000000 		.4byte	0
+ 2991              	.LLST12:
+ 2992 037e 22000000 		.4byte	.LVL9
+ 2993 0382 E6000000 		.4byte	.LVL28
+ 2994 0386 0100     		.2byte	0x1
+ 2995 0388 55       		.byte	0x55
+ 2996 0389 E6000000 		.4byte	.LVL28
+ 2997 038d F8000000 		.4byte	.LVL31
+ 2998 0391 0A00     		.2byte	0xa
+ 2999 0393 74       		.byte	0x74
+ 3000 0394 00       		.sleb128 0
+ 3001 0395 33       		.byte	0x33
+ 3002 0396 24       		.byte	0x24
+ 3003 0397 03       		.byte	0x3
+ 3004 0398 04000000 		.4byte	path_coordinates+4
+ 3005 039c 22       		.byte	0x22
+ 3006 039d F8000000 		.4byte	.LVL31
+ 3007 03a1 34010000 		.4byte	.LVL39
+ 3008 03a5 0100     		.2byte	0x1
+ 3009 03a7 55       		.byte	0x55
+ 3010 03a8 34010000 		.4byte	.LVL39
+ 3011 03ac 46010000 		.4byte	.LVL42
+ 3012 03b0 0A00     		.2byte	0xa
+ 3013 03b2 74       		.byte	0x74
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 63
+
+
+ 3014 03b3 00       		.sleb128 0
+ 3015 03b4 33       		.byte	0x33
+ 3016 03b5 24       		.byte	0x24
+ 3017 03b6 03       		.byte	0x3
+ 3018 03b7 04000000 		.4byte	path_coordinates+4
+ 3019 03bb 22       		.byte	0x22
+ 3020 03bc 46010000 		.4byte	.LVL42
+ 3021 03c0 84010000 		.4byte	.LVL50
+ 3022 03c4 0100     		.2byte	0x1
+ 3023 03c6 55       		.byte	0x55
+ 3024 03c7 84010000 		.4byte	.LVL50
+ 3025 03cb 96010000 		.4byte	.LVL53
+ 3026 03cf 0A00     		.2byte	0xa
+ 3027 03d1 74       		.byte	0x74
+ 3028 03d2 00       		.sleb128 0
+ 3029 03d3 33       		.byte	0x33
+ 3030 03d4 24       		.byte	0x24
+ 3031 03d5 03       		.byte	0x3
+ 3032 03d6 04000000 		.4byte	path_coordinates+4
+ 3033 03da 22       		.byte	0x22
+ 3034 03db 96010000 		.4byte	.LVL53
+ 3035 03df D2010000 		.4byte	.LVL61
+ 3036 03e3 0100     		.2byte	0x1
+ 3037 03e5 55       		.byte	0x55
+ 3038 03e6 D2010000 		.4byte	.LVL61
+ 3039 03ea E4010000 		.4byte	.LVL64
+ 3040 03ee 0A00     		.2byte	0xa
+ 3041 03f0 74       		.byte	0x74
+ 3042 03f1 00       		.sleb128 0
+ 3043 03f2 33       		.byte	0x33
+ 3044 03f3 24       		.byte	0x24
+ 3045 03f4 03       		.byte	0x3
+ 3046 03f5 04000000 		.4byte	path_coordinates+4
+ 3047 03f9 22       		.byte	0x22
+ 3048 03fa 00000000 		.4byte	0
+ 3049 03fe 00000000 		.4byte	0
+ 3050              	.LLST13:
+ 3051 0402 94000000 		.4byte	.LVL19
+ 3052 0406 E4010000 		.4byte	.LVL64
+ 3053 040a 0100     		.2byte	0x1
+ 3054 040c 56       		.byte	0x56
+ 3055 040d 00000000 		.4byte	0
+ 3056 0411 00000000 		.4byte	0
+ 3057              	.LLST14:
+ 3058 0415 98000000 		.4byte	.LVL20
+ 3059 0419 E4010000 		.4byte	.LVL64
+ 3060 041d 0100     		.2byte	0x1
+ 3061 041f 5A       		.byte	0x5a
+ 3062 0420 00000000 		.4byte	0
+ 3063 0424 00000000 		.4byte	0
+ 3064              	.LLST15:
+ 3065 0428 00000000 		.4byte	.LVL84
+ 3066 042c 06000000 		.4byte	.LVL85
+ 3067 0430 0100     		.2byte	0x1
+ 3068 0432 50       		.byte	0x50
+ 3069 0433 06000000 		.4byte	.LVL85
+ 3070 0437 86000000 		.4byte	.LVL100
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 64
+
+
+ 3071 043b 0100     		.2byte	0x1
+ 3072 043d 56       		.byte	0x56
+ 3073 043e 86000000 		.4byte	.LVL100
+ 3074 0442 94000000 		.4byte	.LFE70
+ 3075 0446 0400     		.2byte	0x4
+ 3076 0448 F3       		.byte	0xf3
+ 3077 0449 01       		.uleb128 0x1
+ 3078 044a 50       		.byte	0x50
+ 3079 044b 9F       		.byte	0x9f
+ 3080 044c 00000000 		.4byte	0
+ 3081 0450 00000000 		.4byte	0
+ 3082              	.LLST16:
+ 3083 0454 4A000000 		.4byte	.LVL122
+ 3084 0458 4E000000 		.4byte	.LVL123
+ 3085 045c 0200     		.2byte	0x2
+ 3086 045e 30       		.byte	0x30
+ 3087 045f 9F       		.byte	0x9f
+ 3088 0460 4E000000 		.4byte	.LVL123
+ 3089 0464 C0000000 		.4byte	.LFE72
+ 3090 0468 0100     		.2byte	0x1
+ 3091 046a 54       		.byte	0x54
+ 3092 046b 00000000 		.4byte	0
+ 3093 046f 00000000 		.4byte	0
+ 3094              		.section	.debug_aranges,"",%progbits
+ 3095 0000 5C000000 		.4byte	0x5c
+ 3096 0004 0200     		.2byte	0x2
+ 3097 0006 00000000 		.4byte	.Ldebug_info0
+ 3098 000a 04       		.byte	0x4
+ 3099 000b 00       		.byte	0
+ 3100 000c 0000     		.2byte	0
+ 3101 000e 0000     		.2byte	0
+ 3102 0010 00000000 		.4byte	.LFB65
+ 3103 0014 74000000 		.4byte	.LFE65-.LFB65
+ 3104 0018 00000000 		.4byte	.LFB64
+ 3105 001c F8010000 		.4byte	.LFE64-.LFB64
+ 3106 0020 00000000 		.4byte	.LFB66
+ 3107 0024 10000000 		.4byte	.LFE66-.LFB66
+ 3108 0028 00000000 		.4byte	.LFB67
+ 3109 002c 40000000 		.4byte	.LFE67-.LFB67
+ 3110 0030 00000000 		.4byte	.LFB68
+ 3111 0034 40000000 		.4byte	.LFE68-.LFB68
+ 3112 0038 00000000 		.4byte	.LFB69
+ 3113 003c 10000000 		.4byte	.LFE69-.LFB69
+ 3114 0040 00000000 		.4byte	.LFB70
+ 3115 0044 94000000 		.4byte	.LFE70-.LFB70
+ 3116 0048 00000000 		.4byte	.LFB71
+ 3117 004c 58000000 		.4byte	.LFE71-.LFB71
+ 3118 0050 00000000 		.4byte	.LFB72
+ 3119 0054 C0000000 		.4byte	.LFE72-.LFB72
+ 3120 0058 00000000 		.4byte	0
+ 3121 005c 00000000 		.4byte	0
+ 3122              		.section	.debug_ranges,"",%progbits
+ 3123              	.Ldebug_ranges0:
+ 3124 0000 0A000000 		.4byte	.LBB2
+ 3125 0004 0C000000 		.4byte	.LBE2
+ 3126 0008 14000000 		.4byte	.LBB4
+ 3127 000c F8010000 		.4byte	.LBE4
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 65
+
+
+ 3128 0010 00000000 		.4byte	0
+ 3129 0014 00000000 		.4byte	0
+ 3130 0018 00000000 		.4byte	.LFB65
+ 3131 001c 74000000 		.4byte	.LFE65
+ 3132 0020 00000000 		.4byte	.LFB64
+ 3133 0024 F8010000 		.4byte	.LFE64
+ 3134 0028 00000000 		.4byte	.LFB66
+ 3135 002c 10000000 		.4byte	.LFE66
+ 3136 0030 00000000 		.4byte	.LFB67
+ 3137 0034 40000000 		.4byte	.LFE67
+ 3138 0038 00000000 		.4byte	.LFB68
+ 3139 003c 40000000 		.4byte	.LFE68
+ 3140 0040 00000000 		.4byte	.LFB69
+ 3141 0044 10000000 		.4byte	.LFE69
+ 3142 0048 00000000 		.4byte	.LFB70
+ 3143 004c 94000000 		.4byte	.LFE70
+ 3144 0050 00000000 		.4byte	.LFB71
+ 3145 0054 58000000 		.4byte	.LFE71
+ 3146 0058 00000000 		.4byte	.LFB72
+ 3147 005c C0000000 		.4byte	.LFE72
+ 3148 0060 00000000 		.4byte	0
+ 3149 0064 00000000 		.4byte	0
+ 3150              		.section	.debug_line,"",%progbits
+ 3151              	.Ldebug_line0:
+ 3152 0000 03040000 		.section	.debug_str,"MS",%progbits,1
+ 3152      0200FE01 
+ 3152      00000201 
+ 3152      FB0E0D00 
+ 3152      01010101 
+ 3153              	.LASF53:
+ 3154 0000 676F5374 		.ascii	"goStraight\000"
+ 3154      72616967 
+ 3154      687400
+ 3155              	.LASF27:
+ 3156 000b 474F5F53 		.ascii	"GO_STRAIGHT\000"
+ 3156      54524149 
+ 3156      47485400 
+ 3157              	.LASF35:
+ 3158 0017 73746172 		.ascii	"start_column\000"
+ 3158      745F636F 
+ 3158      6C756D6E 
+ 3158      00
+ 3159              	.LASF90:
+ 3160 0024 50574D5F 		.ascii	"PWM_1_Start\000"
+ 3160      315F5374 
+ 3160      61727400 
+ 3161              	.LASF68:
+ 3162 0030 63757272 		.ascii	"current_state\000"
+ 3162      656E745F 
+ 3162      73746174 
+ 3162      6500
+ 3163              	.LASF37:
+ 3164 003e 74617267 		.ascii	"target_column\000"
+ 3164      65745F63 
+ 3164      6F6C756D 
+ 3164      6E00
+ 3165              	.LASF22:
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 66
+
+
+ 3166 004c 4E4F5254 		.ascii	"NORTH\000"
+ 3166      4800
+ 3167              	.LASF63:
+ 3168 0052 636F6D70 		.ascii	"comp1_sum\000"
+ 3168      315F7375 
+ 3168      6D00
+ 3169              	.LASF55:
+ 3170 005c 77686565 		.ascii	"wheelCircumference_cm\000"
+ 3170      6C436972 
+ 3170      63756D66 
+ 3170      6572656E 
+ 3170      63655F63 
+ 3171              	.LASF10:
+ 3172 0072 73697A65 		.ascii	"sizetype\000"
+ 3172      74797065 
+ 3172      00
+ 3173              	.LASF20:
+ 3174 007b 7475726E 		.ascii	"turnDirection\000"
+ 3174      44697265 
+ 3174      6374696F 
+ 3174      6E00
+ 3175              	.LASF99:
+ 3176 0089 6D61696E 		.ascii	"main\000"
+ 3176      00
+ 3177              	.LASF34:
+ 3178 008e 73746172 		.ascii	"start_row\000"
+ 3178      745F726F 
+ 3178      7700
+ 3179              	.LASF88:
+ 3180 0098 436F6D70 		.ascii	"Comp_3_Start\000"
+ 3180      5F335F53 
+ 3180      74617274 
+ 3180      00
+ 3181              	.LASF38:
+ 3182 00a5 63757272 		.ascii	"current_direction\000"
+ 3182      656E745F 
+ 3182      64697265 
+ 3182      6374696F 
+ 3182      6E00
+ 3183              	.LASF2:
+ 3184 00b7 73686F72 		.ascii	"short int\000"
+ 3184      7420696E 
+ 3184      7400
+ 3185              	.LASF31:
+ 3186 00c1 526F626F 		.ascii	"RobotState\000"
+ 3186      74537461 
+ 3186      746500
+ 3187              	.LASF52:
+ 3188 00cc 676F5374 		.ascii	"goStraight_cm\000"
+ 3188      72616967 
+ 3188      68745F63 
+ 3188      6D00
+ 3189              	.LASF73:
+ 3190 00da 54696D65 		.ascii	"Timer_1_ReadStatusRegister\000"
+ 3190      725F315F 
+ 3190      52656164 
+ 3190      53746174 
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 67
+
+
+ 3190      75735265 
+ 3191              	.LASF14:
+ 3192 00f5 75696E74 		.ascii	"uint8\000"
+ 3192      3800
+ 3193              	.LASF0:
+ 3194 00fb 7369676E 		.ascii	"signed char\000"
+ 3194      65642063 
+ 3194      68617200 
+ 3195              	.LASF82:
+ 3196 0107 51756164 		.ascii	"QuadDec_M1_GetCounter\000"
+ 3196      4465635F 
+ 3196      4D315F47 
+ 3196      6574436F 
+ 3196      756E7465 
+ 3197              	.LASF81:
+ 3198 011d 50574D5F 		.ascii	"PWM_1_ReadCompare\000"
+ 3198      315F5265 
+ 3198      6164436F 
+ 3198      6D706172 
+ 3198      6500
+ 3199              	.LASF75:
+ 3200 012f 50574D5F 		.ascii	"PWM_2_WriteCompare\000"
+ 3200      325F5772 
+ 3200      69746543 
+ 3200      6F6D7061 
+ 3200      726500
+ 3201              	.LASF17:
+ 3202 0142 666C6F61 		.ascii	"float\000"
+ 3202      7400
+ 3203              	.LASF95:
+ 3204 0148 51756164 		.ascii	"QuadDec_M2_Start\000"
+ 3204      4465635F 
+ 3204      4D325F53 
+ 3204      74617274 
+ 3204      00
+ 3205              	.LASF6:
+ 3206 0159 6C6F6E67 		.ascii	"long long int\000"
+ 3206      206C6F6E 
+ 3206      6720696E 
+ 3206      7400
+ 3207              	.LASF80:
+ 3208 0167 50574D5F 		.ascii	"PWM_2_ReadCompare\000"
+ 3208      325F5265 
+ 3208      6164436F 
+ 3208      6D706172 
+ 3208      6500
+ 3209              	.LASF28:
+ 3210 0179 5455524E 		.ascii	"TURN_LEFT\000"
+ 3210      5F4C4546 
+ 3210      5400
+ 3211              	.LASF11:
+ 3212 0183 63686172 		.ascii	"char\000"
+ 3212      00
+ 3213              	.LASF21:
+ 3214 0188 4D6F7665 		.ascii	"Movement\000"
+ 3214      6D656E74 
+ 3214      00
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 68
+
+
+ 3215              	.LASF4:
+ 3216 0191 6C6F6E67 		.ascii	"long int\000"
+ 3216      20696E74 
+ 3216      00
+ 3217              	.LASF29:
+ 3218 019a 5455524E 		.ascii	"TURN_RIGHT\000"
+ 3218      5F524947 
+ 3218      485400
+ 3219              	.LASF84:
+ 3220 01a5 6973725F 		.ascii	"isr_1_StartEx\000"
+ 3220      315F5374 
+ 3220      61727445 
+ 3220      7800
+ 3221              	.LASF36:
+ 3222 01b3 74617267 		.ascii	"target_row\000"
+ 3222      65745F72 
+ 3222      6F7700
+ 3223              	.LASF87:
+ 3224 01be 436F6D70 		.ascii	"Comp_2_Start\000"
+ 3224      5F325F53 
+ 3224      74617274 
+ 3224      00
+ 3225              	.LASF93:
+ 3226 01cb 50574D5F 		.ascii	"PWM_2_WritePeriod\000"
+ 3226      325F5772 
+ 3226      69746550 
+ 3226      6572696F 
+ 3226      6400
+ 3227              	.LASF24:
+ 3228 01dd 534F5554 		.ascii	"SOUTH\000"
+ 3228      4800
+ 3229              	.LASF74:
+ 3230 01e3 50574D5F 		.ascii	"PWM_1_WriteCompare\000"
+ 3230      315F5772 
+ 3230      69746543 
+ 3230      6F6D7061 
+ 3230      726500
+ 3231              	.LASF9:
+ 3232 01f6 6C6F6E67 		.ascii	"long double\000"
+ 3232      20646F75 
+ 3232      626C6500 
+ 3233              	.LASF33:
+ 3234 0202 6765744D 		.ascii	"getMovements\000"
+ 3234      6F76656D 
+ 3234      656E7473 
+ 3234      00
+ 3235              	.LASF1:
+ 3236 020f 756E7369 		.ascii	"unsigned char\000"
+ 3236      676E6564 
+ 3236      20636861 
+ 3236      7200
+ 3237              	.LASF58:
+ 3238 021d 636F756E 		.ascii	"counter\000"
+ 3238      74657200 
+ 3239              	.LASF66:
+ 3240 0225 70617468 		.ascii	"path_coordinates\000"
+ 3240      5F636F6F 
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 69
+
+
+ 3240      7264696E 
+ 3240      61746573 
+ 3240      00
+ 3241              	.LASF26:
+ 3242 0236 526F626F 		.ascii	"RobotDirection\000"
+ 3242      74446972 
+ 3242      65637469 
+ 3242      6F6E00
+ 3243              	.LASF49:
+ 3244 0245 7475726E 		.ascii	"turnLeft\000"
+ 3244      4C656674 
+ 3244      00
+ 3245              	.LASF23:
+ 3246 024e 45415354 		.ascii	"EAST\000"
+ 3246      00
+ 3247              	.LASF78:
+ 3248 0253 536F7574 		.ascii	"Sout_R_Read\000"
+ 3248      5F525F52 
+ 3248      65616400 
+ 3249              	.LASF7:
+ 3250 025f 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 3250      206C6F6E 
+ 3250      6720756E 
+ 3250      7369676E 
+ 3250      65642069 
+ 3251              	.LASF45:
+ 3252 0276 6E657874 		.ascii	"next_column\000"
+ 3252      5F636F6C 
+ 3252      756D6E00 
+ 3253              	.LASF44:
+ 3254 0282 6E657874 		.ascii	"next_row\000"
+ 3254      5F726F77 
+ 3254      00
+ 3255              	.LASF8:
+ 3256 028b 756E7369 		.ascii	"unsigned int\000"
+ 3256      676E6564 
+ 3256      20696E74 
+ 3256      00
+ 3257              	.LASF85:
+ 3258 0298 436F6D70 		.ascii	"Comp_0_Start\000"
+ 3258      5F305F53 
+ 3258      74617274 
+ 3258      00
+ 3259              	.LASF65:
+ 3260 02a5 636F6D70 		.ascii	"comp3_sum\000"
+ 3260      335F7375 
+ 3260      6D00
+ 3261              	.LASF32:
+ 3262 02af 6973725F 		.ascii	"isr_1_handler\000"
+ 3262      315F6861 
+ 3262      6E646C65 
+ 3262      7200
+ 3263              	.LASF41:
+ 3264 02bd 7475726E 		.ascii	"turn\000"
+ 3264      00
+ 3265              	.LASF47:
+ 3266 02c2 64656C74 		.ascii	"deltaY\000"
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 70
+
+
+ 3266      615900
+ 3267              	.LASF62:
+ 3268 02c9 636F6D70 		.ascii	"comp0_sum\000"
+ 3268      305F7375 
+ 3268      6D00
+ 3269              	.LASF91:
+ 3270 02d3 50574D5F 		.ascii	"PWM_2_Start\000"
+ 3270      325F5374 
+ 3270      61727400 
+ 3271              	.LASF42:
+ 3272 02df 63757272 		.ascii	"current_row\000"
+ 3272      656E745F 
+ 3272      726F7700 
+ 3273              	.LASF3:
+ 3274 02eb 73686F72 		.ascii	"short unsigned int\000"
+ 3274      7420756E 
+ 3274      7369676E 
+ 3274      65642069 
+ 3274      6E7400
+ 3275              	.LASF79:
+ 3276 02fe 51756164 		.ascii	"QuadDec_M1_SetCounter\000"
+ 3276      4465635F 
+ 3276      4D315F53 
+ 3276      6574436F 
+ 3276      756E7465 
+ 3277              	.LASF19:
+ 3278 0314 64697374 		.ascii	"distance\000"
+ 3278      616E6365 
+ 3278      00
+ 3279              	.LASF48:
+ 3280 031d 73746F70 		.ascii	"stop\000"
+ 3280      00
+ 3281              	.LASF51:
+ 3282 0322 72657665 		.ascii	"reverse\000"
+ 3282      72736500 
+ 3283              	.LASF64:
+ 3284 032a 636F6D70 		.ascii	"comp2_sum\000"
+ 3284      325F7375 
+ 3284      6D00
+ 3285              	.LASF13:
+ 3286 0334 696E7433 		.ascii	"int32_t\000"
+ 3286      325F7400 
+ 3287              	.LASF56:
+ 3288 033c 74696D65 		.ascii	"timeInterval_s\000"
+ 3288      496E7465 
+ 3288      7276616C 
+ 3288      5F7300
+ 3289              	.LASF61:
+ 3290 034b 5F426F6F 		.ascii	"_Bool\000"
+ 3290      6C00
+ 3291              	.LASF40:
+ 3292 0351 73746570 		.ascii	"stepCount\000"
+ 3292      436F756E 
+ 3292      7400
+ 3293              	.LASF83:
+ 3294 035b 54696D65 		.ascii	"Timer_1_Start\000"
+ 3294      725F315F 
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 71
+
+
+ 3294      53746172 
+ 3294      7400
+ 3295              	.LASF25:
+ 3296 0369 57455354 		.ascii	"WEST\000"
+ 3296      00
+ 3297              	.LASF92:
+ 3298 036e 50574D5F 		.ascii	"PWM_1_WritePeriod\000"
+ 3298      315F5772 
+ 3298      69746550 
+ 3298      6572696F 
+ 3298      6400
+ 3299              	.LASF15:
+ 3300 0380 75696E74 		.ascii	"uint32\000"
+ 3300      333200
+ 3301              	.LASF97:
+ 3302 0387 6D61696E 		.ascii	"main.c\000"
+ 3302      2E6300
+ 3303              	.LASF5:
+ 3304 038e 6C6F6E67 		.ascii	"long unsigned int\000"
+ 3304      20756E73 
+ 3304      69676E65 
+ 3304      6420696E 
+ 3304      7400
+ 3305              	.LASF16:
+ 3306 03a0 696E7433 		.ascii	"int32\000"
+ 3306      3200
+ 3307              	.LASF18:
+ 3308 03a6 646F7562 		.ascii	"double\000"
+ 3308      6C6500
+ 3309              	.LASF94:
+ 3310 03ad 51756164 		.ascii	"QuadDec_M1_Start\000"
+ 3310      4465635F 
+ 3310      4D315F53 
+ 3310      74617274 
+ 3310      00
+ 3311              	.LASF54:
+ 3312 03be 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 3312      52784275 
+ 3312      66666572 
+ 3312      00
+ 3313              	.LASF77:
+ 3314 03cb 536F7574 		.ascii	"Sout_M1_Read\000"
+ 3314      5F4D315F 
+ 3314      52656164 
+ 3314      00
+ 3315              	.LASF60:
+ 3316 03d8 69735475 		.ascii	"isTurning\000"
+ 3316      726E696E 
+ 3316      6700
+ 3317              	.LASF59:
+ 3318 03e2 636F756E 		.ascii	"count\000"
+ 3318      7400
+ 3319              	.LASF12:
+ 3320 03e8 5F5F696E 		.ascii	"__int32_t\000"
+ 3320      7433325F 
+ 3320      7400
+ 3321              	.LASF89:
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 72
+
+
+ 3322 03f2 436C6F63 		.ascii	"Clock_PWM_Start\000"
+ 3322      6B5F5057 
+ 3322      4D5F5374 
+ 3322      61727400 
+ 3323              	.LASF67:
+ 3324 0402 70617468 		.ascii	"path\000"
+ 3324      00
+ 3325              	.LASF69:
+ 3326 0407 436F6D70 		.ascii	"Comp_0_GetCompare\000"
+ 3326      5F305F47 
+ 3326      6574436F 
+ 3326      6D706172 
+ 3326      6500
+ 3327              	.LASF46:
+ 3328 0419 64656C74 		.ascii	"deltaX\000"
+ 3328      615800
+ 3329              	.LASF30:
+ 3330 0420 53544F50 		.ascii	"STOP\000"
+ 3330      00
+ 3331              	.LASF39:
+ 3332 0425 6D6F7665 		.ascii	"movement_count\000"
+ 3332      6D656E74 
+ 3332      5F636F75 
+ 3332      6E7400
+ 3333              	.LASF57:
+ 3334 0434 70617468 		.ascii	"path_length\000"
+ 3334      5F6C656E 
+ 3334      67746800 
+ 3335              	.LASF70:
+ 3336 0440 436F6D70 		.ascii	"Comp_1_GetCompare\000"
+ 3336      5F315F47 
+ 3336      6574436F 
+ 3336      6D706172 
+ 3336      6500
+ 3337              	.LASF71:
+ 3338 0452 436F6D70 		.ascii	"Comp_2_GetCompare\000"
+ 3338      5F325F47 
+ 3338      6574436F 
+ 3338      6D706172 
+ 3338      6500
+ 3339              	.LASF96:
+ 3340 0464 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 3340      43313120 
+ 3340      352E342E 
+ 3340      31203230 
+ 3340      31363036 
+ 3341 0497 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m3 -mthumb -g -O"
+ 3341      20726576 
+ 3341      6973696F 
+ 3341      6E203233 
+ 3341      37373135 
+ 3342 04ca 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 3342      66756E63 
+ 3342      74696F6E 
+ 3342      2D736563 
+ 3342      74696F6E 
+ 3343              	.LASF43:
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccxGnLto.s 			page 73
+
+
+ 3344 04f2 63757272 		.ascii	"current_column\000"
+ 3344      656E745F 
+ 3344      636F6C75 
+ 3344      6D6E00
+ 3345              	.LASF98:
+ 3346 0501 433A5C55 		.ascii	"C:\\Users\\dulan\\OneDrive\\Desktop\\ENGGEN\\2023_s"
+ 3346      73657273 
+ 3346      5C64756C 
+ 3346      616E5C4F 
+ 3346      6E654472 
+ 3347 052e 656D325C 		.ascii	"em2\\301\\301_15_path_following\\Additional_HD.cyds"
+ 3347      3330315C 
+ 3347      3330315F 
+ 3347      31355F70 
+ 3347      6174685F 
+ 3348 055e 6E00     		.ascii	"n\000"
+ 3349              	.LASF72:
+ 3350 0560 436F6D70 		.ascii	"Comp_3_GetCompare\000"
+ 3350      5F335F47 
+ 3350      6574436F 
+ 3350      6D706172 
+ 3350      6500
+ 3351              	.LASF76:
+ 3352 0572 536F7574 		.ascii	"Sout_L_Read\000"
+ 3352      5F4C5F52 
+ 3352      65616400 
+ 3353              	.LASF50:
+ 3354 057e 7475726E 		.ascii	"turnRight\000"
+ 3354      52696768 
+ 3354      7400
+ 3355              	.LASF86:
+ 3356 0588 436F6D70 		.ascii	"Comp_1_Start\000"
+ 3356      5F315F53 
+ 3356      74617274 
+ 3356      00
+ 3357              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

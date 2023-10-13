@@ -25,6 +25,7 @@
  *
  * ========================================
 */
+//WORKS 90% of the time
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -104,7 +105,7 @@ void stop(){
 
 void turnLeft(){
     PWM_1_WriteCompare(70);
-    PWM_2_WriteCompare(30);
+    PWM_2_WriteCompare(35);
 //    CyDelay(350);
     while(Sout_L_Read()==0){//wait while left is on line
        ;;
@@ -115,10 +116,11 @@ void turnLeft(){
     isTurning=false;
     PWM_1_WriteCompare(65);
     PWM_2_WriteCompare(66);
+
     
 }
 void turnRight(){
-    PWM_1_WriteCompare(30);
+    PWM_1_WriteCompare(35);
     PWM_2_WriteCompare(70);
     while(Sout_R_Read()==0){//wait while left is on line
        ;;
@@ -129,7 +131,6 @@ void turnRight(){
     isTurning=false;
     PWM_1_WriteCompare(65);
     PWM_2_WriteCompare(66);
-
 }
     
 
