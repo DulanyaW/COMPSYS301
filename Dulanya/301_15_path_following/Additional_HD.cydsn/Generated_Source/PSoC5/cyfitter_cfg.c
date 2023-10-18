@@ -22,7 +22,6 @@
 #include "cyfitter.h"
 #include "CyLib.h"
 #include "cyfitter_cfg.h"
-#include "cyapicallbacks.h"
 
 #define CY_NEED_CYCLOCKSTARTUPERROR 1
 
