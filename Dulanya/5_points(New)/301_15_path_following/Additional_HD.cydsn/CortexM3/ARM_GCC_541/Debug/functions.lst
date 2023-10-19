@@ -1,0 +1,4557 @@
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"functions.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.getCurrentDirection,"ax",%progbits
+  20              		.align	2
+  21              		.global	getCurrentDirection
+  22              		.thumb
+  23              		.thumb_func
+  24              		.type	getCurrentDirection, %function
+  25              	getCurrentDirection:
+  26              	.LFB64:
+  27              		.file 1 "functions.c"
+   1:functions.c   **** 
+   2:functions.c   **** #include "program.h"
+   3:functions.c   **** 
+   4:functions.c   **** Movement movementArray[25];
+   5:functions.c   **** RobotDirection robot_direction;
+   6:functions.c   **** 
+   7:functions.c   **** 
+   8:functions.c   **** // Define the grid map with obstacles (1) and open cells (0)
+   9:functions.c   **** int map[ROWS][COLS] = {
+  10:functions.c   ****     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+  11:functions.c   ****     {1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+  12:functions.c   ****     {1,0,1,0,1,1,1,1,1,0,1,1,1,0,1,1,1,0,1},
+  13:functions.c   ****     {1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1,0,1},
+  14:functions.c   ****     {1,1,1,0,1,0,1,0,1,1,1,0,1,0,1,1,1,0,1},
+  15:functions.c   ****     {1,0,0,0,1,0,1,0,0,0,1,0,1,0,0,0,0,0,1},
+  16:functions.c   ****     {1,0,1,1,1,0,1,0,1,0,1,0,1,0,1,1,1,0,1},
+  17:functions.c   ****     {1,0,1,0,1,0,0,0,1,0,1,0,1,0,1,0,0,0,1},
+  18:functions.c   ****     {1,0,1,0,1,0,1,1,1,0,1,0,1,0,1,0,1,1,1},
+  19:functions.c   ****     {1,0,0,0,1,0,1,0,0,0,1,0,0,0,1,0,0,0,1},
+  20:functions.c   ****     {1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1},
+  21:functions.c   ****     {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+  22:functions.c   ****     {1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1},
+  23:functions.c   ****     {1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1},
+  24:functions.c   ****     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+  25:functions.c   **** };
+  26:functions.c   **** 
+  27:functions.c   **** // Structure to represent a node in the grid
+  28:functions.c   **** typedef struct {
+  29:functions.c   ****     int x, y;
+  30:functions.c   **** } Node;
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 2
+
+
+  31:functions.c   **** 
+  32:functions.c   **** // Structure to represent a cell in the grid
+  33:functions.c   **** typedef struct {
+  34:functions.c   ****     int cost;
+  35:functions.c   ****     Node parent;
+  36:functions.c   **** } Cell;
+  37:functions.c   **** 
+  38:functions.c   **** // Initialize the path length
+  39:functions.c   **** int pathLength = 0;
+  40:functions.c   **** 
+  41:functions.c   **** // Trace the path from target to start
+  42:functions.c   **** Node path[ROWS * COLS];
+  43:functions.c   **** 
+  44:functions.c   **** RobotDirection getCurrentDirection(){
+  28              		.loc 1 44 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  45:functions.c   ****     return robot_direction;
+  46:functions.c   **** }
+  33              		.loc 1 46 0
+  34 0000 014B     		ldr	r3, .L2
+  35 0002 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+  36 0004 7047     		bx	lr
+  37              	.L3:
+  38 0006 00BF     		.align	2
+  39              	.L2:
+  40 0008 00000000 		.word	robot_direction
+  41              		.cfi_endproc
+  42              	.LFE64:
+  43              		.size	getCurrentDirection, .-getCurrentDirection
+  44              		.section	.text.isValidCell,"ax",%progbits
+  45              		.align	2
+  46              		.global	isValidCell
+  47              		.thumb
+  48              		.thumb_func
+  49              		.type	isValidCell, %function
+  50              	isValidCell:
+  51              	.LFB65:
+  47:functions.c   **** 
+  48:functions.c   **** // Function to check if a cell is within the map boundaries
+  49:functions.c   **** bool isValidCell(int x, int y) {
+  52              		.loc 1 49 0
+  53              		.cfi_startproc
+  54              		@ args = 0, pretend = 0, frame = 0
+  55              		@ frame_needed = 0, uses_anonymous_args = 0
+  56              		@ link register save eliminated.
+  57              	.LVL0:
+  50:functions.c   ****     return (x >= 0 && x < ROWS && y >= 0 && y < COLS);
+  58              		.loc 1 50 0
+  59 0000 0E28     		cmp	r0, #14
+  60 0002 05D8     		bhi	.L6
+  61              		.loc 1 50 0 is_stmt 0 discriminator 1
+  62 0004 0029     		cmp	r1, #0
+  63 0006 05DB     		blt	.L7
+  64              		.loc 1 50 0 discriminator 3
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 3
+
+
+  65 0008 1229     		cmp	r1, #18
+  66 000a 05DD     		ble	.L8
+  67              		.loc 1 50 0
+  68 000c 0020     		movs	r0, #0
+  69              	.LVL1:
+  70 000e 7047     		bx	lr
+  71              	.LVL2:
+  72              	.L6:
+  73 0010 0020     		movs	r0, #0
+  74              	.LVL3:
+  75 0012 7047     		bx	lr
+  76              	.LVL4:
+  77              	.L7:
+  78 0014 0020     		movs	r0, #0
+  79              	.LVL5:
+  80 0016 7047     		bx	lr
+  81              	.LVL6:
+  82              	.L8:
+  83 0018 0120     		movs	r0, #1
+  84              	.LVL7:
+  51:functions.c   **** }
+  85              		.loc 1 51 0 is_stmt 1
+  86 001a 7047     		bx	lr
+  87              		.cfi_endproc
+  88              	.LFE65:
+  89              		.size	isValidCell, .-isValidCell
+  90              		.section	.text.dijkstra,"ax",%progbits
+  91              		.align	2
+  92              		.global	dijkstra
+  93              		.thumb
+  94              		.thumb_func
+  95              		.type	dijkstra, %function
+  96              	dijkstra:
+  97              	.LFB66:
+  52:functions.c   **** 
+  53:functions.c   **** // Function to find the shortest path using Dijkstra's algorithm
+  54:functions.c   **** void dijkstra(int startX, int startY, int targetX, int targetY) {
+  98              		.loc 1 54 0
+  99              		.cfi_startproc
+ 100              		@ args = 0, pretend = 0, frame = 5760
+ 101              		@ frame_needed = 0, uses_anonymous_args = 0
+ 102              	.LVL8:
+ 103 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 104              		.cfi_def_cfa_offset 36
+ 105              		.cfi_offset 4, -36
+ 106              		.cfi_offset 5, -32
+ 107              		.cfi_offset 6, -28
+ 108              		.cfi_offset 7, -24
+ 109              		.cfi_offset 8, -20
+ 110              		.cfi_offset 9, -16
+ 111              		.cfi_offset 10, -12
+ 112              		.cfi_offset 11, -8
+ 113              		.cfi_offset 14, -4
+ 114 0004 ADF5B45D 		sub	sp, sp, #5760
+ 115              		.cfi_def_cfa_offset 5796
+ 116 0008 81B0     		sub	sp, sp, #4
+ 117              		.cfi_def_cfa_offset 5800
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 4
+
+
+ 118 000a 8146     		mov	r9, r0
+ 119 000c 8B46     		mov	fp, r1
+ 120 000e 9246     		mov	r10, r2
+ 121 0010 0193     		str	r3, [sp, #4]
+ 122              	.LVL9:
+ 123              	.LBB2:
+  55:functions.c   ****     // Create an array to store visited status and cell information
+  56:functions.c   ****     Cell grid[ROWS][COLS];
+  57:functions.c   **** 
+  58:functions.c   ****     // Initialize all cells with maximum cost and invalid parent
+  59:functions.c   ****     for (int i = 0; i < ROWS; i++) {
+ 124              		.loc 1 59 0
+ 125 0012 0025     		movs	r5, #0
+ 126 0014 16E0     		b	.L10
+ 127              	.LVL10:
+ 128              	.L11:
+ 129              	.LBB3:
+  60:functions.c   ****         for (int j = 0; j < COLS; j++) {
+  61:functions.c   ****             grid[i][j].cost = INT_MAX;
+ 130              		.loc 1 61 0 discriminator 3
+ 131 0016 0DF62410 		addw	r0, sp, #2340
+ 132 001a 02EB4201 		add	r1, r2, r2, lsl #1
+ 133 001e E423     		movs	r3, #228
+ 134 0020 03FB05F3 		mul	r3, r3, r5
+ 135 0024 03EB8103 		add	r3, r3, r1, lsl #2
+ 136 0028 C118     		adds	r1, r0, r3
+ 137 002a 6FF00044 		mvn	r4, #-2147483648
+ 138 002e C450     		str	r4, [r0, r3]
+  62:functions.c   ****             grid[i][j].parent.x = -1;
+ 139              		.loc 1 62 0 discriminator 3
+ 140 0030 4FF0FF33 		mov	r3, #-1
+ 141 0034 4B60     		str	r3, [r1, #4]
+  63:functions.c   ****             grid[i][j].parent.y = -1;
+ 142              		.loc 1 63 0 discriminator 3
+ 143 0036 8B60     		str	r3, [r1, #8]
+  60:functions.c   ****         for (int j = 0; j < COLS; j++) {
+ 144              		.loc 1 60 0 discriminator 3
+ 145 0038 0132     		adds	r2, r2, #1
+ 146              	.LVL11:
+ 147 003a 00E0     		b	.L12
+ 148              	.LVL12:
+ 149              	.L26:
+ 150              	.LBE3:
+ 151 003c 0022     		movs	r2, #0
+ 152              	.L12:
+ 153              	.LVL13:
+ 154              	.LBB4:
+  60:functions.c   ****         for (int j = 0; j < COLS; j++) {
+ 155              		.loc 1 60 0 is_stmt 0 discriminator 1
+ 156 003e 122A     		cmp	r2, #18
+ 157 0040 E9DD     		ble	.L11
+ 158              	.LBE4:
+  59:functions.c   ****         for (int j = 0; j < COLS; j++) {
+ 159              		.loc 1 59 0 is_stmt 1 discriminator 2
+ 160 0042 0135     		adds	r5, r5, #1
+ 161              	.LVL14:
+ 162              	.L10:
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 5
+
+
+  59:functions.c   ****         for (int j = 0; j < COLS; j++) {
+ 163              		.loc 1 59 0 is_stmt 0 discriminator 1
+ 164 0044 0E2D     		cmp	r5, #14
+ 165 0046 F9DD     		ble	.L26
+ 166              	.LBE2:
+  64:functions.c   ****         }
+  65:functions.c   ****     }
+  66:functions.c   **** 
+  67:functions.c   ****     // Initialize the starting cell
+  68:functions.c   ****     grid[startX][startY].cost = 0;
+ 167              		.loc 1 68 0 is_stmt 1
+ 168 0048 0BEB4B02 		add	r2, fp, fp, lsl #1
+ 169 004c E423     		movs	r3, #228
+ 170 004e 03FB09F3 		mul	r3, r3, r9
+ 171 0052 03EB8203 		add	r3, r3, r2, lsl #2
+ 172 0056 0021     		movs	r1, #0
+ 173 0058 0DF62412 		addw	r2, sp, #2340
+ 174 005c D150     		str	r1, [r2, r3]
+  69:functions.c   ****     Node currentNode = {startX, startY};
+ 175              		.loc 1 69 0
+ 176 005e CDF81C99 		str	r9, [sp, #2332]
+ 177 0062 CDF820B9 		str	fp, [sp, #2336]
+  70:functions.c   **** 
+  71:functions.c   ****    
+  72:functions.c   ****     // Create an array to store possible movement directions
+  73:functions.c   ****     int dx[] = {1, -1, 0, 0};
+ 178              		.loc 1 73 0
+ 179 0066 0DF60C15 		addw	r5, sp, #2316
+ 180              	.LVL15:
+ 181 006a 674C     		ldr	r4, .L29
+ 182 006c 94E80F00 		ldmia	r4, {r0, r1, r2, r3}
+ 183 0070 85E80F00 		stmia	r5, {r0, r1, r2, r3}
+  74:functions.c   ****     int dy[] = {0, 0, 1, -1};
+ 184              		.loc 1 74 0
+ 185 0074 0DF6FC05 		addw	r5, sp, #2300
+ 186 0078 1034     		adds	r4, r4, #16
+ 187 007a 94E80F00 		ldmia	r4, {r0, r1, r2, r3}
+ 188 007e 85E80F00 		stmia	r5, {r0, r1, r2, r3}
+  75:functions.c   **** 
+  76:functions.c   ****     // Main loop
+  77:functions.c   ****     while (currentNode.x != targetX || currentNode.y != targetY) {
+ 189              		.loc 1 77 0
+ 190 0082 6EE0     		b	.L13
+ 191              	.L21:
+ 192              	.LVL16:
+ 193              	.LBB5:
+  78:functions.c   ****         // Mark the current cell as visited
+  79:functions.c   ****         int x = currentNode.x;
+  80:functions.c   ****         int y = currentNode.y;
+ 194              		.loc 1 80 0
+ 195 0084 DDF82079 		ldr	r7, [sp, #2336]
+ 196              	.LVL17:
+  81:functions.c   ****         grid[x][y].cost = -1;
+ 197              		.loc 1 81 0
+ 198 0088 07EB4702 		add	r2, r7, r7, lsl #1
+ 199 008c E423     		movs	r3, #228
+ 200 008e 03FB08F3 		mul	r3, r3, r8
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 6
+
+
+ 201 0092 03EB8203 		add	r3, r3, r2, lsl #2
+ 202 0096 4FF0FF31 		mov	r1, #-1
+ 203 009a 0DF62412 		addw	r2, sp, #2340
+ 204 009e D150     		str	r1, [r2, r3]
+ 205              	.LVL18:
+ 206              	.LBB6:
+  82:functions.c   **** 
+  83:functions.c   ****         // Check neighbors
+  84:functions.c   ****         for (int i = 0; i < 4; i++) {
+ 207              		.loc 1 84 0
+ 208 00a0 0025     		movs	r5, #0
+ 209 00a2 3CE0     		b	.L14
+ 210              	.LVL19:
+ 211              	.L16:
+ 212              	.LBB7:
+  85:functions.c   ****             int newX = x + dx[i];
+ 213              		.loc 1 85 0
+ 214 00a4 0DF60C13 		addw	r3, sp, #2316
+ 215 00a8 53F82540 		ldr	r4, [r3, r5, lsl #2]
+ 216 00ac 4444     		add	r4, r4, r8
+ 217              	.LVL20:
+  86:functions.c   ****             int newY = y + dy[i];
+ 218              		.loc 1 86 0
+ 219 00ae 0DF6FC03 		addw	r3, sp, #2300
+ 220 00b2 53F82560 		ldr	r6, [r3, r5, lsl #2]
+ 221 00b6 3E44     		add	r6, r6, r7
+ 222              	.LVL21:
+  87:functions.c   **** 
+  88:functions.c   ****             if (isValidCell(newX, newY) && map[newX][newY] == 0) {
+ 223              		.loc 1 88 0
+ 224 00b8 3146     		mov	r1, r6
+ 225 00ba 2046     		mov	r0, r4
+ 226 00bc FFF7FEFF 		bl	isValidCell
+ 227              	.LVL22:
+ 228 00c0 60B3     		cbz	r0, .L15
+ 229              		.loc 1 88 0 is_stmt 0 discriminator 1
+ 230 00c2 04EBC403 		add	r3, r4, r4, lsl #3
+ 231 00c6 04EB4303 		add	r3, r4, r3, lsl #1
+ 232 00ca 3344     		add	r3, r3, r6
+ 233 00cc 4F4A     		ldr	r2, .L29+4
+ 234 00ce 52F82330 		ldr	r3, [r2, r3, lsl #2]
+ 235 00d2 1BBB     		cbnz	r3, .L15
+ 236              	.LBB8:
+  89:functions.c   ****                 int newCost = grid[x][y].cost + 1;
+ 237              		.loc 1 89 0 is_stmt 1
+ 238 00d4 0DF62410 		addw	r0, sp, #2340
+ 239 00d8 07EB4702 		add	r2, r7, r7, lsl #1
+ 240 00dc E423     		movs	r3, #228
+ 241 00de 03FB08F1 		mul	r1, r3, r8
+ 242 00e2 01EB8202 		add	r2, r1, r2, lsl #2
+ 243 00e6 8258     		ldr	r2, [r0, r2]
+ 244 00e8 0132     		adds	r2, r2, #1
+ 245              	.LVL23:
+  90:functions.c   ****                 if (newCost < grid[newX][newY].cost) {
+ 246              		.loc 1 90 0
+ 247 00ea 06EB4601 		add	r1, r6, r6, lsl #1
+ 248 00ee 03FB04F3 		mul	r3, r3, r4
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 7
+
+
+ 249 00f2 03EB8103 		add	r3, r3, r1, lsl #2
+ 250 00f6 C358     		ldr	r3, [r0, r3]
+ 251 00f8 9A42     		cmp	r2, r3
+ 252 00fa 0FDA     		bge	.L15
+  91:functions.c   ****                     grid[newX][newY].cost = newCost;
+ 253              		.loc 1 91 0
+ 254 00fc 0346     		mov	r3, r0
+ 255 00fe 7000     		lsls	r0, r6, #1
+ 256 0100 8119     		adds	r1, r0, r6
+ 257 0102 4FF0E40E 		mov	lr, #228
+ 258 0106 0EFB04F4 		mul	r4, lr, r4
+ 259              	.LVL24:
+ 260 010a 04EB8101 		add	r1, r4, r1, lsl #2
+ 261 010e 03EB010E 		add	lr, r3, r1
+ 262 0112 5A50     		str	r2, [r3, r1]
+  92:functions.c   ****                     grid[newX][newY].parent.x = x;
+ 263              		.loc 1 92 0
+ 264 0114 CEF80480 		str	r8, [lr, #4]
+  93:functions.c   ****                     grid[newX][newY].parent.y = y;
+ 265              		.loc 1 93 0
+ 266 0118 CEF80870 		str	r7, [lr, #8]
+ 267              	.LVL25:
+ 268              	.L15:
+ 269              	.LBE8:
+ 270              	.LBE7:
+  84:functions.c   ****             int newX = x + dx[i];
+ 271              		.loc 1 84 0 discriminator 2
+ 272 011c 0135     		adds	r5, r5, #1
+ 273              	.LVL26:
+ 274              	.L14:
+  84:functions.c   ****             int newX = x + dx[i];
+ 275              		.loc 1 84 0 is_stmt 0 discriminator 1
+ 276 011e 032D     		cmp	r5, #3
+ 277 0120 C0DD     		ble	.L16
+ 278 0122 0020     		movs	r0, #0
+ 279 0124 6FF00044 		mvn	r4, #-2147483648
+ 280 0128 19E0     		b	.L17
+ 281              	.LVL27:
+ 282              	.L19:
+ 283              	.LBE6:
+ 284              	.LBB9:
+ 285              	.LBB10:
+  94:functions.c   ****                 }
+  95:functions.c   ****             }
+  96:functions.c   ****         }
+  97:functions.c   **** 
+  98:functions.c   ****         // Find the next unvisited cell with the lowest cost
+  99:functions.c   ****         int minCost = INT_MAX;
+ 100:functions.c   ****         for (int i = 0; i < ROWS; i++) {
+ 101:functions.c   ****             for (int j = 0; j < COLS; j++) {
+ 102:functions.c   ****                 if (grid[i][j].cost != -1 && grid[i][j].cost < minCost) {
+ 286              		.loc 1 102 0 is_stmt 1
+ 287 012a 01EB4103 		add	r3, r1, r1, lsl #1
+ 288 012e E422     		movs	r2, #228
+ 289 0130 02FB00F2 		mul	r2, r2, r0
+ 290 0134 02EB8303 		add	r3, r2, r3, lsl #2
+ 291 0138 0DF62412 		addw	r2, sp, #2340
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 8
+
+
+ 292 013c D358     		ldr	r3, [r2, r3]
+ 293 013e B3F1FF3F 		cmp	r3, #-1
+ 294 0142 06D0     		beq	.L18
+ 295              		.loc 1 102 0 is_stmt 0 discriminator 1
+ 296 0144 9C42     		cmp	r4, r3
+ 297 0146 04DD     		ble	.L18
+ 298              	.LVL28:
+ 103:functions.c   ****                     minCost = grid[i][j].cost;
+ 104:functions.c   ****                     currentNode.x = i;
+ 299              		.loc 1 104 0 is_stmt 1
+ 300 0148 CDF81C09 		str	r0, [sp, #2332]
+ 105:functions.c   ****                     currentNode.y = j;
+ 301              		.loc 1 105 0
+ 302 014c CDF82019 		str	r1, [sp, #2336]
+ 103:functions.c   ****                     minCost = grid[i][j].cost;
+ 303              		.loc 1 103 0
+ 304 0150 1C46     		mov	r4, r3
+ 305              	.LVL29:
+ 306              	.L18:
+ 101:functions.c   ****                 if (grid[i][j].cost != -1 && grid[i][j].cost < minCost) {
+ 307              		.loc 1 101 0 discriminator 2
+ 308 0152 0131     		adds	r1, r1, #1
+ 309              	.LVL30:
+ 310 0154 00E0     		b	.L20
+ 311              	.LVL31:
+ 312              	.L27:
+ 313              	.LBE10:
+ 314 0156 0021     		movs	r1, #0
+ 315              	.L20:
+ 316              	.LVL32:
+ 317              	.LBB11:
+ 101:functions.c   ****                 if (grid[i][j].cost != -1 && grid[i][j].cost < minCost) {
+ 318              		.loc 1 101 0 is_stmt 0 discriminator 1
+ 319 0158 1229     		cmp	r1, #18
+ 320 015a E6DD     		ble	.L19
+ 321              	.LBE11:
+ 100:functions.c   ****             for (int j = 0; j < COLS; j++) {
+ 322              		.loc 1 100 0 is_stmt 1 discriminator 2
+ 323 015c 0130     		adds	r0, r0, #1
+ 324              	.LVL33:
+ 325              	.L17:
+ 100:functions.c   ****             for (int j = 0; j < COLS; j++) {
+ 326              		.loc 1 100 0 is_stmt 0 discriminator 1
+ 327 015e 0E28     		cmp	r0, #14
+ 328 0160 F9DD     		ble	.L27
+ 329              	.LVL34:
+ 330              	.L13:
+ 331              	.LBE9:
+ 332              	.LBE5:
+  77:functions.c   ****         // Mark the current cell as visited
+ 333              		.loc 1 77 0 is_stmt 1
+ 334 0162 DDF81C89 		ldr	r8, [sp, #2332]
+ 335 0166 D045     		cmp	r8, r10
+ 336 0168 8CD1     		bne	.L21
+  77:functions.c   ****         // Mark the current cell as visited
+ 337              		.loc 1 77 0 is_stmt 0 discriminator 1
+ 338 016a DDF82039 		ldr	r3, [sp, #2336]
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 9
+
+
+ 339 016e 019A     		ldr	r2, [sp, #4]
+ 340 0170 9342     		cmp	r3, r2
+ 341 0172 87D1     		bne	.L21
+ 106:functions.c   ****                 }
+ 107:functions.c   ****             }
+ 108:functions.c   ****         }
+ 109:functions.c   ****     }
+ 110:functions.c   ****     // Store the path in a temporary array
+ 111:functions.c   ****     // Store the starting point in the path
+ 112:functions.c   ****     pathLength=0;
+ 113:functions.c   ****     Node tempPath[ROWS * COLS];
+ 114:functions.c   ****     tempPath[pathLength++] = currentNode;
+ 342              		.loc 1 114 0 is_stmt 1
+ 343 0174 0122     		movs	r2, #1
+ 344 0176 264B     		ldr	r3, .L29+8
+ 345 0178 1A60     		str	r2, [r3]
+ 346 017a 05AB     		add	r3, sp, #20
+ 347 017c 0DF61C12 		addw	r2, sp, #2332
+ 348 0180 92E80300 		ldmia	r2, {r0, r1}
+ 349 0184 83E80300 		stmia	r3, {r0, r1}
+ 115:functions.c   ****     // Trace the path from target to start
+ 116:functions.c   ****     Node current = {targetX, targetY};
+ 350              		.loc 1 116 0
+ 351 0188 CDF80CA0 		str	r10, [sp, #12]
+ 352 018c 019B     		ldr	r3, [sp, #4]
+ 353 018e 0493     		str	r3, [sp, #16]
+ 117:functions.c   ****     while (current.x != startX || current.y != startY) {
+ 354              		.loc 1 117 0
+ 355 0190 1AE0     		b	.L22
+ 356              	.L23:
+ 118:functions.c   ****         tempPath[pathLength++] = current;
+ 357              		.loc 1 118 0
+ 358 0192 1F49     		ldr	r1, .L29+8
+ 359 0194 0A68     		ldr	r2, [r1]
+ 360 0196 501C     		adds	r0, r2, #1
+ 361 0198 0860     		str	r0, [r1]
+ 362 019a 03AC     		add	r4, sp, #12
+ 363 019c 05A9     		add	r1, sp, #20
+ 364 019e 01EBC202 		add	r2, r1, r2, lsl #3
+ 365 01a2 94E80300 		ldmia	r4, {r0, r1}
+ 366 01a6 82E80300 		stmia	r2, {r0, r1}
+ 119:functions.c   ****         current = grid[current.x][current.y].parent;// Move to the parent cell
+ 367              		.loc 1 119 0
+ 368 01aa 01EB4101 		add	r1, r1, r1, lsl #1
+ 369 01ae E422     		movs	r2, #228
+ 370 01b0 02FB03F3 		mul	r3, r2, r3
+ 371 01b4 03EB8103 		add	r3, r3, r1, lsl #2
+ 372 01b8 0DF62412 		addw	r2, sp, #2340
+ 373 01bc 1344     		add	r3, r3, r2
+ 374 01be 0433     		adds	r3, r3, #4
+ 375 01c0 93E80300 		ldmia	r3, {r0, r1}
+ 376 01c4 84E80300 		stmia	r4, {r0, r1}
+ 377              	.L22:
+ 117:functions.c   ****     while (current.x != startX || current.y != startY) {
+ 378              		.loc 1 117 0
+ 379 01c8 039B     		ldr	r3, [sp, #12]
+ 380 01ca 9945     		cmp	r9, r3
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 10
+
+
+ 381 01cc E1D1     		bne	.L23
+ 117:functions.c   ****     while (current.x != startX || current.y != startY) {
+ 382              		.loc 1 117 0 is_stmt 0 discriminator 1
+ 383 01ce 049A     		ldr	r2, [sp, #16]
+ 384 01d0 9345     		cmp	fp, r2
+ 385 01d2 DED1     		bne	.L23
+ 386              	.LBB12:
+ 120:functions.c   ****     }
+ 121:functions.c   ****    
+ 122:functions.c   **** 
+ 123:functions.c   ****    
+ 124:functions.c   **** 
+ 125:functions.c   ****     // Reverse the path and store it in pathCoordinates
+ 126:functions.c   ****     for (int j = pathLength - 1, k = 0; j >= 0; j--, k++) {
+ 387              		.loc 1 126 0 is_stmt 1
+ 388 01d4 0E4B     		ldr	r3, .L29+8
+ 389 01d6 1B68     		ldr	r3, [r3]
+ 390 01d8 013B     		subs	r3, r3, #1
+ 391              	.LVL35:
+ 392 01da 0020     		movs	r0, #0
+ 393 01dc 0DE0     		b	.L24
+ 394              	.LVL36:
+ 395              	.L25:
+ 127:functions.c   ****         path[k].x = tempPath[j].x;
+ 396              		.loc 1 127 0 discriminator 3
+ 397 01de 05A9     		add	r1, sp, #20
+ 398 01e0 51F83340 		ldr	r4, [r1, r3, lsl #3]
+ 399 01e4 0B4A     		ldr	r2, .L29+12
+ 400 01e6 42F83040 		str	r4, [r2, r0, lsl #3]
+ 128:functions.c   ****         path[k].y = tempPath[j].y;
+ 401              		.loc 1 128 0 discriminator 3
+ 402 01ea 01EBC301 		add	r1, r1, r3, lsl #3
+ 403 01ee 4968     		ldr	r1, [r1, #4]
+ 404 01f0 02EBC002 		add	r2, r2, r0, lsl #3
+ 405 01f4 5160     		str	r1, [r2, #4]
+ 126:functions.c   ****         path[k].x = tempPath[j].x;
+ 406              		.loc 1 126 0 discriminator 3
+ 407 01f6 013B     		subs	r3, r3, #1
+ 408              	.LVL37:
+ 409 01f8 0130     		adds	r0, r0, #1
+ 410              	.LVL38:
+ 411              	.L24:
+ 126:functions.c   ****         path[k].x = tempPath[j].x;
+ 412              		.loc 1 126 0 is_stmt 0 discriminator 1
+ 413 01fa 002B     		cmp	r3, #0
+ 414 01fc EFDA     		bge	.L25
+ 415              	.LBE12:
+ 129:functions.c   ****     }
+ 130:functions.c   ****    
+ 131:functions.c   **** 
+ 132:functions.c   **** }
+ 416              		.loc 1 132 0 is_stmt 1
+ 417 01fe 0DF5B45D 		add	sp, sp, #5760
+ 418 0202 01B0     		add	sp, sp, #4
+ 419              		.cfi_def_cfa_offset 36
+ 420              		@ sp needed
+ 421 0204 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 11
+
+
+ 422              	.LVL39:
+ 423              	.L30:
+ 424              		.align	2
+ 425              	.L29:
+ 426 0208 00000000 		.word	.LANCHOR0
+ 427 020c 00000000 		.word	.LANCHOR1
+ 428 0210 00000000 		.word	.LANCHOR2
+ 429 0214 00000000 		.word	path
+ 430              		.cfi_endproc
+ 431              	.LFE66:
+ 432              		.size	dijkstra, .-dijkstra
+ 433              		.global	__aeabi_i2d
+ 434              		.global	__aeabi_dmul
+ 435              		.global	__aeabi_d2iz
+ 436              		.section	.text.getDistance_H,"ax",%progbits
+ 437              		.align	2
+ 438              		.global	getDistance_H
+ 439              		.thumb
+ 440              		.thumb_func
+ 441              		.type	getDistance_H, %function
+ 442              	getDistance_H:
+ 443              	.LFB67:
+ 133:functions.c   **** 
+ 134:functions.c   **** int getDistance_H(int stepCount){
+ 444              		.loc 1 134 0
+ 445              		.cfi_startproc
+ 446              		@ args = 0, pretend = 0, frame = 0
+ 447              		@ frame_needed = 0, uses_anonymous_args = 0
+ 448              	.LVL40:
+ 449 0000 08B5     		push	{r3, lr}
+ 450              		.cfi_def_cfa_offset 8
+ 451              		.cfi_offset 3, -8
+ 452              		.cfi_offset 14, -4
+ 135:functions.c   ****     if(stepCount>10){
+ 453              		.loc 1 135 0
+ 454 0002 0A28     		cmp	r0, #10
+ 455 0004 09DD     		ble	.L32
+ 136:functions.c   ****         return stepCount*11.2;
+ 456              		.loc 1 136 0
+ 457 0006 FFF7FEFF 		bl	__aeabi_i2d
+ 458              	.LVL41:
+ 459 000a 4FF06632 		mov	r2, #1717986918
+ 460 000e 204B     		ldr	r3, .L39+16
+ 461 0010 FFF7FEFF 		bl	__aeabi_dmul
+ 462              	.LVL42:
+ 463 0014 FFF7FEFF 		bl	__aeabi_d2iz
+ 464              	.LVL43:
+ 465 0018 08BD     		pop	{r3, pc}
+ 466              	.LVL44:
+ 467              	.L32:
+ 137:functions.c   ****     }else if(stepCount>8){
+ 468              		.loc 1 137 0
+ 469 001a 0828     		cmp	r0, #8
+ 470 001c 09DD     		ble	.L34
+ 138:functions.c   ****         return stepCount*10.6;
+ 471              		.loc 1 138 0
+ 472 001e FFF7FEFF 		bl	__aeabi_i2d
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 12
+
+
+ 473              	.LVL45:
+ 474 0022 17A3     		adr	r3, .L39
+ 475 0024 D3E90023 		ldrd	r2, [r3]
+ 476 0028 FFF7FEFF 		bl	__aeabi_dmul
+ 477              	.LVL46:
+ 478 002c FFF7FEFF 		bl	__aeabi_d2iz
+ 479              	.LVL47:
+ 480 0030 08BD     		pop	{r3, pc}
+ 481              	.LVL48:
+ 482              	.L34:
+ 139:functions.c   ****     }else if(stepCount>6){
+ 483              		.loc 1 139 0
+ 484 0032 0628     		cmp	r0, #6
+ 485 0034 08DD     		ble	.L35
+ 140:functions.c   ****         return stepCount*10.5;
+ 486              		.loc 1 140 0
+ 487 0036 FFF7FEFF 		bl	__aeabi_i2d
+ 488              	.LVL49:
+ 489 003a 0022     		movs	r2, #0
+ 490 003c 154B     		ldr	r3, .L39+20
+ 491 003e FFF7FEFF 		bl	__aeabi_dmul
+ 492              	.LVL50:
+ 493 0042 FFF7FEFF 		bl	__aeabi_d2iz
+ 494              	.LVL51:
+ 495 0046 08BD     		pop	{r3, pc}
+ 496              	.LVL52:
+ 497              	.L35:
+ 141:functions.c   ****     }else if(stepCount>4){
+ 498              		.loc 1 141 0
+ 499 0048 0428     		cmp	r0, #4
+ 500 004a 09DD     		ble	.L36
+ 142:functions.c   ****         return stepCount*9.7;
+ 501              		.loc 1 142 0
+ 502 004c FFF7FEFF 		bl	__aeabi_i2d
+ 503              	.LVL53:
+ 504 0050 0DA3     		adr	r3, .L39+8
+ 505 0052 D3E90023 		ldrd	r2, [r3]
+ 506 0056 FFF7FEFF 		bl	__aeabi_dmul
+ 507              	.LVL54:
+ 508 005a FFF7FEFF 		bl	__aeabi_d2iz
+ 509              	.LVL55:
+ 510 005e 08BD     		pop	{r3, pc}
+ 511              	.LVL56:
+ 512              	.L36:
+ 143:functions.c   ****     }else if(stepCount>2){
+ 513              		.loc 1 143 0
+ 514 0060 0228     		cmp	r0, #2
+ 515 0062 08DD     		ble	.L37
+ 144:functions.c   ****         return stepCount*7.5;
+ 516              		.loc 1 144 0
+ 517 0064 FFF7FEFF 		bl	__aeabi_i2d
+ 518              	.LVL57:
+ 519 0068 0022     		movs	r2, #0
+ 520 006a 0B4B     		ldr	r3, .L39+24
+ 521 006c FFF7FEFF 		bl	__aeabi_dmul
+ 522              	.LVL58:
+ 523 0070 FFF7FEFF 		bl	__aeabi_d2iz
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 13
+
+
+ 524              	.LVL59:
+ 525 0074 08BD     		pop	{r3, pc}
+ 526              	.LVL60:
+ 527              	.L37:
+ 145:functions.c   ****     }else{
+ 146:functions.c   ****         return stepCount*7;
+ 528              		.loc 1 146 0
+ 529 0076 C0EBC000 		rsb	r0, r0, r0, lsl #3
+ 530              	.LVL61:
+ 147:functions.c   ****     }
+ 148:functions.c   ****         
+ 149:functions.c   ****     
+ 150:functions.c   **** }
+ 531              		.loc 1 150 0
+ 532 007a 08BD     		pop	{r3, pc}
+ 533              	.L40:
+ 534 007c AFF30080 		.align	3
+ 535              	.L39:
+ 536 0080 33333333 		.word	858993459
+ 537 0084 33332540 		.word	1076179763
+ 538 0088 66666666 		.word	1717986918
+ 539 008c 66662340 		.word	1076061798
+ 540 0090 66662640 		.word	1076258406
+ 541 0094 00002540 		.word	1076166656
+ 542 0098 00001E40 		.word	1075707904
+ 543              		.cfi_endproc
+ 544              	.LFE67:
+ 545              		.size	getDistance_H, .-getDistance_H
+ 546              		.section	.text.getDistance_V,"ax",%progbits
+ 547              		.align	2
+ 548              		.global	getDistance_V
+ 549              		.thumb
+ 550              		.thumb_func
+ 551              		.type	getDistance_V, %function
+ 552              	getDistance_V:
+ 553              	.LFB68:
+ 151:functions.c   **** 
+ 152:functions.c   **** 
+ 153:functions.c   **** int getDistance_V(int stepCount){
+ 554              		.loc 1 153 0
+ 555              		.cfi_startproc
+ 556              		@ args = 0, pretend = 0, frame = 0
+ 557              		@ frame_needed = 0, uses_anonymous_args = 0
+ 558              	.LVL62:
+ 559 0000 08B5     		push	{r3, lr}
+ 560              		.cfi_def_cfa_offset 8
+ 561              		.cfi_offset 3, -8
+ 562              		.cfi_offset 14, -4
+ 154:functions.c   ****      if(stepCount>10){
+ 563              		.loc 1 154 0
+ 564 0002 0A28     		cmp	r0, #10
+ 565 0004 09DD     		ble	.L42
+ 155:functions.c   ****         return stepCount*7.9;
+ 566              		.loc 1 155 0
+ 567 0006 FFF7FEFF 		bl	__aeabi_i2d
+ 568              	.LVL63:
+ 569 000a 1DA3     		adr	r3, .L49
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 14
+
+
+ 570 000c D3E90023 		ldrd	r2, [r3]
+ 571 0010 FFF7FEFF 		bl	__aeabi_dmul
+ 572              	.LVL64:
+ 573 0014 FFF7FEFF 		bl	__aeabi_d2iz
+ 574              	.LVL65:
+ 575 0018 08BD     		pop	{r3, pc}
+ 576              	.LVL66:
+ 577              	.L42:
+ 156:functions.c   ****     }else if(stepCount>8){
+ 578              		.loc 1 156 0
+ 579 001a 0828     		cmp	r0, #8
+ 580 001c 09DD     		ble	.L44
+ 157:functions.c   ****         return stepCount*7.7;
+ 581              		.loc 1 157 0
+ 582 001e FFF7FEFF 		bl	__aeabi_i2d
+ 583              	.LVL67:
+ 584 0022 19A3     		adr	r3, .L49+8
+ 585 0024 D3E90023 		ldrd	r2, [r3]
+ 586 0028 FFF7FEFF 		bl	__aeabi_dmul
+ 587              	.LVL68:
+ 588 002c FFF7FEFF 		bl	__aeabi_d2iz
+ 589              	.LVL69:
+ 590 0030 08BD     		pop	{r3, pc}
+ 591              	.LVL70:
+ 592              	.L44:
+ 158:functions.c   ****     }else if(stepCount>6){
+ 593              		.loc 1 158 0
+ 594 0032 0628     		cmp	r0, #6
+ 595 0034 09DD     		ble	.L45
+ 159:functions.c   ****         return stepCount*7.2;
+ 596              		.loc 1 159 0
+ 597 0036 FFF7FEFF 		bl	__aeabi_i2d
+ 598              	.LVL71:
+ 599 003a 15A3     		adr	r3, .L49+16
+ 600 003c D3E90023 		ldrd	r2, [r3]
+ 601 0040 FFF7FEFF 		bl	__aeabi_dmul
+ 602              	.LVL72:
+ 603 0044 FFF7FEFF 		bl	__aeabi_d2iz
+ 604              	.LVL73:
+ 605 0048 08BD     		pop	{r3, pc}
+ 606              	.LVL74:
+ 607              	.L45:
+ 160:functions.c   ****     }else if(stepCount>4){
+ 608              		.loc 1 160 0
+ 609 004a 0428     		cmp	r0, #4
+ 610 004c 09DD     		ble	.L46
+ 161:functions.c   ****         return stepCount*6.7;
+ 611              		.loc 1 161 0
+ 612 004e FFF7FEFF 		bl	__aeabi_i2d
+ 613              	.LVL75:
+ 614 0052 11A3     		adr	r3, .L49+24
+ 615 0054 D3E90023 		ldrd	r2, [r3]
+ 616 0058 FFF7FEFF 		bl	__aeabi_dmul
+ 617              	.LVL76:
+ 618 005c FFF7FEFF 		bl	__aeabi_d2iz
+ 619              	.LVL77:
+ 620 0060 08BD     		pop	{r3, pc}
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 15
+
+
+ 621              	.LVL78:
+ 622              	.L46:
+ 162:functions.c   ****     }else if(stepCount>2){
+ 623              		.loc 1 162 0
+ 624 0062 0228     		cmp	r0, #2
+ 625 0064 09DD     		ble	.L47
+ 163:functions.c   ****         return stepCount*5.2;
+ 626              		.loc 1 163 0
+ 627 0066 FFF7FEFF 		bl	__aeabi_i2d
+ 628              	.LVL79:
+ 629 006a 0DA3     		adr	r3, .L49+32
+ 630 006c D3E90023 		ldrd	r2, [r3]
+ 631 0070 FFF7FEFF 		bl	__aeabi_dmul
+ 632              	.LVL80:
+ 633 0074 FFF7FEFF 		bl	__aeabi_d2iz
+ 634              	.LVL81:
+ 635 0078 08BD     		pop	{r3, pc}
+ 636              	.LVL82:
+ 637              	.L47:
+ 164:functions.c   ****     }else{
+ 165:functions.c   ****         return stepCount*5;
+ 638              		.loc 1 165 0
+ 639 007a 00EB8000 		add	r0, r0, r0, lsl #2
+ 640              	.LVL83:
+ 166:functions.c   ****     }
+ 167:functions.c   **** //    if(stepCount<4){
+ 168:functions.c   **** //        return stepCount*5.5;
+ 169:functions.c   **** //    }else if(stepCount<6){
+ 170:functions.c   **** //        return stepCount*6.8;
+ 171:functions.c   **** //    }else if(stepCount<8){
+ 172:functions.c   **** //        return stepCount*7.3;
+ 173:functions.c   **** //    }else if(stepCount<10){
+ 174:functions.c   **** //        return stepCount*7.8;
+ 175:functions.c   **** //    }else{
+ 176:functions.c   **** //        return stepCount*8;
+ 177:functions.c   **** //    }
+ 178:functions.c   ****     
+ 179:functions.c   **** }
+ 641              		.loc 1 179 0
+ 642 007e 08BD     		pop	{r3, pc}
+ 643              	.L50:
+ 644              		.align	3
+ 645              	.L49:
+ 646 0080 9A999999 		.word	-1717986918
+ 647 0084 99991F40 		.word	1075812761
+ 648 0088 CDCCCCCC 		.word	-858993459
+ 649 008c CCCC1E40 		.word	1075760332
+ 650 0090 CDCCCCCC 		.word	-858993459
+ 651 0094 CCCC1C40 		.word	1075629260
+ 652 0098 CDCCCCCC 		.word	-858993459
+ 653 009c CCCC1A40 		.word	1075498188
+ 654 00a0 CDCCCCCC 		.word	-858993459
+ 655 00a4 CCCC1440 		.word	1075104972
+ 656              		.cfi_endproc
+ 657              	.LFE68:
+ 658              		.size	getDistance_V, .-getDistance_V
+ 659              		.section	.text.getMovementArray,"ax",%progbits
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 16
+
+
+ 660              		.align	2
+ 661              		.global	getMovementArray
+ 662              		.thumb
+ 663              		.thumb_func
+ 664              		.type	getMovementArray, %function
+ 665              	getMovementArray:
+ 666              	.LFB69:
+ 180:functions.c   **** 
+ 181:functions.c   **** //input order are start row, column, target row, column
+ 182:functions.c   **** //input order are start row, column, target row, column
+ 183:functions.c   **** void getMovementArray(int start_row,int start_column,int target_row,int target_column,RobotDirectio
+ 667              		.loc 1 183 0
+ 668              		.cfi_startproc
+ 669              		@ args = 4, pretend = 0, frame = 0
+ 670              		@ frame_needed = 0, uses_anonymous_args = 0
+ 671              	.LVL84:
+ 672 0000 2DE9F047 		push	{r4, r5, r6, r7, r8, r9, r10, lr}
+ 673              		.cfi_def_cfa_offset 32
+ 674              		.cfi_offset 4, -32
+ 675              		.cfi_offset 5, -28
+ 676              		.cfi_offset 6, -24
+ 677              		.cfi_offset 7, -20
+ 678              		.cfi_offset 8, -16
+ 679              		.cfi_offset 9, -12
+ 680              		.cfi_offset 10, -8
+ 681              		.cfi_offset 14, -4
+ 682 0004 1746     		mov	r7, r2
+ 683 0006 9946     		mov	r9, r3
+ 684 0008 9DF82060 		ldrb	r6, [sp, #32]	@ zero_extendqisi2
+ 685              	.LVL85:
+ 686              	.LBB13:
+ 184:functions.c   **** 
+ 185:functions.c   ****     int stepCount = -1;
+ 186:functions.c   ****     int position = -1;
+ 187:functions.c   ****     
+ 188:functions.c   ****     //naming error
+ 189:functions.c   ****     int current_row=start_row;
+ 190:functions.c   ****     int current_column=start_column;
+ 191:functions.c   **** 
+ 192:functions.c   ****     for (int i = 0; i < pathLength; i++) {
+ 687              		.loc 1 192 0
+ 688 000c 0024     		movs	r4, #0
+ 689              	.LBE13:
+ 186:functions.c   ****     
+ 690              		.loc 1 186 0
+ 691 000e 4FF0FF38 		mov	r8, #-1
+ 185:functions.c   ****     int position = -1;
+ 692              		.loc 1 185 0
+ 693 0012 4246     		mov	r2, r8
+ 694              	.LVL86:
+ 695              	.LBB15:
+ 696              		.loc 1 192 0
+ 697 0014 FBE0     		b	.L52
+ 698              	.LVL87:
+ 699              	.L72:
+ 700              	.LBB14:
+ 193:functions.c   ****         int next_row = path[i].x;
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 17
+
+
+ 701              		.loc 1 193 0
+ 702 0016 814B     		ldr	r3, .L74
+ 703 0018 53F83450 		ldr	r5, [r3, r4, lsl #3]
+ 704              	.LVL88:
+ 194:functions.c   ****         int next_column = path[i].y;
+ 705              		.loc 1 194 0
+ 706 001c 03EBC403 		add	r3, r3, r4, lsl #3
+ 707 0020 D3F804A0 		ldr	r10, [r3, #4]
+ 708              	.LVL89:
+ 195:functions.c   **** 
+ 196:functions.c   **** 
+ 197:functions.c   **** 
+ 198:functions.c   ****         if(current_row == target_row && current_column == target_column ){
+ 709              		.loc 1 198 0
+ 710 0024 B842     		cmp	r0, r7
+ 711 0026 21D1     		bne	.L53
+ 712              		.loc 1 198 0 is_stmt 0 discriminator 1
+ 713 0028 4945     		cmp	r1, r9
+ 714 002a 1FD1     		bne	.L53
+ 199:functions.c   ****                     stepCount+=2 ;
+ 715              		.loc 1 199 0 is_stmt 1
+ 716 002c 941C     		adds	r4, r2, #2
+ 717              	.LVL90:
+ 200:functions.c   ****                     position++;
+ 718              		.loc 1 200 0
+ 719 002e 08F10108 		add	r8, r8, #1
+ 720              	.LVL91:
+ 201:functions.c   ****                     if(current_direction==EAST ||current_direction==WEST){
+ 721              		.loc 1 201 0
+ 722 0032 012E     		cmp	r6, #1
+ 723 0034 01D0     		beq	.L54
+ 724              		.loc 1 201 0 is_stmt 0 discriminator 1
+ 725 0036 032E     		cmp	r6, #3
+ 726 0038 07D1     		bne	.L55
+ 727              	.L54:
+ 202:functions.c   ****                         movementArray[position].distance = getDistance_H(stepCount)+stepCount;
+ 728              		.loc 1 202 0 is_stmt 1
+ 729 003a 2046     		mov	r0, r4
+ 730              	.LVL92:
+ 731 003c FFF7FEFF 		bl	getDistance_H
+ 732              	.LVL93:
+ 733 0040 2044     		add	r0, r0, r4
+ 734 0042 774B     		ldr	r3, .L74+4
+ 735 0044 43F83800 		str	r0, [r3, r8, lsl #3]
+ 736 0048 06E0     		b	.L56
+ 737              	.LVL94:
+ 738              	.L55:
+ 203:functions.c   ****                     }else{
+ 204:functions.c   ****                         movementArray[position].distance = getDistance_V(stepCount)+stepCount;
+ 739              		.loc 1 204 0
+ 740 004a 2046     		mov	r0, r4
+ 741              	.LVL95:
+ 742 004c FFF7FEFF 		bl	getDistance_V
+ 743              	.LVL96:
+ 744 0050 2044     		add	r0, r0, r4
+ 745 0052 734B     		ldr	r3, .L74+4
+ 746 0054 43F83800 		str	r0, [r3, r8, lsl #3]
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 18
+
+
+ 747              	.L56:
+ 205:functions.c   ****                     }
+ 206:functions.c   ****                     movementArray[position].turnDirection = 'E';
+ 748              		.loc 1 206 0
+ 749 0058 714B     		ldr	r3, .L74+4
+ 750 005a 03EBC808 		add	r8, r3, r8, lsl #3
+ 751              	.LVL97:
+ 752 005e 4523     		movs	r3, #69
+ 753 0060 88F80430 		strb	r3, [r8, #4]
+ 207:functions.c   ****                     robot_direction=current_direction;
+ 754              		.loc 1 207 0
+ 755 0064 6F4B     		ldr	r3, .L74+8
+ 756 0066 1E70     		strb	r6, [r3]
+ 208:functions.c   ****                     break;
+ 757              		.loc 1 208 0
+ 758 0068 BDE8F087 		pop	{r4, r5, r6, r7, r8, r9, r10, pc}
+ 759              	.LVL98:
+ 760              	.L53:
+ 209:functions.c   ****         }
+ 210:functions.c   ****         
+ 211:functions.c   **** 
+ 212:functions.c   ****         switch (current_direction) {
+ 761              		.loc 1 212 0
+ 762 006c 032E     		cmp	r6, #3
+ 763 006e 00F2CD80 		bhi	.L58
+ 764 0072 DFE806F0 		tbb	[pc, r6]
+ 765              	.L60:
+ 766 0076 02       		.byte	(.L59-.L60)/2
+ 767 0077 36       		.byte	(.L61-.L60)/2
+ 768 0078 68       		.byte	(.L62-.L60)/2
+ 769 0079 9A       		.byte	(.L63-.L60)/2
+ 770              		.p2align 1
+ 771              	.L59:
+ 213:functions.c   ****             case NORTH:
+ 214:functions.c   ****                 if (next_row<current_row && next_column == current_column) { 
+ 772              		.loc 1 214 0
+ 773 007a A842     		cmp	r0, r5
+ 774 007c 05DD     		ble	.L64
+ 775              		.loc 1 214 0 is_stmt 0 discriminator 1
+ 776 007e 5145     		cmp	r1, r10
+ 777 0080 03D1     		bne	.L64
+ 215:functions.c   ****                     // Go straight
+ 216:functions.c   ****                     stepCount++;
+ 778              		.loc 1 216 0 is_stmt 1
+ 779 0082 0132     		adds	r2, r2, #1
+ 780              	.LVL99:
+ 217:functions.c   ****                     current_row = next_row; // Update coordinates
+ 218:functions.c   ****                     current_column = next_column;
+ 781              		.loc 1 218 0
+ 782 0084 5146     		mov	r1, r10
+ 217:functions.c   ****                     current_row = next_row; // Update coordinates
+ 783              		.loc 1 217 0
+ 784 0086 2846     		mov	r0, r5
+ 219:functions.c   ****                     continue; 
+ 785              		.loc 1 219 0
+ 786 0088 C0E0     		b	.L58
+ 787              	.LVL100:
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 19
+
+
+ 788              	.L64:
+ 220:functions.c   ****                 } else if (next_row==current_row && next_column > current_column) {
+ 789              		.loc 1 220 0
+ 790 008a A842     		cmp	r0, r5
+ 791 008c 12D1     		bne	.L65
+ 792              		.loc 1 220 0 is_stmt 0 discriminator 1
+ 793 008e 5145     		cmp	r1, r10
+ 794 0090 10DA     		bge	.L65
+ 795              	.LVL101:
+ 221:functions.c   ****                     // Turn right
+ 222:functions.c   ****                     stepCount+=2;
+ 223:functions.c   ****                     position++;
+ 796              		.loc 1 223 0 is_stmt 1
+ 797 0092 08F10108 		add	r8, r8, #1
+ 798              	.LVL102:
+ 224:functions.c   ****                     movementArray[position].distance = getDistance_V(stepCount);
+ 799              		.loc 1 224 0
+ 800 0096 901C     		adds	r0, r2, #2
+ 801              	.LVL103:
+ 802 0098 FFF7FEFF 		bl	getDistance_V
+ 803              	.LVL104:
+ 804 009c 604B     		ldr	r3, .L74+4
+ 805 009e 43F83800 		str	r0, [r3, r8, lsl #3]
+ 225:functions.c   ****                     movementArray[position].turnDirection = 'R';
+ 806              		.loc 1 225 0
+ 807 00a2 03EBC803 		add	r3, r3, r8, lsl #3
+ 808 00a6 5222     		movs	r2, #82
+ 809 00a8 1A71     		strb	r2, [r3, #4]
+ 810              	.LVL105:
+ 226:functions.c   ****                     current_row = next_row; // Update coordinates
+ 227:functions.c   ****                     current_column = next_column;
+ 811              		.loc 1 227 0
+ 812 00aa 5146     		mov	r1, r10
+ 226:functions.c   ****                     current_row = next_row; // Update coordinates
+ 813              		.loc 1 226 0
+ 814 00ac 2846     		mov	r0, r5
+ 228:functions.c   ****                     stepCount = 0;
+ 815              		.loc 1 228 0
+ 816 00ae 0022     		movs	r2, #0
+ 229:functions.c   ****                     current_direction = EAST;
+ 817              		.loc 1 229 0
+ 818 00b0 0126     		movs	r6, #1
+ 819 00b2 ABE0     		b	.L58
+ 820              	.LVL106:
+ 821              	.L65:
+ 230:functions.c   ****                 } else if (next_row==current_row && next_column < current_column) {
+ 822              		.loc 1 230 0
+ 823 00b4 A842     		cmp	r0, r5
+ 824 00b6 40F0A980 		bne	.L58
+ 825              		.loc 1 230 0 is_stmt 0 discriminator 1
+ 826 00ba 5145     		cmp	r1, r10
+ 827 00bc 40F3A680 		ble	.L58
+ 828              	.LVL107:
+ 231:functions.c   ****                     // Turn left
+ 232:functions.c   ****                     stepCount+=2;
+ 233:functions.c   ****                     position++;
+ 829              		.loc 1 233 0 is_stmt 1
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 20
+
+
+ 830 00c0 08F10108 		add	r8, r8, #1
+ 831              	.LVL108:
+ 234:functions.c   ****                     movementArray[position].distance =getDistance_V(stepCount);
+ 832              		.loc 1 234 0
+ 833 00c4 901C     		adds	r0, r2, #2
+ 834              	.LVL109:
+ 835 00c6 FFF7FEFF 		bl	getDistance_V
+ 836              	.LVL110:
+ 837 00ca 554B     		ldr	r3, .L74+4
+ 838 00cc 43F83800 		str	r0, [r3, r8, lsl #3]
+ 235:functions.c   ****                     movementArray[position].turnDirection = 'L';
+ 839              		.loc 1 235 0
+ 840 00d0 03EBC803 		add	r3, r3, r8, lsl #3
+ 841 00d4 4C22     		movs	r2, #76
+ 842 00d6 1A71     		strb	r2, [r3, #4]
+ 843              	.LVL111:
+ 236:functions.c   ****                     current_row = next_row; // Update coordinates
+ 237:functions.c   ****                     current_column = next_column;
+ 844              		.loc 1 237 0
+ 845 00d8 5146     		mov	r1, r10
+ 236:functions.c   ****                     current_row = next_row; // Update coordinates
+ 846              		.loc 1 236 0
+ 847 00da 2846     		mov	r0, r5
+ 238:functions.c   ****                     stepCount = 0;
+ 848              		.loc 1 238 0
+ 849 00dc 0022     		movs	r2, #0
+ 239:functions.c   ****                     current_direction = WEST;
+ 850              		.loc 1 239 0
+ 851 00de 0326     		movs	r6, #3
+ 852 00e0 94E0     		b	.L58
+ 853              	.LVL112:
+ 854              	.L61:
+ 240:functions.c   ****                 }
+ 241:functions.c   ****                 break;
+ 242:functions.c   ****                 
+ 243:functions.c   ****                 
+ 244:functions.c   ****             case EAST:
+ 245:functions.c   ****                 if (next_row==current_row && next_column > current_column) { 
+ 855              		.loc 1 245 0
+ 856 00e2 A842     		cmp	r0, r5
+ 857 00e4 05D1     		bne	.L66
+ 858              		.loc 1 245 0 is_stmt 0 discriminator 1
+ 859 00e6 5145     		cmp	r1, r10
+ 860 00e8 03DA     		bge	.L66
+ 246:functions.c   ****                     // Go straight
+ 247:functions.c   ****                     stepCount++;
+ 861              		.loc 1 247 0 is_stmt 1
+ 862 00ea 0132     		adds	r2, r2, #1
+ 863              	.LVL113:
+ 248:functions.c   ****                     current_row = next_row; // Update coordinates
+ 249:functions.c   ****                     current_column = next_column;
+ 864              		.loc 1 249 0
+ 865 00ec 5146     		mov	r1, r10
+ 248:functions.c   ****                     current_row = next_row; // Update coordinates
+ 866              		.loc 1 248 0
+ 867 00ee 2846     		mov	r0, r5
+ 250:functions.c   ****                     continue; // Skip the rest of this iteration and go to the next
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 21
+
+
+ 868              		.loc 1 250 0
+ 869 00f0 8CE0     		b	.L58
+ 870              	.LVL114:
+ 871              	.L66:
+ 251:functions.c   ****                 } else if (next_row>current_row && next_column == current_column) {
+ 872              		.loc 1 251 0
+ 873 00f2 A842     		cmp	r0, r5
+ 874 00f4 12DA     		bge	.L67
+ 875              		.loc 1 251 0 is_stmt 0 discriminator 1
+ 876 00f6 5145     		cmp	r1, r10
+ 877 00f8 10D1     		bne	.L67
+ 878              	.LVL115:
+ 252:functions.c   ****                     // Turn right
+ 253:functions.c   ****                     stepCount+=2;
+ 254:functions.c   ****                     position++;
+ 879              		.loc 1 254 0 is_stmt 1
+ 880 00fa 08F10108 		add	r8, r8, #1
+ 881              	.LVL116:
+ 255:functions.c   ****                     movementArray[position].distance = getDistance_H(stepCount);
+ 882              		.loc 1 255 0
+ 883 00fe 901C     		adds	r0, r2, #2
+ 884              	.LVL117:
+ 885 0100 FFF7FEFF 		bl	getDistance_H
+ 886              	.LVL118:
+ 887 0104 464B     		ldr	r3, .L74+4
+ 888 0106 43F83800 		str	r0, [r3, r8, lsl #3]
+ 256:functions.c   ****                     movementArray[position].turnDirection = 'R';
+ 889              		.loc 1 256 0
+ 890 010a 03EBC803 		add	r3, r3, r8, lsl #3
+ 891 010e 5222     		movs	r2, #82
+ 892 0110 1A71     		strb	r2, [r3, #4]
+ 893              	.LVL119:
+ 257:functions.c   ****                     current_row = next_row; // Update coordinates
+ 258:functions.c   ****                     current_column = next_column;
+ 894              		.loc 1 258 0
+ 895 0112 5146     		mov	r1, r10
+ 257:functions.c   ****                     current_row = next_row; // Update coordinates
+ 896              		.loc 1 257 0
+ 897 0114 2846     		mov	r0, r5
+ 259:functions.c   ****                     stepCount = 0;
+ 898              		.loc 1 259 0
+ 899 0116 0022     		movs	r2, #0
+ 260:functions.c   ****                     current_direction = SOUTH;   
+ 900              		.loc 1 260 0
+ 901 0118 0226     		movs	r6, #2
+ 902 011a 77E0     		b	.L58
+ 903              	.LVL120:
+ 904              	.L67:
+ 261:functions.c   ****                 } else if (next_row<current_row && next_column == current_column) {
+ 905              		.loc 1 261 0
+ 906 011c A842     		cmp	r0, r5
+ 907 011e 75DD     		ble	.L58
+ 908              		.loc 1 261 0 is_stmt 0 discriminator 1
+ 909 0120 5145     		cmp	r1, r10
+ 910 0122 73D1     		bne	.L58
+ 911              	.LVL121:
+ 262:functions.c   ****                     // Turn left
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 22
+
+
+ 263:functions.c   ****                     stepCount+=2;
+ 264:functions.c   ****                     position++;
+ 912              		.loc 1 264 0 is_stmt 1
+ 913 0124 08F10108 		add	r8, r8, #1
+ 914              	.LVL122:
+ 265:functions.c   ****                     movementArray[position].distance = getDistance_H(stepCount);
+ 915              		.loc 1 265 0
+ 916 0128 901C     		adds	r0, r2, #2
+ 917              	.LVL123:
+ 918 012a FFF7FEFF 		bl	getDistance_H
+ 919              	.LVL124:
+ 920 012e 3C4B     		ldr	r3, .L74+4
+ 921 0130 43F83800 		str	r0, [r3, r8, lsl #3]
+ 266:functions.c   ****                     movementArray[position].turnDirection = 'L';
+ 922              		.loc 1 266 0
+ 923 0134 03EBC803 		add	r3, r3, r8, lsl #3
+ 924 0138 4C22     		movs	r2, #76
+ 925 013a 1A71     		strb	r2, [r3, #4]
+ 926              	.LVL125:
+ 267:functions.c   ****                     current_row = next_row; // Update coordinates
+ 268:functions.c   ****                     current_column = next_column;
+ 927              		.loc 1 268 0
+ 928 013c 5146     		mov	r1, r10
+ 267:functions.c   ****                     current_row = next_row; // Update coordinates
+ 929              		.loc 1 267 0
+ 930 013e 2846     		mov	r0, r5
+ 269:functions.c   ****                     stepCount = 0;
+ 931              		.loc 1 269 0
+ 932 0140 0022     		movs	r2, #0
+ 270:functions.c   ****                     current_direction = NORTH;
+ 933              		.loc 1 270 0
+ 934 0142 1646     		mov	r6, r2
+ 935 0144 62E0     		b	.L58
+ 936              	.LVL126:
+ 937              	.L62:
+ 271:functions.c   ****                 }
+ 272:functions.c   ****                 break;
+ 273:functions.c   **** 
+ 274:functions.c   ****             case SOUTH:
+ 275:functions.c   ****                 if (next_row>current_row && next_column == current_column) { 
+ 938              		.loc 1 275 0
+ 939 0146 A842     		cmp	r0, r5
+ 940 0148 05DA     		bge	.L68
+ 941              		.loc 1 275 0 is_stmt 0 discriminator 1
+ 942 014a 5145     		cmp	r1, r10
+ 943 014c 03D1     		bne	.L68
+ 276:functions.c   ****                     // Go straight
+ 277:functions.c   ****                     stepCount++;
+ 944              		.loc 1 277 0 is_stmt 1
+ 945 014e 0132     		adds	r2, r2, #1
+ 946              	.LVL127:
+ 278:functions.c   ****                     current_row = next_row; // Update coordinates
+ 279:functions.c   ****                     current_column = next_column;
+ 947              		.loc 1 279 0
+ 948 0150 5146     		mov	r1, r10
+ 278:functions.c   ****                     current_row = next_row; // Update coordinates
+ 949              		.loc 1 278 0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 23
+
+
+ 950 0152 2846     		mov	r0, r5
+ 280:functions.c   ****                     continue; 
+ 951              		.loc 1 280 0
+ 952 0154 5AE0     		b	.L58
+ 953              	.LVL128:
+ 954              	.L68:
+ 281:functions.c   ****                 } else if (next_row==current_row && next_column < current_column) {
+ 955              		.loc 1 281 0
+ 956 0156 A842     		cmp	r0, r5
+ 957 0158 12D1     		bne	.L69
+ 958              		.loc 1 281 0 is_stmt 0 discriminator 1
+ 959 015a 5145     		cmp	r1, r10
+ 960 015c 10DD     		ble	.L69
+ 961              	.LVL129:
+ 282:functions.c   ****                     // Turn right
+ 283:functions.c   ****                     stepCount+=2;
+ 284:functions.c   ****                     position++;
+ 962              		.loc 1 284 0 is_stmt 1
+ 963 015e 08F10108 		add	r8, r8, #1
+ 964              	.LVL130:
+ 285:functions.c   ****                     movementArray[position].distance = getDistance_V(stepCount);
+ 965              		.loc 1 285 0
+ 966 0162 901C     		adds	r0, r2, #2
+ 967              	.LVL131:
+ 968 0164 FFF7FEFF 		bl	getDistance_V
+ 969              	.LVL132:
+ 970 0168 2D4B     		ldr	r3, .L74+4
+ 971 016a 43F83800 		str	r0, [r3, r8, lsl #3]
+ 286:functions.c   ****                     movementArray[position].turnDirection = 'R';
+ 972              		.loc 1 286 0
+ 973 016e 03EBC803 		add	r3, r3, r8, lsl #3
+ 974 0172 5222     		movs	r2, #82
+ 975 0174 1A71     		strb	r2, [r3, #4]
+ 976              	.LVL133:
+ 287:functions.c   ****                     current_row = next_row; // Update coordinates
+ 288:functions.c   ****                     current_column = next_column;
+ 977              		.loc 1 288 0
+ 978 0176 5146     		mov	r1, r10
+ 287:functions.c   ****                     current_row = next_row; // Update coordinates
+ 979              		.loc 1 287 0
+ 980 0178 2846     		mov	r0, r5
+ 289:functions.c   ****                     stepCount = 0;
+ 981              		.loc 1 289 0
+ 982 017a 0022     		movs	r2, #0
+ 290:functions.c   ****                     current_direction = WEST;
+ 983              		.loc 1 290 0
+ 984 017c 0326     		movs	r6, #3
+ 985 017e 45E0     		b	.L58
+ 986              	.LVL134:
+ 987              	.L69:
+ 291:functions.c   ****                 } else if (next_row==current_row && next_column > current_column) {
+ 988              		.loc 1 291 0
+ 989 0180 A842     		cmp	r0, r5
+ 990 0182 43D1     		bne	.L58
+ 991              		.loc 1 291 0 is_stmt 0 discriminator 1
+ 992 0184 5145     		cmp	r1, r10
+ 993 0186 41DA     		bge	.L58
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 24
+
+
+ 994              	.LVL135:
+ 292:functions.c   ****                     // Turn left
+ 293:functions.c   ****                     stepCount+=2;
+ 294:functions.c   ****                     position++;
+ 995              		.loc 1 294 0 is_stmt 1
+ 996 0188 08F10108 		add	r8, r8, #1
+ 997              	.LVL136:
+ 295:functions.c   ****                     movementArray[position].distance = getDistance_V(stepCount);
+ 998              		.loc 1 295 0
+ 999 018c 901C     		adds	r0, r2, #2
+ 1000              	.LVL137:
+ 1001 018e FFF7FEFF 		bl	getDistance_V
+ 1002              	.LVL138:
+ 1003 0192 234B     		ldr	r3, .L74+4
+ 1004 0194 43F83800 		str	r0, [r3, r8, lsl #3]
+ 296:functions.c   ****                     movementArray[position].turnDirection = 'L';
+ 1005              		.loc 1 296 0
+ 1006 0198 03EBC803 		add	r3, r3, r8, lsl #3
+ 1007 019c 4C22     		movs	r2, #76
+ 1008 019e 1A71     		strb	r2, [r3, #4]
+ 1009              	.LVL139:
+ 297:functions.c   ****                     current_row = next_row; // Update coordinates
+ 298:functions.c   ****                     current_column = next_column;
+ 1010              		.loc 1 298 0
+ 1011 01a0 5146     		mov	r1, r10
+ 297:functions.c   ****                     current_row = next_row; // Update coordinates
+ 1012              		.loc 1 297 0
+ 1013 01a2 2846     		mov	r0, r5
+ 299:functions.c   ****                     stepCount = 0;
+ 1014              		.loc 1 299 0
+ 1015 01a4 0022     		movs	r2, #0
+ 300:functions.c   ****                     current_direction = EAST;
+ 1016              		.loc 1 300 0
+ 1017 01a6 0126     		movs	r6, #1
+ 1018 01a8 30E0     		b	.L58
+ 1019              	.LVL140:
+ 1020              	.L63:
+ 301:functions.c   ****                 }
+ 302:functions.c   ****                 break;
+ 303:functions.c   ****                 
+ 304:functions.c   ****                 
+ 305:functions.c   ****             case WEST:
+ 306:functions.c   ****                 if (next_row==current_row && next_column < current_column) { 
+ 1021              		.loc 1 306 0
+ 1022 01aa A842     		cmp	r0, r5
+ 1023 01ac 05D1     		bne	.L70
+ 1024              		.loc 1 306 0 is_stmt 0 discriminator 1
+ 1025 01ae 5145     		cmp	r1, r10
+ 1026 01b0 03DD     		ble	.L70
+ 307:functions.c   ****                     // Go straight
+ 308:functions.c   ****                     stepCount++;
+ 1027              		.loc 1 308 0 is_stmt 1
+ 1028 01b2 0132     		adds	r2, r2, #1
+ 1029              	.LVL141:
+ 309:functions.c   ****                     current_row = next_row; // Update coordinates
+ 310:functions.c   ****                     current_column = next_column;
+ 1030              		.loc 1 310 0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 25
+
+
+ 1031 01b4 5146     		mov	r1, r10
+ 309:functions.c   ****                     current_row = next_row; // Update coordinates
+ 1032              		.loc 1 309 0
+ 1033 01b6 2846     		mov	r0, r5
+ 311:functions.c   ****                     continue; 
+ 1034              		.loc 1 311 0
+ 1035 01b8 28E0     		b	.L58
+ 1036              	.LVL142:
+ 1037              	.L70:
+ 312:functions.c   ****                 } else if (next_row<current_row && next_column == current_column) {
+ 1038              		.loc 1 312 0
+ 1039 01ba A842     		cmp	r0, r5
+ 1040 01bc 12DD     		ble	.L71
+ 1041              		.loc 1 312 0 is_stmt 0 discriminator 1
+ 1042 01be 5145     		cmp	r1, r10
+ 1043 01c0 10D1     		bne	.L71
+ 1044              	.LVL143:
+ 313:functions.c   ****                     // Turn right
+ 314:functions.c   ****                     stepCount+=2;
+ 315:functions.c   ****                     position++;
+ 1045              		.loc 1 315 0 is_stmt 1
+ 1046 01c2 08F10108 		add	r8, r8, #1
+ 1047              	.LVL144:
+ 316:functions.c   ****                     movementArray[position].distance = getDistance_H(stepCount);
+ 1048              		.loc 1 316 0
+ 1049 01c6 901C     		adds	r0, r2, #2
+ 1050              	.LVL145:
+ 1051 01c8 FFF7FEFF 		bl	getDistance_H
+ 1052              	.LVL146:
+ 1053 01cc 144B     		ldr	r3, .L74+4
+ 1054 01ce 43F83800 		str	r0, [r3, r8, lsl #3]
+ 317:functions.c   ****                     movementArray[position].turnDirection = 'R';
+ 1055              		.loc 1 317 0
+ 1056 01d2 03EBC803 		add	r3, r3, r8, lsl #3
+ 1057 01d6 5222     		movs	r2, #82
+ 1058 01d8 1A71     		strb	r2, [r3, #4]
+ 1059              	.LVL147:
+ 318:functions.c   ****                     current_row = next_row; // Update coordinates
+ 319:functions.c   ****                     current_column = next_column;
+ 1060              		.loc 1 319 0
+ 1061 01da 5146     		mov	r1, r10
+ 318:functions.c   ****                     current_row = next_row; // Update coordinates
+ 1062              		.loc 1 318 0
+ 1063 01dc 2846     		mov	r0, r5
+ 320:functions.c   ****                     stepCount = 0;
+ 1064              		.loc 1 320 0
+ 1065 01de 0022     		movs	r2, #0
+ 321:functions.c   ****                     current_direction = NORTH;
+ 1066              		.loc 1 321 0
+ 1067 01e0 1646     		mov	r6, r2
+ 1068 01e2 13E0     		b	.L58
+ 1069              	.LVL148:
+ 1070              	.L71:
+ 322:functions.c   ****                 } else if (next_row>current_row && next_column == current_column) {
+ 1071              		.loc 1 322 0
+ 1072 01e4 A842     		cmp	r0, r5
+ 1073 01e6 11DA     		bge	.L58
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 26
+
+
+ 1074              		.loc 1 322 0 is_stmt 0 discriminator 1
+ 1075 01e8 5145     		cmp	r1, r10
+ 1076 01ea 0FD1     		bne	.L58
+ 1077              	.LVL149:
+ 323:functions.c   ****                     // Turn left
+ 324:functions.c   ****                     stepCount+=2;
+ 325:functions.c   ****                     position++;
+ 1078              		.loc 1 325 0 is_stmt 1
+ 1079 01ec 08F10108 		add	r8, r8, #1
+ 1080              	.LVL150:
+ 326:functions.c   ****                     movementArray[position].distance = getDistance_H(stepCount);
+ 1081              		.loc 1 326 0
+ 1082 01f0 901C     		adds	r0, r2, #2
+ 1083              	.LVL151:
+ 1084 01f2 FFF7FEFF 		bl	getDistance_H
+ 1085              	.LVL152:
+ 1086 01f6 0A4B     		ldr	r3, .L74+4
+ 1087 01f8 43F83800 		str	r0, [r3, r8, lsl #3]
+ 327:functions.c   ****                     movementArray[position].turnDirection = 'L';
+ 1088              		.loc 1 327 0
+ 1089 01fc 03EBC803 		add	r3, r3, r8, lsl #3
+ 1090 0200 4C22     		movs	r2, #76
+ 1091 0202 1A71     		strb	r2, [r3, #4]
+ 1092              	.LVL153:
+ 328:functions.c   ****                     current_row = next_row; // Update coordinates
+ 329:functions.c   ****                     current_column = next_column;
+ 1093              		.loc 1 329 0
+ 1094 0204 5146     		mov	r1, r10
+ 328:functions.c   ****                     current_row = next_row; // Update coordinates
+ 1095              		.loc 1 328 0
+ 1096 0206 2846     		mov	r0, r5
+ 330:functions.c   ****                     stepCount = 0;
+ 1097              		.loc 1 330 0
+ 1098 0208 0022     		movs	r2, #0
+ 331:functions.c   ****                     current_direction = SOUTH;
+ 1099              		.loc 1 331 0
+ 1100 020a 0226     		movs	r6, #2
+ 1101              	.LVL154:
+ 1102              	.L58:
+ 1103              	.LBE14:
+ 192:functions.c   ****         int next_row = path[i].x;
+ 1104              		.loc 1 192 0 discriminator 2
+ 1105 020c 0134     		adds	r4, r4, #1
+ 1106              	.LVL155:
+ 1107              	.L52:
+ 192:functions.c   ****         int next_row = path[i].x;
+ 1108              		.loc 1 192 0 is_stmt 0 discriminator 1
+ 1109 020e 064B     		ldr	r3, .L74+12
+ 1110 0210 1B68     		ldr	r3, [r3]
+ 1111 0212 9C42     		cmp	r4, r3
+ 1112 0214 FFF6FFAE 		blt	.L72
+ 1113 0218 BDE8F087 		pop	{r4, r5, r6, r7, r8, r9, r10, pc}
+ 1114              	.LVL156:
+ 1115              	.L75:
+ 1116              		.align	2
+ 1117              	.L74:
+ 1118 021c 00000000 		.word	path
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 27
+
+
+ 1119 0220 00000000 		.word	movementArray
+ 1120 0224 00000000 		.word	robot_direction
+ 1121 0228 00000000 		.word	.LANCHOR2
+ 1122              	.LBE15:
+ 1123              		.cfi_endproc
+ 1124              	.LFE69:
+ 1125              		.size	getMovementArray, .-getMovementArray
+ 1126              		.comm	path,2280,4
+ 1127              		.global	pathLength
+ 1128              		.global	map
+ 1129              		.comm	robot_direction,1,1
+ 1130              		.comm	movementArray,200,4
+ 1131              		.section	.rodata
+ 1132              		.align	2
+ 1133              		.set	.LANCHOR0,. + 0
+ 1134              	.LC0:
+ 1135 0000 01000000 		.word	1
+ 1136 0004 FFFFFFFF 		.word	-1
+ 1137 0008 00000000 		.word	0
+ 1138 000c 00000000 		.word	0
+ 1139              	.LC1:
+ 1140 0010 00000000 		.word	0
+ 1141 0014 00000000 		.word	0
+ 1142 0018 01000000 		.word	1
+ 1143 001c FFFFFFFF 		.word	-1
+ 1144              		.data
+ 1145              		.align	2
+ 1146              		.set	.LANCHOR1,. + 0
+ 1147              		.type	map, %object
+ 1148              		.size	map, 1140
+ 1149              	map:
+ 1150 0000 01000000 		.word	1
+ 1151 0004 01000000 		.word	1
+ 1152 0008 01000000 		.word	1
+ 1153 000c 01000000 		.word	1
+ 1154 0010 01000000 		.word	1
+ 1155 0014 01000000 		.word	1
+ 1156 0018 01000000 		.word	1
+ 1157 001c 01000000 		.word	1
+ 1158 0020 01000000 		.word	1
+ 1159 0024 01000000 		.word	1
+ 1160 0028 01000000 		.word	1
+ 1161 002c 01000000 		.word	1
+ 1162 0030 01000000 		.word	1
+ 1163 0034 01000000 		.word	1
+ 1164 0038 01000000 		.word	1
+ 1165 003c 01000000 		.word	1
+ 1166 0040 01000000 		.word	1
+ 1167 0044 01000000 		.word	1
+ 1168 0048 01000000 		.word	1
+ 1169 004c 01000000 		.word	1
+ 1170 0050 00000000 		.word	0
+ 1171 0054 01000000 		.word	1
+ 1172 0058 00000000 		.word	0
+ 1173 005c 00000000 		.word	0
+ 1174 0060 00000000 		.word	0
+ 1175 0064 00000000 		.word	0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 28
+
+
+ 1176 0068 00000000 		.word	0
+ 1177 006c 00000000 		.word	0
+ 1178 0070 00000000 		.word	0
+ 1179 0074 00000000 		.word	0
+ 1180 0078 00000000 		.word	0
+ 1181 007c 00000000 		.word	0
+ 1182 0080 00000000 		.word	0
+ 1183 0084 00000000 		.word	0
+ 1184 0088 00000000 		.word	0
+ 1185 008c 00000000 		.word	0
+ 1186 0090 00000000 		.word	0
+ 1187 0094 01000000 		.word	1
+ 1188 0098 01000000 		.word	1
+ 1189 009c 00000000 		.word	0
+ 1190 00a0 01000000 		.word	1
+ 1191 00a4 00000000 		.word	0
+ 1192 00a8 01000000 		.word	1
+ 1193 00ac 01000000 		.word	1
+ 1194 00b0 01000000 		.word	1
+ 1195 00b4 01000000 		.word	1
+ 1196 00b8 01000000 		.word	1
+ 1197 00bc 00000000 		.word	0
+ 1198 00c0 01000000 		.word	1
+ 1199 00c4 01000000 		.word	1
+ 1200 00c8 01000000 		.word	1
+ 1201 00cc 00000000 		.word	0
+ 1202 00d0 01000000 		.word	1
+ 1203 00d4 01000000 		.word	1
+ 1204 00d8 01000000 		.word	1
+ 1205 00dc 00000000 		.word	0
+ 1206 00e0 01000000 		.word	1
+ 1207 00e4 01000000 		.word	1
+ 1208 00e8 00000000 		.word	0
+ 1209 00ec 00000000 		.word	0
+ 1210 00f0 00000000 		.word	0
+ 1211 00f4 01000000 		.word	1
+ 1212 00f8 00000000 		.word	0
+ 1213 00fc 00000000 		.word	0
+ 1214 0100 00000000 		.word	0
+ 1215 0104 01000000 		.word	1
+ 1216 0108 00000000 		.word	0
+ 1217 010c 00000000 		.word	0
+ 1218 0110 00000000 		.word	0
+ 1219 0114 00000000 		.word	0
+ 1220 0118 00000000 		.word	0
+ 1221 011c 00000000 		.word	0
+ 1222 0120 00000000 		.word	0
+ 1223 0124 01000000 		.word	1
+ 1224 0128 00000000 		.word	0
+ 1225 012c 01000000 		.word	1
+ 1226 0130 01000000 		.word	1
+ 1227 0134 01000000 		.word	1
+ 1228 0138 01000000 		.word	1
+ 1229 013c 00000000 		.word	0
+ 1230 0140 01000000 		.word	1
+ 1231 0144 00000000 		.word	0
+ 1232 0148 01000000 		.word	1
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 29
+
+
+ 1233 014c 00000000 		.word	0
+ 1234 0150 01000000 		.word	1
+ 1235 0154 01000000 		.word	1
+ 1236 0158 01000000 		.word	1
+ 1237 015c 00000000 		.word	0
+ 1238 0160 01000000 		.word	1
+ 1239 0164 00000000 		.word	0
+ 1240 0168 01000000 		.word	1
+ 1241 016c 01000000 		.word	1
+ 1242 0170 01000000 		.word	1
+ 1243 0174 00000000 		.word	0
+ 1244 0178 01000000 		.word	1
+ 1245 017c 01000000 		.word	1
+ 1246 0180 00000000 		.word	0
+ 1247 0184 00000000 		.word	0
+ 1248 0188 00000000 		.word	0
+ 1249 018c 01000000 		.word	1
+ 1250 0190 00000000 		.word	0
+ 1251 0194 01000000 		.word	1
+ 1252 0198 00000000 		.word	0
+ 1253 019c 00000000 		.word	0
+ 1254 01a0 00000000 		.word	0
+ 1255 01a4 01000000 		.word	1
+ 1256 01a8 00000000 		.word	0
+ 1257 01ac 01000000 		.word	1
+ 1258 01b0 00000000 		.word	0
+ 1259 01b4 00000000 		.word	0
+ 1260 01b8 00000000 		.word	0
+ 1261 01bc 00000000 		.word	0
+ 1262 01c0 00000000 		.word	0
+ 1263 01c4 01000000 		.word	1
+ 1264 01c8 01000000 		.word	1
+ 1265 01cc 00000000 		.word	0
+ 1266 01d0 01000000 		.word	1
+ 1267 01d4 01000000 		.word	1
+ 1268 01d8 01000000 		.word	1
+ 1269 01dc 00000000 		.word	0
+ 1270 01e0 01000000 		.word	1
+ 1271 01e4 00000000 		.word	0
+ 1272 01e8 01000000 		.word	1
+ 1273 01ec 00000000 		.word	0
+ 1274 01f0 01000000 		.word	1
+ 1275 01f4 00000000 		.word	0
+ 1276 01f8 01000000 		.word	1
+ 1277 01fc 00000000 		.word	0
+ 1278 0200 01000000 		.word	1
+ 1279 0204 01000000 		.word	1
+ 1280 0208 01000000 		.word	1
+ 1281 020c 00000000 		.word	0
+ 1282 0210 01000000 		.word	1
+ 1283 0214 01000000 		.word	1
+ 1284 0218 00000000 		.word	0
+ 1285 021c 01000000 		.word	1
+ 1286 0220 00000000 		.word	0
+ 1287 0224 01000000 		.word	1
+ 1288 0228 00000000 		.word	0
+ 1289 022c 00000000 		.word	0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 30
+
+
+ 1290 0230 00000000 		.word	0
+ 1291 0234 01000000 		.word	1
+ 1292 0238 00000000 		.word	0
+ 1293 023c 01000000 		.word	1
+ 1294 0240 00000000 		.word	0
+ 1295 0244 01000000 		.word	1
+ 1296 0248 00000000 		.word	0
+ 1297 024c 01000000 		.word	1
+ 1298 0250 00000000 		.word	0
+ 1299 0254 00000000 		.word	0
+ 1300 0258 00000000 		.word	0
+ 1301 025c 01000000 		.word	1
+ 1302 0260 01000000 		.word	1
+ 1303 0264 00000000 		.word	0
+ 1304 0268 01000000 		.word	1
+ 1305 026c 00000000 		.word	0
+ 1306 0270 01000000 		.word	1
+ 1307 0274 00000000 		.word	0
+ 1308 0278 01000000 		.word	1
+ 1309 027c 01000000 		.word	1
+ 1310 0280 01000000 		.word	1
+ 1311 0284 00000000 		.word	0
+ 1312 0288 01000000 		.word	1
+ 1313 028c 00000000 		.word	0
+ 1314 0290 01000000 		.word	1
+ 1315 0294 00000000 		.word	0
+ 1316 0298 01000000 		.word	1
+ 1317 029c 00000000 		.word	0
+ 1318 02a0 01000000 		.word	1
+ 1319 02a4 01000000 		.word	1
+ 1320 02a8 01000000 		.word	1
+ 1321 02ac 01000000 		.word	1
+ 1322 02b0 00000000 		.word	0
+ 1323 02b4 00000000 		.word	0
+ 1324 02b8 00000000 		.word	0
+ 1325 02bc 01000000 		.word	1
+ 1326 02c0 00000000 		.word	0
+ 1327 02c4 01000000 		.word	1
+ 1328 02c8 00000000 		.word	0
+ 1329 02cc 00000000 		.word	0
+ 1330 02d0 00000000 		.word	0
+ 1331 02d4 01000000 		.word	1
+ 1332 02d8 00000000 		.word	0
+ 1333 02dc 00000000 		.word	0
+ 1334 02e0 00000000 		.word	0
+ 1335 02e4 01000000 		.word	1
+ 1336 02e8 00000000 		.word	0
+ 1337 02ec 00000000 		.word	0
+ 1338 02f0 00000000 		.word	0
+ 1339 02f4 01000000 		.word	1
+ 1340 02f8 01000000 		.word	1
+ 1341 02fc 01000000 		.word	1
+ 1342 0300 01000000 		.word	1
+ 1343 0304 00000000 		.word	0
+ 1344 0308 01000000 		.word	1
+ 1345 030c 00000000 		.word	0
+ 1346 0310 01000000 		.word	1
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 31
+
+
+ 1347 0314 01000000 		.word	1
+ 1348 0318 01000000 		.word	1
+ 1349 031c 01000000 		.word	1
+ 1350 0320 01000000 		.word	1
+ 1351 0324 01000000 		.word	1
+ 1352 0328 01000000 		.word	1
+ 1353 032c 01000000 		.word	1
+ 1354 0330 01000000 		.word	1
+ 1355 0334 01000000 		.word	1
+ 1356 0338 01000000 		.word	1
+ 1357 033c 00000000 		.word	0
+ 1358 0340 01000000 		.word	1
+ 1359 0344 01000000 		.word	1
+ 1360 0348 00000000 		.word	0
+ 1361 034c 00000000 		.word	0
+ 1362 0350 00000000 		.word	0
+ 1363 0354 00000000 		.word	0
+ 1364 0358 00000000 		.word	0
+ 1365 035c 00000000 		.word	0
+ 1366 0360 00000000 		.word	0
+ 1367 0364 00000000 		.word	0
+ 1368 0368 00000000 		.word	0
+ 1369 036c 00000000 		.word	0
+ 1370 0370 00000000 		.word	0
+ 1371 0374 00000000 		.word	0
+ 1372 0378 00000000 		.word	0
+ 1373 037c 00000000 		.word	0
+ 1374 0380 00000000 		.word	0
+ 1375 0384 00000000 		.word	0
+ 1376 0388 00000000 		.word	0
+ 1377 038c 01000000 		.word	1
+ 1378 0390 01000000 		.word	1
+ 1379 0394 00000000 		.word	0
+ 1380 0398 01000000 		.word	1
+ 1381 039c 01000000 		.word	1
+ 1382 03a0 01000000 		.word	1
+ 1383 03a4 01000000 		.word	1
+ 1384 03a8 01000000 		.word	1
+ 1385 03ac 01000000 		.word	1
+ 1386 03b0 01000000 		.word	1
+ 1387 03b4 01000000 		.word	1
+ 1388 03b8 01000000 		.word	1
+ 1389 03bc 01000000 		.word	1
+ 1390 03c0 01000000 		.word	1
+ 1391 03c4 00000000 		.word	0
+ 1392 03c8 01000000 		.word	1
+ 1393 03cc 01000000 		.word	1
+ 1394 03d0 01000000 		.word	1
+ 1395 03d4 01000000 		.word	1
+ 1396 03d8 01000000 		.word	1
+ 1397 03dc 01000000 		.word	1
+ 1398 03e0 00000000 		.word	0
+ 1399 03e4 00000000 		.word	0
+ 1400 03e8 00000000 		.word	0
+ 1401 03ec 00000000 		.word	0
+ 1402 03f0 00000000 		.word	0
+ 1403 03f4 00000000 		.word	0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 32
+
+
+ 1404 03f8 00000000 		.word	0
+ 1405 03fc 01000000 		.word	1
+ 1406 0400 00000000 		.word	0
+ 1407 0404 00000000 		.word	0
+ 1408 0408 00000000 		.word	0
+ 1409 040c 00000000 		.word	0
+ 1410 0410 00000000 		.word	0
+ 1411 0414 00000000 		.word	0
+ 1412 0418 00000000 		.word	0
+ 1413 041c 00000000 		.word	0
+ 1414 0420 00000000 		.word	0
+ 1415 0424 01000000 		.word	1
+ 1416 0428 01000000 		.word	1
+ 1417 042c 01000000 		.word	1
+ 1418 0430 01000000 		.word	1
+ 1419 0434 01000000 		.word	1
+ 1420 0438 01000000 		.word	1
+ 1421 043c 01000000 		.word	1
+ 1422 0440 01000000 		.word	1
+ 1423 0444 01000000 		.word	1
+ 1424 0448 01000000 		.word	1
+ 1425 044c 01000000 		.word	1
+ 1426 0450 01000000 		.word	1
+ 1427 0454 01000000 		.word	1
+ 1428 0458 01000000 		.word	1
+ 1429 045c 01000000 		.word	1
+ 1430 0460 01000000 		.word	1
+ 1431 0464 01000000 		.word	1
+ 1432 0468 01000000 		.word	1
+ 1433 046c 01000000 		.word	1
+ 1434 0470 01000000 		.word	1
+ 1435              		.bss
+ 1436              		.align	2
+ 1437              		.set	.LANCHOR2,. + 0
+ 1438              		.type	pathLength, %object
+ 1439              		.size	pathLength, 4
+ 1440              	pathLength:
+ 1441 0000 00000000 		.space	4
+ 1442              		.text
+ 1443              	.Letext0:
+ 1444              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 1445              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 1446              		.file 4 "program.h"
+ 1447              		.file 5 "Generated_Source\\PSoC5/core_cm3.h"
+ 1448              		.section	.debug_info,"",%progbits
+ 1449              	.Ldebug_info0:
+ 1450 0000 D1050000 		.4byte	0x5d1
+ 1451 0004 0400     		.2byte	0x4
+ 1452 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 1453 000a 04       		.byte	0x4
+ 1454 000b 01       		.uleb128 0x1
+ 1455 000c 02030000 		.4byte	.LASF62
+ 1456 0010 0C       		.byte	0xc
+ 1457 0011 F1010000 		.4byte	.LASF63
+ 1458 0015 02020000 		.4byte	.LASF64
+ 1459 0019 48000000 		.4byte	.Ldebug_ranges0+0x48
+ 1460 001d 00000000 		.4byte	0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 33
+
+
+ 1461 0021 00000000 		.4byte	.Ldebug_line0
+ 1462 0025 02       		.uleb128 0x2
+ 1463 0026 01       		.byte	0x1
+ 1464 0027 06       		.byte	0x6
+ 1465 0028 13010000 		.4byte	.LASF0
+ 1466 002c 02       		.uleb128 0x2
+ 1467 002d 01       		.byte	0x1
+ 1468 002e 08       		.byte	0x8
+ 1469 002f F1000000 		.4byte	.LASF1
+ 1470 0033 02       		.uleb128 0x2
+ 1471 0034 02       		.byte	0x2
+ 1472 0035 05       		.byte	0x5
+ 1473 0036 24000000 		.4byte	.LASF2
+ 1474 003a 02       		.uleb128 0x2
+ 1475 003b 02       		.byte	0x2
+ 1476 003c 07       		.byte	0x7
+ 1477 003d A2010000 		.4byte	.LASF3
+ 1478 0041 03       		.uleb128 0x3
+ 1479 0042 98020000 		.4byte	.LASF12
+ 1480 0046 02       		.byte	0x2
+ 1481 0047 3F       		.byte	0x3f
+ 1482 0048 4C000000 		.4byte	0x4c
+ 1483 004c 02       		.uleb128 0x2
+ 1484 004d 04       		.byte	0x4
+ 1485 004e 05       		.byte	0x5
+ 1486 004f D2000000 		.4byte	.LASF4
+ 1487 0053 02       		.uleb128 0x2
+ 1488 0054 04       		.byte	0x4
+ 1489 0055 07       		.byte	0x7
+ 1490 0056 D8010000 		.4byte	.LASF5
+ 1491 005a 02       		.uleb128 0x2
+ 1492 005b 08       		.byte	0x8
+ 1493 005c 05       		.byte	0x5
+ 1494 005d C4000000 		.4byte	.LASF6
+ 1495 0061 02       		.uleb128 0x2
+ 1496 0062 08       		.byte	0x8
+ 1497 0063 07       		.byte	0x7
+ 1498 0064 1F010000 		.4byte	.LASF7
+ 1499 0068 04       		.uleb128 0x4
+ 1500 0069 04       		.byte	0x4
+ 1501 006a 05       		.byte	0x5
+ 1502 006b 696E7400 		.ascii	"int\000"
+ 1503 006f 02       		.uleb128 0x2
+ 1504 0070 04       		.byte	0x4
+ 1505 0071 07       		.byte	0x7
+ 1506 0072 57010000 		.4byte	.LASF8
+ 1507 0076 02       		.uleb128 0x2
+ 1508 0077 08       		.byte	0x8
+ 1509 0078 04       		.byte	0x4
+ 1510 0079 43000000 		.4byte	.LASF9
+ 1511 007d 02       		.uleb128 0x2
+ 1512 007e 04       		.byte	0x4
+ 1513 007f 07       		.byte	0x7
+ 1514 0080 BB020000 		.4byte	.LASF10
+ 1515 0084 02       		.uleb128 0x2
+ 1516 0085 01       		.byte	0x1
+ 1517 0086 08       		.byte	0x8
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 34
+
+
+ 1518 0087 90010000 		.4byte	.LASF11
+ 1519 008b 03       		.uleb128 0x3
+ 1520 008c 9A010000 		.4byte	.LASF13
+ 1521 0090 03       		.byte	0x3
+ 1522 0091 2C       		.byte	0x2c
+ 1523 0092 41000000 		.4byte	0x41
+ 1524 0096 02       		.uleb128 0x2
+ 1525 0097 04       		.byte	0x4
+ 1526 0098 04       		.byte	0x4
+ 1527 0099 BE000000 		.4byte	.LASF14
+ 1528 009d 02       		.uleb128 0x2
+ 1529 009e 08       		.byte	0x8
+ 1530 009f 04       		.byte	0x4
+ 1531 00a0 EA010000 		.4byte	.LASF15
+ 1532 00a4 05       		.uleb128 0x5
+ 1533 00a5 A7020000 		.4byte	.LASF18
+ 1534 00a9 08       		.byte	0x8
+ 1535 00aa 04       		.byte	0x4
+ 1536 00ab 27       		.byte	0x27
+ 1537 00ac C9000000 		.4byte	0xc9
+ 1538 00b0 06       		.uleb128 0x6
+ 1539 00b1 87010000 		.4byte	.LASF16
+ 1540 00b5 04       		.byte	0x4
+ 1541 00b6 28       		.byte	0x28
+ 1542 00b7 68000000 		.4byte	0x68
+ 1543 00bb 00       		.byte	0
+ 1544 00bc 06       		.uleb128 0x6
+ 1545 00bd E7020000 		.4byte	.LASF17
+ 1546 00c1 04       		.byte	0x4
+ 1547 00c2 29       		.byte	0x29
+ 1548 00c3 84000000 		.4byte	0x84
+ 1549 00c7 04       		.byte	0x4
+ 1550 00c8 00       		.byte	0
+ 1551 00c9 03       		.uleb128 0x3
+ 1552 00ca A7020000 		.4byte	.LASF18
+ 1553 00ce 04       		.byte	0x4
+ 1554 00cf 2A       		.byte	0x2a
+ 1555 00d0 A4000000 		.4byte	0xa4
+ 1556 00d4 07       		.uleb128 0x7
+ 1557 00d5 01       		.byte	0x1
+ 1558 00d6 2C000000 		.4byte	0x2c
+ 1559 00da 04       		.byte	0x4
+ 1560 00db 2C       		.byte	0x2c
+ 1561 00dc F9000000 		.4byte	0xf9
+ 1562 00e0 08       		.uleb128 0x8
+ 1563 00e1 1E000000 		.4byte	.LASF19
+ 1564 00e5 00       		.byte	0
+ 1565 00e6 08       		.uleb128 0x8
+ 1566 00e7 0E010000 		.4byte	.LASF20
+ 1567 00eb 01       		.byte	0x1
+ 1568 00ec 08       		.uleb128 0x8
+ 1569 00ed FF000000 		.4byte	.LASF21
+ 1570 00f1 02       		.byte	0x2
+ 1571 00f2 08       		.uleb128 0x8
+ 1572 00f3 C5010000 		.4byte	.LASF22
+ 1573 00f7 03       		.byte	0x3
+ 1574 00f8 00       		.byte	0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 35
+
+
+ 1575 00f9 03       		.uleb128 0x3
+ 1576 00fa C4020000 		.4byte	.LASF23
+ 1577 00fe 04       		.byte	0x4
+ 1578 00ff 31       		.byte	0x31
+ 1579 0100 D4000000 		.4byte	0xd4
+ 1580 0104 09       		.uleb128 0x9
+ 1581 0105 08       		.byte	0x8
+ 1582 0106 01       		.byte	0x1
+ 1583 0107 1C       		.byte	0x1c
+ 1584 0108 21010000 		.4byte	0x121
+ 1585 010c 0A       		.uleb128 0xa
+ 1586 010d 7800     		.ascii	"x\000"
+ 1587 010f 01       		.byte	0x1
+ 1588 0110 1D       		.byte	0x1d
+ 1589 0111 68000000 		.4byte	0x68
+ 1590 0115 00       		.byte	0
+ 1591 0116 0A       		.uleb128 0xa
+ 1592 0117 7900     		.ascii	"y\000"
+ 1593 0119 01       		.byte	0x1
+ 1594 011a 1D       		.byte	0x1d
+ 1595 011b 68000000 		.4byte	0x68
+ 1596 011f 04       		.byte	0x4
+ 1597 0120 00       		.byte	0
+ 1598 0121 03       		.uleb128 0x3
+ 1599 0122 3E000000 		.4byte	.LASF24
+ 1600 0126 01       		.byte	0x1
+ 1601 0127 1E       		.byte	0x1e
+ 1602 0128 04010000 		.4byte	0x104
+ 1603 012c 09       		.uleb128 0x9
+ 1604 012d 0C       		.byte	0xc
+ 1605 012e 01       		.byte	0x1
+ 1606 012f 21       		.byte	0x21
+ 1607 0130 4D010000 		.4byte	0x14d
+ 1608 0134 06       		.uleb128 0x6
+ 1609 0135 95010000 		.4byte	.LASF25
+ 1610 0139 01       		.byte	0x1
+ 1611 013a 22       		.byte	0x22
+ 1612 013b 68000000 		.4byte	0x68
+ 1613 013f 00       		.byte	0
+ 1614 0140 06       		.uleb128 0x6
+ 1615 0141 AE000000 		.4byte	.LASF26
+ 1616 0145 01       		.byte	0x1
+ 1617 0146 23       		.byte	0x23
+ 1618 0147 21010000 		.4byte	0x121
+ 1619 014b 04       		.byte	0x4
+ 1620 014c 00       		.byte	0
+ 1621 014d 03       		.uleb128 0x3
+ 1622 014e 82010000 		.4byte	.LASF27
+ 1623 0152 01       		.byte	0x1
+ 1624 0153 24       		.byte	0x24
+ 1625 0154 2C010000 		.4byte	0x12c
+ 1626 0158 0B       		.uleb128 0xb
+ 1627 0159 8C000000 		.4byte	.LASF65
+ 1628 015d 01       		.byte	0x1
+ 1629 015e 2C       		.byte	0x2c
+ 1630 015f F9000000 		.4byte	0xf9
+ 1631 0163 00000000 		.4byte	.LFB64
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 36
+
+
+ 1632 0167 0C000000 		.4byte	.LFE64-.LFB64
+ 1633 016b 01       		.uleb128 0x1
+ 1634 016c 9C       		.byte	0x9c
+ 1635 016d 0C       		.uleb128 0xc
+ 1636 016e 4F000000 		.4byte	.LASF41
+ 1637 0172 01       		.byte	0x1
+ 1638 0173 31       		.byte	0x31
+ 1639 0174 9F010000 		.4byte	0x19f
+ 1640 0178 00000000 		.4byte	.LFB65
+ 1641 017c 1C000000 		.4byte	.LFE65-.LFB65
+ 1642 0180 01       		.uleb128 0x1
+ 1643 0181 9C       		.byte	0x9c
+ 1644 0182 9F010000 		.4byte	0x19f
+ 1645 0186 0D       		.uleb128 0xd
+ 1646 0187 7800     		.ascii	"x\000"
+ 1647 0189 01       		.byte	0x1
+ 1648 018a 31       		.byte	0x31
+ 1649 018b 68000000 		.4byte	0x68
+ 1650 018f 00000000 		.4byte	.LLST0
+ 1651 0193 0E       		.uleb128 0xe
+ 1652 0194 7900     		.ascii	"y\000"
+ 1653 0196 01       		.byte	0x1
+ 1654 0197 31       		.byte	0x31
+ 1655 0198 68000000 		.4byte	0x68
+ 1656 019c 01       		.uleb128 0x1
+ 1657 019d 51       		.byte	0x51
+ 1658 019e 00       		.byte	0
+ 1659 019f 02       		.uleb128 0x2
+ 1660 01a0 01       		.byte	0x1
+ 1661 01a1 02       		.byte	0x2
+ 1662 01a2 B5010000 		.4byte	.LASF28
+ 1663 01a6 0F       		.uleb128 0xf
+ 1664 01a7 05010000 		.4byte	.LASF45
+ 1665 01ab 01       		.byte	0x1
+ 1666 01ac 36       		.byte	0x36
+ 1667 01ad 00000000 		.4byte	.LFB66
+ 1668 01b1 18020000 		.4byte	.LFE66-.LFB66
+ 1669 01b5 01       		.uleb128 0x1
+ 1670 01b6 9C       		.byte	0x9c
+ 1671 01b7 77030000 		.4byte	0x377
+ 1672 01bb 10       		.uleb128 0x10
+ 1673 01bc E3000000 		.4byte	.LASF29
+ 1674 01c0 01       		.byte	0x1
+ 1675 01c1 36       		.byte	0x36
+ 1676 01c2 68000000 		.4byte	0x68
+ 1677 01c6 6C000000 		.4byte	.LLST1
+ 1678 01ca 10       		.uleb128 0x10
+ 1679 01cb EA000000 		.4byte	.LASF30
+ 1680 01cf 01       		.byte	0x1
+ 1681 01d0 36       		.byte	0x36
+ 1682 01d1 68000000 		.4byte	0x68
+ 1683 01d5 98000000 		.4byte	.LLST2
+ 1684 01d9 10       		.uleb128 0x10
+ 1685 01da 0E000000 		.4byte	.LASF31
+ 1686 01de 01       		.byte	0x1
+ 1687 01df 36       		.byte	0x36
+ 1688 01e0 68000000 		.4byte	0x68
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 37
+
+
+ 1689 01e4 C4000000 		.4byte	.LLST3
+ 1690 01e8 10       		.uleb128 0x10
+ 1691 01e9 16000000 		.4byte	.LASF32
+ 1692 01ed 01       		.byte	0x1
+ 1693 01ee 36       		.byte	0x36
+ 1694 01ef 68000000 		.4byte	0x68
+ 1695 01f3 F0000000 		.4byte	.LLST4
+ 1696 01f7 11       		.uleb128 0x11
+ 1697 01f8 6C010000 		.4byte	.LASF33
+ 1698 01fc 01       		.byte	0x1
+ 1699 01fd 38       		.byte	0x38
+ 1700 01fe 77030000 		.4byte	0x377
+ 1701 0202 03       		.uleb128 0x3
+ 1702 0203 91       		.byte	0x91
+ 1703 0204 FC64     		.sleb128 -3460
+ 1704 0206 11       		.uleb128 0x11
+ 1705 0207 42010000 		.4byte	.LASF34
+ 1706 020b 01       		.byte	0x1
+ 1707 020c 45       		.byte	0x45
+ 1708 020d 21010000 		.4byte	0x121
+ 1709 0211 03       		.uleb128 0x3
+ 1710 0212 91       		.byte	0x91
+ 1711 0213 F464     		.sleb128 -3468
+ 1712 0215 12       		.uleb128 0x12
+ 1713 0216 647800   		.ascii	"dx\000"
+ 1714 0219 01       		.byte	0x1
+ 1715 021a 49       		.byte	0x49
+ 1716 021b 8D030000 		.4byte	0x38d
+ 1717 021f 03       		.uleb128 0x3
+ 1718 0220 91       		.byte	0x91
+ 1719 0221 E464     		.sleb128 -3484
+ 1720 0223 12       		.uleb128 0x12
+ 1721 0224 647900   		.ascii	"dy\000"
+ 1722 0227 01       		.byte	0x1
+ 1723 0228 4A       		.byte	0x4a
+ 1724 0229 8D030000 		.4byte	0x38d
+ 1725 022d 03       		.uleb128 0x3
+ 1726 022e 91       		.byte	0x91
+ 1727 022f D464     		.sleb128 -3500
+ 1728 0231 11       		.uleb128 0x11
+ 1729 0232 B5000000 		.4byte	.LASF35
+ 1730 0236 01       		.byte	0x1
+ 1731 0237 71       		.byte	0x71
+ 1732 0238 9D030000 		.4byte	0x39d
+ 1733 023c 03       		.uleb128 0x3
+ 1734 023d 91       		.byte	0x91
+ 1735 023e EC52     		.sleb128 -5780
+ 1736 0240 11       		.uleb128 0x11
+ 1737 0241 64010000 		.4byte	.LASF36
+ 1738 0245 01       		.byte	0x1
+ 1739 0246 74       		.byte	0x74
+ 1740 0247 21010000 		.4byte	0x121
+ 1741 024b 03       		.uleb128 0x3
+ 1742 024c 91       		.byte	0x91
+ 1743 024d E452     		.sleb128 -5788
+ 1744 024f 13       		.uleb128 0x13
+ 1745 0250 12000000 		.4byte	.LBB2
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 38
+
+
+ 1746 0254 36000000 		.4byte	.LBE2-.LBB2
+ 1747 0258 7D020000 		.4byte	0x27d
+ 1748 025c 14       		.uleb128 0x14
+ 1749 025d 6900     		.ascii	"i\000"
+ 1750 025f 01       		.byte	0x1
+ 1751 0260 3B       		.byte	0x3b
+ 1752 0261 68000000 		.4byte	0x68
+ 1753 0265 1D010000 		.4byte	.LLST5
+ 1754 0269 15       		.uleb128 0x15
+ 1755 026a 00000000 		.4byte	.Ldebug_ranges0+0
+ 1756 026e 14       		.uleb128 0x14
+ 1757 026f 6A00     		.ascii	"j\000"
+ 1758 0271 01       		.byte	0x1
+ 1759 0272 3C       		.byte	0x3c
+ 1760 0273 68000000 		.4byte	0x68
+ 1761 0277 3C010000 		.4byte	.LLST6
+ 1762 027b 00       		.byte	0
+ 1763 027c 00       		.byte	0
+ 1764 027d 13       		.uleb128 0x13
+ 1765 027e 84000000 		.4byte	.LBB5
+ 1766 0282 DE000000 		.4byte	.LBE5-.LBB5
+ 1767 0286 54030000 		.4byte	0x354
+ 1768 028a 14       		.uleb128 0x14
+ 1769 028b 7800     		.ascii	"x\000"
+ 1770 028d 01       		.byte	0x1
+ 1771 028e 4F       		.byte	0x4f
+ 1772 028f 68000000 		.4byte	0x68
+ 1773 0293 5A010000 		.4byte	.LLST7
+ 1774 0297 14       		.uleb128 0x14
+ 1775 0298 7900     		.ascii	"y\000"
+ 1776 029a 01       		.byte	0x1
+ 1777 029b 50       		.byte	0x50
+ 1778 029c 68000000 		.4byte	0x68
+ 1779 02a0 6D010000 		.4byte	.LLST8
+ 1780 02a4 16       		.uleb128 0x16
+ 1781 02a5 77000000 		.4byte	.LASF37
+ 1782 02a9 01       		.byte	0x1
+ 1783 02aa 63       		.byte	0x63
+ 1784 02ab 68000000 		.4byte	0x68
+ 1785 02af 80010000 		.4byte	.LLST9
+ 1786 02b3 13       		.uleb128 0x13
+ 1787 02b4 A0000000 		.4byte	.LBB6
+ 1788 02b8 8A000000 		.4byte	.LBE6-.LBB6
+ 1789 02bc 29030000 		.4byte	0x329
+ 1790 02c0 14       		.uleb128 0x14
+ 1791 02c1 6900     		.ascii	"i\000"
+ 1792 02c3 01       		.byte	0x1
+ 1793 02c4 54       		.byte	0x54
+ 1794 02c5 68000000 		.4byte	0x68
+ 1795 02c9 A9010000 		.4byte	.LLST10
+ 1796 02cd 17       		.uleb128 0x17
+ 1797 02ce A4000000 		.4byte	.LBB7
+ 1798 02d2 78000000 		.4byte	.LBE7-.LBB7
+ 1799 02d6 16       		.uleb128 0x16
+ 1800 02d7 71010000 		.4byte	.LASF38
+ 1801 02db 01       		.byte	0x1
+ 1802 02dc 55       		.byte	0x55
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 39
+
+
+ 1803 02dd 68000000 		.4byte	0x68
+ 1804 02e1 C8010000 		.4byte	.LLST11
+ 1805 02e5 16       		.uleb128 0x16
+ 1806 02e6 FD010000 		.4byte	.LASF39
+ 1807 02ea 01       		.byte	0x1
+ 1808 02eb 56       		.byte	0x56
+ 1809 02ec 68000000 		.4byte	0x68
+ 1810 02f0 F5010000 		.4byte	.LLST12
+ 1811 02f4 13       		.uleb128 0x13
+ 1812 02f5 D4000000 		.4byte	.LBB8
+ 1813 02f9 48000000 		.4byte	.LBE8-.LBB8
+ 1814 02fd 11030000 		.4byte	0x311
+ 1815 0301 16       		.uleb128 0x16
+ 1816 0302 DB000000 		.4byte	.LASF40
+ 1817 0306 01       		.byte	0x1
+ 1818 0307 59       		.byte	0x59
+ 1819 0308 68000000 		.4byte	0x68
+ 1820 030c 08020000 		.4byte	.LLST13
+ 1821 0310 00       		.byte	0
+ 1822 0311 18       		.uleb128 0x18
+ 1823 0312 C0000000 		.4byte	.LVL22
+ 1824 0316 6D010000 		.4byte	0x16d
+ 1825 031a 19       		.uleb128 0x19
+ 1826 031b 01       		.uleb128 0x1
+ 1827 031c 50       		.byte	0x50
+ 1828 031d 02       		.uleb128 0x2
+ 1829 031e 74       		.byte	0x74
+ 1830 031f 00       		.sleb128 0
+ 1831 0320 19       		.uleb128 0x19
+ 1832 0321 01       		.uleb128 0x1
+ 1833 0322 51       		.byte	0x51
+ 1834 0323 02       		.uleb128 0x2
+ 1835 0324 76       		.byte	0x76
+ 1836 0325 00       		.sleb128 0
+ 1837 0326 00       		.byte	0
+ 1838 0327 00       		.byte	0
+ 1839 0328 00       		.byte	0
+ 1840 0329 17       		.uleb128 0x17
+ 1841 032a 2A010000 		.4byte	.LBB9
+ 1842 032e 38000000 		.4byte	.LBE9-.LBB9
+ 1843 0332 14       		.uleb128 0x14
+ 1844 0333 6900     		.ascii	"i\000"
+ 1845 0335 01       		.byte	0x1
+ 1846 0336 64       		.byte	0x64
+ 1847 0337 68000000 		.4byte	0x68
+ 1848 033b 1B020000 		.4byte	.LLST14
+ 1849 033f 15       		.uleb128 0x15
+ 1850 0340 18000000 		.4byte	.Ldebug_ranges0+0x18
+ 1851 0344 14       		.uleb128 0x14
+ 1852 0345 6A00     		.ascii	"j\000"
+ 1853 0347 01       		.byte	0x1
+ 1854 0348 65       		.byte	0x65
+ 1855 0349 68000000 		.4byte	0x68
+ 1856 034d 2E020000 		.4byte	.LLST15
+ 1857 0351 00       		.byte	0
+ 1858 0352 00       		.byte	0
+ 1859 0353 00       		.byte	0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 40
+
+
+ 1860 0354 17       		.uleb128 0x17
+ 1861 0355 D4010000 		.4byte	.LBB12
+ 1862 0359 2A000000 		.4byte	.LBE12-.LBB12
+ 1863 035d 12       		.uleb128 0x12
+ 1864 035e 6A00     		.ascii	"j\000"
+ 1865 0360 01       		.byte	0x1
+ 1866 0361 7E       		.byte	0x7e
+ 1867 0362 68000000 		.4byte	0x68
+ 1868 0366 01       		.uleb128 0x1
+ 1869 0367 53       		.byte	0x53
+ 1870 0368 14       		.uleb128 0x14
+ 1871 0369 6B00     		.ascii	"k\000"
+ 1872 036b 01       		.byte	0x1
+ 1873 036c 7E       		.byte	0x7e
+ 1874 036d 68000000 		.4byte	0x68
+ 1875 0371 4C020000 		.4byte	.LLST16
+ 1876 0375 00       		.byte	0
+ 1877 0376 00       		.byte	0
+ 1878 0377 1A       		.uleb128 0x1a
+ 1879 0378 4D010000 		.4byte	0x14d
+ 1880 037c 8D030000 		.4byte	0x38d
+ 1881 0380 1B       		.uleb128 0x1b
+ 1882 0381 7D000000 		.4byte	0x7d
+ 1883 0385 0E       		.byte	0xe
+ 1884 0386 1B       		.uleb128 0x1b
+ 1885 0387 7D000000 		.4byte	0x7d
+ 1886 038b 12       		.byte	0x12
+ 1887 038c 00       		.byte	0
+ 1888 038d 1A       		.uleb128 0x1a
+ 1889 038e 68000000 		.4byte	0x68
+ 1890 0392 9D030000 		.4byte	0x39d
+ 1891 0396 1B       		.uleb128 0x1b
+ 1892 0397 7D000000 		.4byte	0x7d
+ 1893 039b 03       		.byte	0x3
+ 1894 039c 00       		.byte	0
+ 1895 039d 1A       		.uleb128 0x1a
+ 1896 039e 21010000 		.4byte	0x121
+ 1897 03a2 AE030000 		.4byte	0x3ae
+ 1898 03a6 1C       		.uleb128 0x1c
+ 1899 03a7 7D000000 		.4byte	0x7d
+ 1900 03ab 1C01     		.2byte	0x11c
+ 1901 03ad 00       		.byte	0
+ 1902 03ae 1D       		.uleb128 0x1d
+ 1903 03af 9F030000 		.4byte	.LASF42
+ 1904 03b3 01       		.byte	0x1
+ 1905 03b4 86       		.byte	0x86
+ 1906 03b5 68000000 		.4byte	0x68
+ 1907 03b9 00000000 		.4byte	.LFB67
+ 1908 03bd 9C000000 		.4byte	.LFE67-.LFB67
+ 1909 03c1 01       		.uleb128 0x1
+ 1910 03c2 9C       		.byte	0x9c
+ 1911 03c3 D7030000 		.4byte	0x3d7
+ 1912 03c7 10       		.uleb128 0x10
+ 1913 03c8 BB010000 		.4byte	.LASF43
+ 1914 03cc 01       		.byte	0x1
+ 1915 03cd 86       		.byte	0x86
+ 1916 03ce 68000000 		.4byte	0x68
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 41
+
+
+ 1917 03d2 6B020000 		.4byte	.LLST17
+ 1918 03d6 00       		.byte	0
+ 1919 03d7 1D       		.uleb128 0x1d
+ 1920 03d8 00000000 		.4byte	.LASF44
+ 1921 03dc 01       		.byte	0x1
+ 1922 03dd 99       		.byte	0x99
+ 1923 03de 68000000 		.4byte	0x68
+ 1924 03e2 00000000 		.4byte	.LFB68
+ 1925 03e6 A8000000 		.4byte	.LFE68-.LFB68
+ 1926 03ea 01       		.uleb128 0x1
+ 1927 03eb 9C       		.byte	0x9c
+ 1928 03ec 00040000 		.4byte	0x400
+ 1929 03f0 10       		.uleb128 0x10
+ 1930 03f1 BB010000 		.4byte	.LASF43
+ 1931 03f5 01       		.byte	0x1
+ 1932 03f6 99       		.byte	0x99
+ 1933 03f7 68000000 		.4byte	0x68
+ 1934 03fb 09030000 		.4byte	.LLST18
+ 1935 03ff 00       		.byte	0
+ 1936 0400 0F       		.uleb128 0xf
+ 1937 0401 87020000 		.4byte	.LASF46
+ 1938 0405 01       		.byte	0x1
+ 1939 0406 B7       		.byte	0xb7
+ 1940 0407 00000000 		.4byte	.LFB69
+ 1941 040b 2C020000 		.4byte	.LFE69-.LFB69
+ 1942 040f 01       		.uleb128 0x1
+ 1943 0410 9C       		.byte	0x9c
+ 1944 0411 48050000 		.4byte	0x548
+ 1945 0415 10       		.uleb128 0x10
+ 1946 0416 5B000000 		.4byte	.LASF47
+ 1947 041a 01       		.byte	0x1
+ 1948 041b B7       		.byte	0xb7
+ 1949 041c 68000000 		.4byte	0x68
+ 1950 0420 A7030000 		.4byte	.LLST19
+ 1951 0424 10       		.uleb128 0x10
+ 1952 0425 7F000000 		.4byte	.LASF48
+ 1953 0429 01       		.byte	0x1
+ 1954 042a B7       		.byte	0xb7
+ 1955 042b 68000000 		.4byte	0x68
+ 1956 042f C8030000 		.4byte	.LLST20
+ 1957 0433 10       		.uleb128 0x10
+ 1958 0434 D3020000 		.4byte	.LASF49
+ 1959 0438 01       		.byte	0x1
+ 1960 0439 B7       		.byte	0xb7
+ 1961 043a 68000000 		.4byte	0x68
+ 1962 043e E9030000 		.4byte	.LLST21
+ 1963 0442 10       		.uleb128 0x10
+ 1964 0443 CA010000 		.4byte	.LASF50
+ 1965 0447 01       		.byte	0x1
+ 1966 0448 B7       		.byte	0xb7
+ 1967 0449 68000000 		.4byte	0x68
+ 1968 044d 15040000 		.4byte	.LLST22
+ 1969 0451 10       		.uleb128 0x10
+ 1970 0452 65000000 		.4byte	.LASF51
+ 1971 0456 01       		.byte	0x1
+ 1972 0457 B7       		.byte	0xb7
+ 1973 0458 F9000000 		.4byte	0xf9
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 42
+
+
+ 1974 045c 41040000 		.4byte	.LLST23
+ 1975 0460 16       		.uleb128 0x16
+ 1976 0461 BB010000 		.4byte	.LASF43
+ 1977 0465 01       		.byte	0x1
+ 1978 0466 B9       		.byte	0xb9
+ 1979 0467 68000000 		.4byte	0x68
+ 1980 046b 18050000 		.4byte	.LLST24
+ 1981 046f 16       		.uleb128 0x16
+ 1982 0470 DE020000 		.4byte	.LASF52
+ 1983 0474 01       		.byte	0x1
+ 1984 0475 BA       		.byte	0xba
+ 1985 0476 68000000 		.4byte	0x68
+ 1986 047a C6060000 		.4byte	.LLST25
+ 1987 047e 16       		.uleb128 0x16
+ 1988 047f 76010000 		.4byte	.LASF53
+ 1989 0483 01       		.byte	0x1
+ 1990 0484 BD       		.byte	0xbd
+ 1991 0485 68000000 		.4byte	0x68
+ 1992 0489 F1060000 		.4byte	.LLST26
+ 1993 048d 16       		.uleb128 0x16
+ 1994 048e 90030000 		.4byte	.LASF54
+ 1995 0492 01       		.byte	0x1
+ 1996 0493 BE       		.byte	0xbe
+ 1997 0494 68000000 		.4byte	0x68
+ 1998 0498 22080000 		.4byte	.LLST27
+ 1999 049c 15       		.uleb128 0x15
+ 2000 049d 30000000 		.4byte	.Ldebug_ranges0+0x30
+ 2001 04a1 14       		.uleb128 0x14
+ 2002 04a2 6900     		.ascii	"i\000"
+ 2003 04a4 01       		.byte	0x1
+ 2004 04a5 C0       		.byte	0xc0
+ 2005 04a6 68000000 		.4byte	0x68
+ 2006 04aa 53090000 		.4byte	.LLST28
+ 2007 04ae 17       		.uleb128 0x17
+ 2008 04af 16000000 		.4byte	.LBB14
+ 2009 04b3 F6010000 		.4byte	.LBE14-.LBB14
+ 2010 04b7 16       		.uleb128 0x16
+ 2011 04b8 4E010000 		.4byte	.LASF55
+ 2012 04bc 01       		.byte	0x1
+ 2013 04bd C1       		.byte	0xc1
+ 2014 04be 68000000 		.4byte	0x68
+ 2015 04c2 7D090000 		.4byte	.LLST29
+ 2016 04c6 16       		.uleb128 0x16
+ 2017 04c7 36010000 		.4byte	.LASF56
+ 2018 04cb 01       		.byte	0x1
+ 2019 04cc C2       		.byte	0xc2
+ 2020 04cd 68000000 		.4byte	0x68
+ 2021 04d1 90090000 		.4byte	.LLST30
+ 2022 04d5 1E       		.uleb128 0x1e
+ 2023 04d6 40000000 		.4byte	.LVL93
+ 2024 04da AE030000 		.4byte	0x3ae
+ 2025 04de E9040000 		.4byte	0x4e9
+ 2026 04e2 19       		.uleb128 0x19
+ 2027 04e3 01       		.uleb128 0x1
+ 2028 04e4 50       		.byte	0x50
+ 2029 04e5 02       		.uleb128 0x2
+ 2030 04e6 74       		.byte	0x74
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 43
+
+
+ 2031 04e7 00       		.sleb128 0
+ 2032 04e8 00       		.byte	0
+ 2033 04e9 1E       		.uleb128 0x1e
+ 2034 04ea 50000000 		.4byte	.LVL96
+ 2035 04ee D7030000 		.4byte	0x3d7
+ 2036 04f2 FD040000 		.4byte	0x4fd
+ 2037 04f6 19       		.uleb128 0x19
+ 2038 04f7 01       		.uleb128 0x1
+ 2039 04f8 50       		.byte	0x50
+ 2040 04f9 02       		.uleb128 0x2
+ 2041 04fa 74       		.byte	0x74
+ 2042 04fb 00       		.sleb128 0
+ 2043 04fc 00       		.byte	0
+ 2044 04fd 1F       		.uleb128 0x1f
+ 2045 04fe 9C000000 		.4byte	.LVL104
+ 2046 0502 D7030000 		.4byte	0x3d7
+ 2047 0506 1F       		.uleb128 0x1f
+ 2048 0507 CA000000 		.4byte	.LVL110
+ 2049 050b D7030000 		.4byte	0x3d7
+ 2050 050f 1F       		.uleb128 0x1f
+ 2051 0510 04010000 		.4byte	.LVL118
+ 2052 0514 AE030000 		.4byte	0x3ae
+ 2053 0518 1F       		.uleb128 0x1f
+ 2054 0519 2E010000 		.4byte	.LVL124
+ 2055 051d AE030000 		.4byte	0x3ae
+ 2056 0521 1F       		.uleb128 0x1f
+ 2057 0522 68010000 		.4byte	.LVL132
+ 2058 0526 D7030000 		.4byte	0x3d7
+ 2059 052a 1F       		.uleb128 0x1f
+ 2060 052b 92010000 		.4byte	.LVL138
+ 2061 052f D7030000 		.4byte	0x3d7
+ 2062 0533 1F       		.uleb128 0x1f
+ 2063 0534 CC010000 		.4byte	.LVL146
+ 2064 0538 AE030000 		.4byte	0x3ae
+ 2065 053c 1F       		.uleb128 0x1f
+ 2066 053d F6010000 		.4byte	.LVL152
+ 2067 0541 AE030000 		.4byte	0x3ae
+ 2068 0545 00       		.byte	0
+ 2069 0546 00       		.byte	0
+ 2070 0547 00       		.byte	0
+ 2071 0548 20       		.uleb128 0x20
+ 2072 0549 F5020000 		.4byte	.LASF57
+ 2073 054d 05       		.byte	0x5
+ 2074 054e 1207     		.2byte	0x712
+ 2075 0550 54050000 		.4byte	0x554
+ 2076 0554 21       		.uleb128 0x21
+ 2077 0555 8B000000 		.4byte	0x8b
+ 2078 0559 1A       		.uleb128 0x1a
+ 2079 055a C9000000 		.4byte	0xc9
+ 2080 055e 69050000 		.4byte	0x569
+ 2081 0562 1B       		.uleb128 0x1b
+ 2082 0563 7D000000 		.4byte	0x7d
+ 2083 0567 18       		.byte	0x18
+ 2084 0568 00       		.byte	0
+ 2085 0569 22       		.uleb128 0x22
+ 2086 056a A0000000 		.4byte	.LASF58
+ 2087 056e 01       		.byte	0x1
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 44
+
+
+ 2088 056f 04       		.byte	0x4
+ 2089 0570 59050000 		.4byte	0x559
+ 2090 0574 05       		.uleb128 0x5
+ 2091 0575 03       		.byte	0x3
+ 2092 0576 00000000 		.4byte	movementArray
+ 2093 057a 22       		.uleb128 0x22
+ 2094 057b 2E000000 		.4byte	.LASF59
+ 2095 057f 01       		.byte	0x1
+ 2096 0580 05       		.byte	0x5
+ 2097 0581 F9000000 		.4byte	0xf9
+ 2098 0585 05       		.uleb128 0x5
+ 2099 0586 03       		.byte	0x3
+ 2100 0587 00000000 		.4byte	robot_direction
+ 2101 058b 1A       		.uleb128 0x1a
+ 2102 058c 68000000 		.4byte	0x68
+ 2103 0590 A1050000 		.4byte	0x5a1
+ 2104 0594 1B       		.uleb128 0x1b
+ 2105 0595 7D000000 		.4byte	0x7d
+ 2106 0599 0E       		.byte	0xe
+ 2107 059a 1B       		.uleb128 0x1b
+ 2108 059b 7D000000 		.4byte	0x7d
+ 2109 059f 12       		.byte	0x12
+ 2110 05a0 00       		.byte	0
+ 2111 05a1 23       		.uleb128 0x23
+ 2112 05a2 6D617000 		.ascii	"map\000"
+ 2113 05a6 01       		.byte	0x1
+ 2114 05a7 09       		.byte	0x9
+ 2115 05a8 8B050000 		.4byte	0x58b
+ 2116 05ac 05       		.uleb128 0x5
+ 2117 05ad 03       		.byte	0x3
+ 2118 05ae 00000000 		.4byte	map
+ 2119 05b2 22       		.uleb128 0x22
+ 2120 05b3 B0020000 		.4byte	.LASF60
+ 2121 05b7 01       		.byte	0x1
+ 2122 05b8 27       		.byte	0x27
+ 2123 05b9 68000000 		.4byte	0x68
+ 2124 05bd 05       		.uleb128 0x5
+ 2125 05be 03       		.byte	0x3
+ 2126 05bf 00000000 		.4byte	pathLength
+ 2127 05c3 22       		.uleb128 0x22
+ 2128 05c4 A2020000 		.4byte	.LASF61
+ 2129 05c8 01       		.byte	0x1
+ 2130 05c9 2A       		.byte	0x2a
+ 2131 05ca 9D030000 		.4byte	0x39d
+ 2132 05ce 05       		.uleb128 0x5
+ 2133 05cf 03       		.byte	0x3
+ 2134 05d0 00000000 		.4byte	path
+ 2135 05d4 00       		.byte	0
+ 2136              		.section	.debug_abbrev,"",%progbits
+ 2137              	.Ldebug_abbrev0:
+ 2138 0000 01       		.uleb128 0x1
+ 2139 0001 11       		.uleb128 0x11
+ 2140 0002 01       		.byte	0x1
+ 2141 0003 25       		.uleb128 0x25
+ 2142 0004 0E       		.uleb128 0xe
+ 2143 0005 13       		.uleb128 0x13
+ 2144 0006 0B       		.uleb128 0xb
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 45
+
+
+ 2145 0007 03       		.uleb128 0x3
+ 2146 0008 0E       		.uleb128 0xe
+ 2147 0009 1B       		.uleb128 0x1b
+ 2148 000a 0E       		.uleb128 0xe
+ 2149 000b 55       		.uleb128 0x55
+ 2150 000c 17       		.uleb128 0x17
+ 2151 000d 11       		.uleb128 0x11
+ 2152 000e 01       		.uleb128 0x1
+ 2153 000f 10       		.uleb128 0x10
+ 2154 0010 17       		.uleb128 0x17
+ 2155 0011 00       		.byte	0
+ 2156 0012 00       		.byte	0
+ 2157 0013 02       		.uleb128 0x2
+ 2158 0014 24       		.uleb128 0x24
+ 2159 0015 00       		.byte	0
+ 2160 0016 0B       		.uleb128 0xb
+ 2161 0017 0B       		.uleb128 0xb
+ 2162 0018 3E       		.uleb128 0x3e
+ 2163 0019 0B       		.uleb128 0xb
+ 2164 001a 03       		.uleb128 0x3
+ 2165 001b 0E       		.uleb128 0xe
+ 2166 001c 00       		.byte	0
+ 2167 001d 00       		.byte	0
+ 2168 001e 03       		.uleb128 0x3
+ 2169 001f 16       		.uleb128 0x16
+ 2170 0020 00       		.byte	0
+ 2171 0021 03       		.uleb128 0x3
+ 2172 0022 0E       		.uleb128 0xe
+ 2173 0023 3A       		.uleb128 0x3a
+ 2174 0024 0B       		.uleb128 0xb
+ 2175 0025 3B       		.uleb128 0x3b
+ 2176 0026 0B       		.uleb128 0xb
+ 2177 0027 49       		.uleb128 0x49
+ 2178 0028 13       		.uleb128 0x13
+ 2179 0029 00       		.byte	0
+ 2180 002a 00       		.byte	0
+ 2181 002b 04       		.uleb128 0x4
+ 2182 002c 24       		.uleb128 0x24
+ 2183 002d 00       		.byte	0
+ 2184 002e 0B       		.uleb128 0xb
+ 2185 002f 0B       		.uleb128 0xb
+ 2186 0030 3E       		.uleb128 0x3e
+ 2187 0031 0B       		.uleb128 0xb
+ 2188 0032 03       		.uleb128 0x3
+ 2189 0033 08       		.uleb128 0x8
+ 2190 0034 00       		.byte	0
+ 2191 0035 00       		.byte	0
+ 2192 0036 05       		.uleb128 0x5
+ 2193 0037 13       		.uleb128 0x13
+ 2194 0038 01       		.byte	0x1
+ 2195 0039 03       		.uleb128 0x3
+ 2196 003a 0E       		.uleb128 0xe
+ 2197 003b 0B       		.uleb128 0xb
+ 2198 003c 0B       		.uleb128 0xb
+ 2199 003d 3A       		.uleb128 0x3a
+ 2200 003e 0B       		.uleb128 0xb
+ 2201 003f 3B       		.uleb128 0x3b
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 46
+
+
+ 2202 0040 0B       		.uleb128 0xb
+ 2203 0041 01       		.uleb128 0x1
+ 2204 0042 13       		.uleb128 0x13
+ 2205 0043 00       		.byte	0
+ 2206 0044 00       		.byte	0
+ 2207 0045 06       		.uleb128 0x6
+ 2208 0046 0D       		.uleb128 0xd
+ 2209 0047 00       		.byte	0
+ 2210 0048 03       		.uleb128 0x3
+ 2211 0049 0E       		.uleb128 0xe
+ 2212 004a 3A       		.uleb128 0x3a
+ 2213 004b 0B       		.uleb128 0xb
+ 2214 004c 3B       		.uleb128 0x3b
+ 2215 004d 0B       		.uleb128 0xb
+ 2216 004e 49       		.uleb128 0x49
+ 2217 004f 13       		.uleb128 0x13
+ 2218 0050 38       		.uleb128 0x38
+ 2219 0051 0B       		.uleb128 0xb
+ 2220 0052 00       		.byte	0
+ 2221 0053 00       		.byte	0
+ 2222 0054 07       		.uleb128 0x7
+ 2223 0055 04       		.uleb128 0x4
+ 2224 0056 01       		.byte	0x1
+ 2225 0057 0B       		.uleb128 0xb
+ 2226 0058 0B       		.uleb128 0xb
+ 2227 0059 49       		.uleb128 0x49
+ 2228 005a 13       		.uleb128 0x13
+ 2229 005b 3A       		.uleb128 0x3a
+ 2230 005c 0B       		.uleb128 0xb
+ 2231 005d 3B       		.uleb128 0x3b
+ 2232 005e 0B       		.uleb128 0xb
+ 2233 005f 01       		.uleb128 0x1
+ 2234 0060 13       		.uleb128 0x13
+ 2235 0061 00       		.byte	0
+ 2236 0062 00       		.byte	0
+ 2237 0063 08       		.uleb128 0x8
+ 2238 0064 28       		.uleb128 0x28
+ 2239 0065 00       		.byte	0
+ 2240 0066 03       		.uleb128 0x3
+ 2241 0067 0E       		.uleb128 0xe
+ 2242 0068 1C       		.uleb128 0x1c
+ 2243 0069 0B       		.uleb128 0xb
+ 2244 006a 00       		.byte	0
+ 2245 006b 00       		.byte	0
+ 2246 006c 09       		.uleb128 0x9
+ 2247 006d 13       		.uleb128 0x13
+ 2248 006e 01       		.byte	0x1
+ 2249 006f 0B       		.uleb128 0xb
+ 2250 0070 0B       		.uleb128 0xb
+ 2251 0071 3A       		.uleb128 0x3a
+ 2252 0072 0B       		.uleb128 0xb
+ 2253 0073 3B       		.uleb128 0x3b
+ 2254 0074 0B       		.uleb128 0xb
+ 2255 0075 01       		.uleb128 0x1
+ 2256 0076 13       		.uleb128 0x13
+ 2257 0077 00       		.byte	0
+ 2258 0078 00       		.byte	0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 47
+
+
+ 2259 0079 0A       		.uleb128 0xa
+ 2260 007a 0D       		.uleb128 0xd
+ 2261 007b 00       		.byte	0
+ 2262 007c 03       		.uleb128 0x3
+ 2263 007d 08       		.uleb128 0x8
+ 2264 007e 3A       		.uleb128 0x3a
+ 2265 007f 0B       		.uleb128 0xb
+ 2266 0080 3B       		.uleb128 0x3b
+ 2267 0081 0B       		.uleb128 0xb
+ 2268 0082 49       		.uleb128 0x49
+ 2269 0083 13       		.uleb128 0x13
+ 2270 0084 38       		.uleb128 0x38
+ 2271 0085 0B       		.uleb128 0xb
+ 2272 0086 00       		.byte	0
+ 2273 0087 00       		.byte	0
+ 2274 0088 0B       		.uleb128 0xb
+ 2275 0089 2E       		.uleb128 0x2e
+ 2276 008a 00       		.byte	0
+ 2277 008b 3F       		.uleb128 0x3f
+ 2278 008c 19       		.uleb128 0x19
+ 2279 008d 03       		.uleb128 0x3
+ 2280 008e 0E       		.uleb128 0xe
+ 2281 008f 3A       		.uleb128 0x3a
+ 2282 0090 0B       		.uleb128 0xb
+ 2283 0091 3B       		.uleb128 0x3b
+ 2284 0092 0B       		.uleb128 0xb
+ 2285 0093 49       		.uleb128 0x49
+ 2286 0094 13       		.uleb128 0x13
+ 2287 0095 11       		.uleb128 0x11
+ 2288 0096 01       		.uleb128 0x1
+ 2289 0097 12       		.uleb128 0x12
+ 2290 0098 06       		.uleb128 0x6
+ 2291 0099 40       		.uleb128 0x40
+ 2292 009a 18       		.uleb128 0x18
+ 2293 009b 9742     		.uleb128 0x2117
+ 2294 009d 19       		.uleb128 0x19
+ 2295 009e 00       		.byte	0
+ 2296 009f 00       		.byte	0
+ 2297 00a0 0C       		.uleb128 0xc
+ 2298 00a1 2E       		.uleb128 0x2e
+ 2299 00a2 01       		.byte	0x1
+ 2300 00a3 3F       		.uleb128 0x3f
+ 2301 00a4 19       		.uleb128 0x19
+ 2302 00a5 03       		.uleb128 0x3
+ 2303 00a6 0E       		.uleb128 0xe
+ 2304 00a7 3A       		.uleb128 0x3a
+ 2305 00a8 0B       		.uleb128 0xb
+ 2306 00a9 3B       		.uleb128 0x3b
+ 2307 00aa 0B       		.uleb128 0xb
+ 2308 00ab 27       		.uleb128 0x27
+ 2309 00ac 19       		.uleb128 0x19
+ 2310 00ad 49       		.uleb128 0x49
+ 2311 00ae 13       		.uleb128 0x13
+ 2312 00af 11       		.uleb128 0x11
+ 2313 00b0 01       		.uleb128 0x1
+ 2314 00b1 12       		.uleb128 0x12
+ 2315 00b2 06       		.uleb128 0x6
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 48
+
+
+ 2316 00b3 40       		.uleb128 0x40
+ 2317 00b4 18       		.uleb128 0x18
+ 2318 00b5 9742     		.uleb128 0x2117
+ 2319 00b7 19       		.uleb128 0x19
+ 2320 00b8 01       		.uleb128 0x1
+ 2321 00b9 13       		.uleb128 0x13
+ 2322 00ba 00       		.byte	0
+ 2323 00bb 00       		.byte	0
+ 2324 00bc 0D       		.uleb128 0xd
+ 2325 00bd 05       		.uleb128 0x5
+ 2326 00be 00       		.byte	0
+ 2327 00bf 03       		.uleb128 0x3
+ 2328 00c0 08       		.uleb128 0x8
+ 2329 00c1 3A       		.uleb128 0x3a
+ 2330 00c2 0B       		.uleb128 0xb
+ 2331 00c3 3B       		.uleb128 0x3b
+ 2332 00c4 0B       		.uleb128 0xb
+ 2333 00c5 49       		.uleb128 0x49
+ 2334 00c6 13       		.uleb128 0x13
+ 2335 00c7 02       		.uleb128 0x2
+ 2336 00c8 17       		.uleb128 0x17
+ 2337 00c9 00       		.byte	0
+ 2338 00ca 00       		.byte	0
+ 2339 00cb 0E       		.uleb128 0xe
+ 2340 00cc 05       		.uleb128 0x5
+ 2341 00cd 00       		.byte	0
+ 2342 00ce 03       		.uleb128 0x3
+ 2343 00cf 08       		.uleb128 0x8
+ 2344 00d0 3A       		.uleb128 0x3a
+ 2345 00d1 0B       		.uleb128 0xb
+ 2346 00d2 3B       		.uleb128 0x3b
+ 2347 00d3 0B       		.uleb128 0xb
+ 2348 00d4 49       		.uleb128 0x49
+ 2349 00d5 13       		.uleb128 0x13
+ 2350 00d6 02       		.uleb128 0x2
+ 2351 00d7 18       		.uleb128 0x18
+ 2352 00d8 00       		.byte	0
+ 2353 00d9 00       		.byte	0
+ 2354 00da 0F       		.uleb128 0xf
+ 2355 00db 2E       		.uleb128 0x2e
+ 2356 00dc 01       		.byte	0x1
+ 2357 00dd 3F       		.uleb128 0x3f
+ 2358 00de 19       		.uleb128 0x19
+ 2359 00df 03       		.uleb128 0x3
+ 2360 00e0 0E       		.uleb128 0xe
+ 2361 00e1 3A       		.uleb128 0x3a
+ 2362 00e2 0B       		.uleb128 0xb
+ 2363 00e3 3B       		.uleb128 0x3b
+ 2364 00e4 0B       		.uleb128 0xb
+ 2365 00e5 27       		.uleb128 0x27
+ 2366 00e6 19       		.uleb128 0x19
+ 2367 00e7 11       		.uleb128 0x11
+ 2368 00e8 01       		.uleb128 0x1
+ 2369 00e9 12       		.uleb128 0x12
+ 2370 00ea 06       		.uleb128 0x6
+ 2371 00eb 40       		.uleb128 0x40
+ 2372 00ec 18       		.uleb128 0x18
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 49
+
+
+ 2373 00ed 9742     		.uleb128 0x2117
+ 2374 00ef 19       		.uleb128 0x19
+ 2375 00f0 01       		.uleb128 0x1
+ 2376 00f1 13       		.uleb128 0x13
+ 2377 00f2 00       		.byte	0
+ 2378 00f3 00       		.byte	0
+ 2379 00f4 10       		.uleb128 0x10
+ 2380 00f5 05       		.uleb128 0x5
+ 2381 00f6 00       		.byte	0
+ 2382 00f7 03       		.uleb128 0x3
+ 2383 00f8 0E       		.uleb128 0xe
+ 2384 00f9 3A       		.uleb128 0x3a
+ 2385 00fa 0B       		.uleb128 0xb
+ 2386 00fb 3B       		.uleb128 0x3b
+ 2387 00fc 0B       		.uleb128 0xb
+ 2388 00fd 49       		.uleb128 0x49
+ 2389 00fe 13       		.uleb128 0x13
+ 2390 00ff 02       		.uleb128 0x2
+ 2391 0100 17       		.uleb128 0x17
+ 2392 0101 00       		.byte	0
+ 2393 0102 00       		.byte	0
+ 2394 0103 11       		.uleb128 0x11
+ 2395 0104 34       		.uleb128 0x34
+ 2396 0105 00       		.byte	0
+ 2397 0106 03       		.uleb128 0x3
+ 2398 0107 0E       		.uleb128 0xe
+ 2399 0108 3A       		.uleb128 0x3a
+ 2400 0109 0B       		.uleb128 0xb
+ 2401 010a 3B       		.uleb128 0x3b
+ 2402 010b 0B       		.uleb128 0xb
+ 2403 010c 49       		.uleb128 0x49
+ 2404 010d 13       		.uleb128 0x13
+ 2405 010e 02       		.uleb128 0x2
+ 2406 010f 18       		.uleb128 0x18
+ 2407 0110 00       		.byte	0
+ 2408 0111 00       		.byte	0
+ 2409 0112 12       		.uleb128 0x12
+ 2410 0113 34       		.uleb128 0x34
+ 2411 0114 00       		.byte	0
+ 2412 0115 03       		.uleb128 0x3
+ 2413 0116 08       		.uleb128 0x8
+ 2414 0117 3A       		.uleb128 0x3a
+ 2415 0118 0B       		.uleb128 0xb
+ 2416 0119 3B       		.uleb128 0x3b
+ 2417 011a 0B       		.uleb128 0xb
+ 2418 011b 49       		.uleb128 0x49
+ 2419 011c 13       		.uleb128 0x13
+ 2420 011d 02       		.uleb128 0x2
+ 2421 011e 18       		.uleb128 0x18
+ 2422 011f 00       		.byte	0
+ 2423 0120 00       		.byte	0
+ 2424 0121 13       		.uleb128 0x13
+ 2425 0122 0B       		.uleb128 0xb
+ 2426 0123 01       		.byte	0x1
+ 2427 0124 11       		.uleb128 0x11
+ 2428 0125 01       		.uleb128 0x1
+ 2429 0126 12       		.uleb128 0x12
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 50
+
+
+ 2430 0127 06       		.uleb128 0x6
+ 2431 0128 01       		.uleb128 0x1
+ 2432 0129 13       		.uleb128 0x13
+ 2433 012a 00       		.byte	0
+ 2434 012b 00       		.byte	0
+ 2435 012c 14       		.uleb128 0x14
+ 2436 012d 34       		.uleb128 0x34
+ 2437 012e 00       		.byte	0
+ 2438 012f 03       		.uleb128 0x3
+ 2439 0130 08       		.uleb128 0x8
+ 2440 0131 3A       		.uleb128 0x3a
+ 2441 0132 0B       		.uleb128 0xb
+ 2442 0133 3B       		.uleb128 0x3b
+ 2443 0134 0B       		.uleb128 0xb
+ 2444 0135 49       		.uleb128 0x49
+ 2445 0136 13       		.uleb128 0x13
+ 2446 0137 02       		.uleb128 0x2
+ 2447 0138 17       		.uleb128 0x17
+ 2448 0139 00       		.byte	0
+ 2449 013a 00       		.byte	0
+ 2450 013b 15       		.uleb128 0x15
+ 2451 013c 0B       		.uleb128 0xb
+ 2452 013d 01       		.byte	0x1
+ 2453 013e 55       		.uleb128 0x55
+ 2454 013f 17       		.uleb128 0x17
+ 2455 0140 00       		.byte	0
+ 2456 0141 00       		.byte	0
+ 2457 0142 16       		.uleb128 0x16
+ 2458 0143 34       		.uleb128 0x34
+ 2459 0144 00       		.byte	0
+ 2460 0145 03       		.uleb128 0x3
+ 2461 0146 0E       		.uleb128 0xe
+ 2462 0147 3A       		.uleb128 0x3a
+ 2463 0148 0B       		.uleb128 0xb
+ 2464 0149 3B       		.uleb128 0x3b
+ 2465 014a 0B       		.uleb128 0xb
+ 2466 014b 49       		.uleb128 0x49
+ 2467 014c 13       		.uleb128 0x13
+ 2468 014d 02       		.uleb128 0x2
+ 2469 014e 17       		.uleb128 0x17
+ 2470 014f 00       		.byte	0
+ 2471 0150 00       		.byte	0
+ 2472 0151 17       		.uleb128 0x17
+ 2473 0152 0B       		.uleb128 0xb
+ 2474 0153 01       		.byte	0x1
+ 2475 0154 11       		.uleb128 0x11
+ 2476 0155 01       		.uleb128 0x1
+ 2477 0156 12       		.uleb128 0x12
+ 2478 0157 06       		.uleb128 0x6
+ 2479 0158 00       		.byte	0
+ 2480 0159 00       		.byte	0
+ 2481 015a 18       		.uleb128 0x18
+ 2482 015b 898201   		.uleb128 0x4109
+ 2483 015e 01       		.byte	0x1
+ 2484 015f 11       		.uleb128 0x11
+ 2485 0160 01       		.uleb128 0x1
+ 2486 0161 31       		.uleb128 0x31
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 51
+
+
+ 2487 0162 13       		.uleb128 0x13
+ 2488 0163 00       		.byte	0
+ 2489 0164 00       		.byte	0
+ 2490 0165 19       		.uleb128 0x19
+ 2491 0166 8A8201   		.uleb128 0x410a
+ 2492 0169 00       		.byte	0
+ 2493 016a 02       		.uleb128 0x2
+ 2494 016b 18       		.uleb128 0x18
+ 2495 016c 9142     		.uleb128 0x2111
+ 2496 016e 18       		.uleb128 0x18
+ 2497 016f 00       		.byte	0
+ 2498 0170 00       		.byte	0
+ 2499 0171 1A       		.uleb128 0x1a
+ 2500 0172 01       		.uleb128 0x1
+ 2501 0173 01       		.byte	0x1
+ 2502 0174 49       		.uleb128 0x49
+ 2503 0175 13       		.uleb128 0x13
+ 2504 0176 01       		.uleb128 0x1
+ 2505 0177 13       		.uleb128 0x13
+ 2506 0178 00       		.byte	0
+ 2507 0179 00       		.byte	0
+ 2508 017a 1B       		.uleb128 0x1b
+ 2509 017b 21       		.uleb128 0x21
+ 2510 017c 00       		.byte	0
+ 2511 017d 49       		.uleb128 0x49
+ 2512 017e 13       		.uleb128 0x13
+ 2513 017f 2F       		.uleb128 0x2f
+ 2514 0180 0B       		.uleb128 0xb
+ 2515 0181 00       		.byte	0
+ 2516 0182 00       		.byte	0
+ 2517 0183 1C       		.uleb128 0x1c
+ 2518 0184 21       		.uleb128 0x21
+ 2519 0185 00       		.byte	0
+ 2520 0186 49       		.uleb128 0x49
+ 2521 0187 13       		.uleb128 0x13
+ 2522 0188 2F       		.uleb128 0x2f
+ 2523 0189 05       		.uleb128 0x5
+ 2524 018a 00       		.byte	0
+ 2525 018b 00       		.byte	0
+ 2526 018c 1D       		.uleb128 0x1d
+ 2527 018d 2E       		.uleb128 0x2e
+ 2528 018e 01       		.byte	0x1
+ 2529 018f 3F       		.uleb128 0x3f
+ 2530 0190 19       		.uleb128 0x19
+ 2531 0191 03       		.uleb128 0x3
+ 2532 0192 0E       		.uleb128 0xe
+ 2533 0193 3A       		.uleb128 0x3a
+ 2534 0194 0B       		.uleb128 0xb
+ 2535 0195 3B       		.uleb128 0x3b
+ 2536 0196 0B       		.uleb128 0xb
+ 2537 0197 27       		.uleb128 0x27
+ 2538 0198 19       		.uleb128 0x19
+ 2539 0199 49       		.uleb128 0x49
+ 2540 019a 13       		.uleb128 0x13
+ 2541 019b 11       		.uleb128 0x11
+ 2542 019c 01       		.uleb128 0x1
+ 2543 019d 12       		.uleb128 0x12
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 52
+
+
+ 2544 019e 06       		.uleb128 0x6
+ 2545 019f 40       		.uleb128 0x40
+ 2546 01a0 18       		.uleb128 0x18
+ 2547 01a1 9642     		.uleb128 0x2116
+ 2548 01a3 19       		.uleb128 0x19
+ 2549 01a4 01       		.uleb128 0x1
+ 2550 01a5 13       		.uleb128 0x13
+ 2551 01a6 00       		.byte	0
+ 2552 01a7 00       		.byte	0
+ 2553 01a8 1E       		.uleb128 0x1e
+ 2554 01a9 898201   		.uleb128 0x4109
+ 2555 01ac 01       		.byte	0x1
+ 2556 01ad 11       		.uleb128 0x11
+ 2557 01ae 01       		.uleb128 0x1
+ 2558 01af 31       		.uleb128 0x31
+ 2559 01b0 13       		.uleb128 0x13
+ 2560 01b1 01       		.uleb128 0x1
+ 2561 01b2 13       		.uleb128 0x13
+ 2562 01b3 00       		.byte	0
+ 2563 01b4 00       		.byte	0
+ 2564 01b5 1F       		.uleb128 0x1f
+ 2565 01b6 898201   		.uleb128 0x4109
+ 2566 01b9 00       		.byte	0
+ 2567 01ba 11       		.uleb128 0x11
+ 2568 01bb 01       		.uleb128 0x1
+ 2569 01bc 31       		.uleb128 0x31
+ 2570 01bd 13       		.uleb128 0x13
+ 2571 01be 00       		.byte	0
+ 2572 01bf 00       		.byte	0
+ 2573 01c0 20       		.uleb128 0x20
+ 2574 01c1 34       		.uleb128 0x34
+ 2575 01c2 00       		.byte	0
+ 2576 01c3 03       		.uleb128 0x3
+ 2577 01c4 0E       		.uleb128 0xe
+ 2578 01c5 3A       		.uleb128 0x3a
+ 2579 01c6 0B       		.uleb128 0xb
+ 2580 01c7 3B       		.uleb128 0x3b
+ 2581 01c8 05       		.uleb128 0x5
+ 2582 01c9 49       		.uleb128 0x49
+ 2583 01ca 13       		.uleb128 0x13
+ 2584 01cb 3F       		.uleb128 0x3f
+ 2585 01cc 19       		.uleb128 0x19
+ 2586 01cd 3C       		.uleb128 0x3c
+ 2587 01ce 19       		.uleb128 0x19
+ 2588 01cf 00       		.byte	0
+ 2589 01d0 00       		.byte	0
+ 2590 01d1 21       		.uleb128 0x21
+ 2591 01d2 35       		.uleb128 0x35
+ 2592 01d3 00       		.byte	0
+ 2593 01d4 49       		.uleb128 0x49
+ 2594 01d5 13       		.uleb128 0x13
+ 2595 01d6 00       		.byte	0
+ 2596 01d7 00       		.byte	0
+ 2597 01d8 22       		.uleb128 0x22
+ 2598 01d9 34       		.uleb128 0x34
+ 2599 01da 00       		.byte	0
+ 2600 01db 03       		.uleb128 0x3
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 53
+
+
+ 2601 01dc 0E       		.uleb128 0xe
+ 2602 01dd 3A       		.uleb128 0x3a
+ 2603 01de 0B       		.uleb128 0xb
+ 2604 01df 3B       		.uleb128 0x3b
+ 2605 01e0 0B       		.uleb128 0xb
+ 2606 01e1 49       		.uleb128 0x49
+ 2607 01e2 13       		.uleb128 0x13
+ 2608 01e3 3F       		.uleb128 0x3f
+ 2609 01e4 19       		.uleb128 0x19
+ 2610 01e5 02       		.uleb128 0x2
+ 2611 01e6 18       		.uleb128 0x18
+ 2612 01e7 00       		.byte	0
+ 2613 01e8 00       		.byte	0
+ 2614 01e9 23       		.uleb128 0x23
+ 2615 01ea 34       		.uleb128 0x34
+ 2616 01eb 00       		.byte	0
+ 2617 01ec 03       		.uleb128 0x3
+ 2618 01ed 08       		.uleb128 0x8
+ 2619 01ee 3A       		.uleb128 0x3a
+ 2620 01ef 0B       		.uleb128 0xb
+ 2621 01f0 3B       		.uleb128 0x3b
+ 2622 01f1 0B       		.uleb128 0xb
+ 2623 01f2 49       		.uleb128 0x49
+ 2624 01f3 13       		.uleb128 0x13
+ 2625 01f4 3F       		.uleb128 0x3f
+ 2626 01f5 19       		.uleb128 0x19
+ 2627 01f6 02       		.uleb128 0x2
+ 2628 01f7 18       		.uleb128 0x18
+ 2629 01f8 00       		.byte	0
+ 2630 01f9 00       		.byte	0
+ 2631 01fa 00       		.byte	0
+ 2632              		.section	.debug_loc,"",%progbits
+ 2633              	.Ldebug_loc0:
+ 2634              	.LLST0:
+ 2635 0000 00000000 		.4byte	.LVL0
+ 2636 0004 0E000000 		.4byte	.LVL1
+ 2637 0008 0100     		.2byte	0x1
+ 2638 000a 50       		.byte	0x50
+ 2639 000b 0E000000 		.4byte	.LVL1
+ 2640 000f 10000000 		.4byte	.LVL2
+ 2641 0013 0400     		.2byte	0x4
+ 2642 0015 F3       		.byte	0xf3
+ 2643 0016 01       		.uleb128 0x1
+ 2644 0017 50       		.byte	0x50
+ 2645 0018 9F       		.byte	0x9f
+ 2646 0019 10000000 		.4byte	.LVL2
+ 2647 001d 12000000 		.4byte	.LVL3
+ 2648 0021 0100     		.2byte	0x1
+ 2649 0023 50       		.byte	0x50
+ 2650 0024 12000000 		.4byte	.LVL3
+ 2651 0028 14000000 		.4byte	.LVL4
+ 2652 002c 0400     		.2byte	0x4
+ 2653 002e F3       		.byte	0xf3
+ 2654 002f 01       		.uleb128 0x1
+ 2655 0030 50       		.byte	0x50
+ 2656 0031 9F       		.byte	0x9f
+ 2657 0032 14000000 		.4byte	.LVL4
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 54
+
+
+ 2658 0036 16000000 		.4byte	.LVL5
+ 2659 003a 0100     		.2byte	0x1
+ 2660 003c 50       		.byte	0x50
+ 2661 003d 16000000 		.4byte	.LVL5
+ 2662 0041 18000000 		.4byte	.LVL6
+ 2663 0045 0400     		.2byte	0x4
+ 2664 0047 F3       		.byte	0xf3
+ 2665 0048 01       		.uleb128 0x1
+ 2666 0049 50       		.byte	0x50
+ 2667 004a 9F       		.byte	0x9f
+ 2668 004b 18000000 		.4byte	.LVL6
+ 2669 004f 1A000000 		.4byte	.LVL7
+ 2670 0053 0100     		.2byte	0x1
+ 2671 0055 50       		.byte	0x50
+ 2672 0056 1A000000 		.4byte	.LVL7
+ 2673 005a 1C000000 		.4byte	.LFE65
+ 2674 005e 0400     		.2byte	0x4
+ 2675 0060 F3       		.byte	0xf3
+ 2676 0061 01       		.uleb128 0x1
+ 2677 0062 50       		.byte	0x50
+ 2678 0063 9F       		.byte	0x9f
+ 2679 0064 00000000 		.4byte	0
+ 2680 0068 00000000 		.4byte	0
+ 2681              	.LLST1:
+ 2682 006c 00000000 		.4byte	.LVL8
+ 2683 0070 16000000 		.4byte	.LVL10
+ 2684 0074 0100     		.2byte	0x1
+ 2685 0076 50       		.byte	0x50
+ 2686 0077 16000000 		.4byte	.LVL10
+ 2687 007b 08020000 		.4byte	.LVL39
+ 2688 007f 0100     		.2byte	0x1
+ 2689 0081 59       		.byte	0x59
+ 2690 0082 08020000 		.4byte	.LVL39
+ 2691 0086 18020000 		.4byte	.LFE66
+ 2692 008a 0400     		.2byte	0x4
+ 2693 008c F3       		.byte	0xf3
+ 2694 008d 01       		.uleb128 0x1
+ 2695 008e 50       		.byte	0x50
+ 2696 008f 9F       		.byte	0x9f
+ 2697 0090 00000000 		.4byte	0
+ 2698 0094 00000000 		.4byte	0
+ 2699              	.LLST2:
+ 2700 0098 00000000 		.4byte	.LVL8
+ 2701 009c 16000000 		.4byte	.LVL10
+ 2702 00a0 0100     		.2byte	0x1
+ 2703 00a2 51       		.byte	0x51
+ 2704 00a3 16000000 		.4byte	.LVL10
+ 2705 00a7 08020000 		.4byte	.LVL39
+ 2706 00ab 0100     		.2byte	0x1
+ 2707 00ad 5B       		.byte	0x5b
+ 2708 00ae 08020000 		.4byte	.LVL39
+ 2709 00b2 18020000 		.4byte	.LFE66
+ 2710 00b6 0400     		.2byte	0x4
+ 2711 00b8 F3       		.byte	0xf3
+ 2712 00b9 01       		.uleb128 0x1
+ 2713 00ba 51       		.byte	0x51
+ 2714 00bb 9F       		.byte	0x9f
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 55
+
+
+ 2715 00bc 00000000 		.4byte	0
+ 2716 00c0 00000000 		.4byte	0
+ 2717              	.LLST3:
+ 2718 00c4 00000000 		.4byte	.LVL8
+ 2719 00c8 16000000 		.4byte	.LVL10
+ 2720 00cc 0100     		.2byte	0x1
+ 2721 00ce 52       		.byte	0x52
+ 2722 00cf 16000000 		.4byte	.LVL10
+ 2723 00d3 08020000 		.4byte	.LVL39
+ 2724 00d7 0100     		.2byte	0x1
+ 2725 00d9 5A       		.byte	0x5a
+ 2726 00da 08020000 		.4byte	.LVL39
+ 2727 00de 18020000 		.4byte	.LFE66
+ 2728 00e2 0400     		.2byte	0x4
+ 2729 00e4 F3       		.byte	0xf3
+ 2730 00e5 01       		.uleb128 0x1
+ 2731 00e6 52       		.byte	0x52
+ 2732 00e7 9F       		.byte	0x9f
+ 2733 00e8 00000000 		.4byte	0
+ 2734 00ec 00000000 		.4byte	0
+ 2735              	.LLST4:
+ 2736 00f0 00000000 		.4byte	.LVL8
+ 2737 00f4 16000000 		.4byte	.LVL10
+ 2738 00f8 0100     		.2byte	0x1
+ 2739 00fa 53       		.byte	0x53
+ 2740 00fb 16000000 		.4byte	.LVL10
+ 2741 00ff 08020000 		.4byte	.LVL39
+ 2742 0103 0300     		.2byte	0x3
+ 2743 0105 91       		.byte	0x91
+ 2744 0106 DC52     		.sleb128 -5796
+ 2745 0108 08020000 		.4byte	.LVL39
+ 2746 010c 18020000 		.4byte	.LFE66
+ 2747 0110 0300     		.2byte	0x3
+ 2748 0112 7D       		.byte	0x7d
+ 2749 0113 DC52     		.sleb128 -5796
+ 2750 0115 00000000 		.4byte	0
+ 2751 0119 00000000 		.4byte	0
+ 2752              	.LLST5:
+ 2753 011d 12000000 		.4byte	.LVL9
+ 2754 0121 16000000 		.4byte	.LVL10
+ 2755 0125 0200     		.2byte	0x2
+ 2756 0127 30       		.byte	0x30
+ 2757 0128 9F       		.byte	0x9f
+ 2758 0129 16000000 		.4byte	.LVL10
+ 2759 012d 6A000000 		.4byte	.LVL15
+ 2760 0131 0100     		.2byte	0x1
+ 2761 0133 55       		.byte	0x55
+ 2762 0134 00000000 		.4byte	0
+ 2763 0138 00000000 		.4byte	0
+ 2764              	.LLST6:
+ 2765 013c 16000000 		.4byte	.LVL10
+ 2766 0140 3C000000 		.4byte	.LVL12
+ 2767 0144 0100     		.2byte	0x1
+ 2768 0146 52       		.byte	0x52
+ 2769 0147 3E000000 		.4byte	.LVL13
+ 2770 014b 44000000 		.4byte	.LVL14
+ 2771 014f 0100     		.2byte	0x1
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 56
+
+
+ 2772 0151 52       		.byte	0x52
+ 2773 0152 00000000 		.4byte	0
+ 2774 0156 00000000 		.4byte	0
+ 2775              	.LLST7:
+ 2776 015a 84000000 		.4byte	.LVL16
+ 2777 015e 62010000 		.4byte	.LVL34
+ 2778 0162 0100     		.2byte	0x1
+ 2779 0164 58       		.byte	0x58
+ 2780 0165 00000000 		.4byte	0
+ 2781 0169 00000000 		.4byte	0
+ 2782              	.LLST8:
+ 2783 016d 88000000 		.4byte	.LVL17
+ 2784 0171 62010000 		.4byte	.LVL34
+ 2785 0175 0100     		.2byte	0x1
+ 2786 0177 57       		.byte	0x57
+ 2787 0178 00000000 		.4byte	0
+ 2788 017c 00000000 		.4byte	0
+ 2789              	.LLST9:
+ 2790 0180 2A010000 		.4byte	.LVL27
+ 2791 0184 48010000 		.4byte	.LVL28
+ 2792 0188 0100     		.2byte	0x1
+ 2793 018a 54       		.byte	0x54
+ 2794 018b 48010000 		.4byte	.LVL28
+ 2795 018f 52010000 		.4byte	.LVL29
+ 2796 0193 0100     		.2byte	0x1
+ 2797 0195 53       		.byte	0x53
+ 2798 0196 52010000 		.4byte	.LVL29
+ 2799 019a 62010000 		.4byte	.LVL34
+ 2800 019e 0100     		.2byte	0x1
+ 2801 01a0 54       		.byte	0x54
+ 2802 01a1 00000000 		.4byte	0
+ 2803 01a5 00000000 		.4byte	0
+ 2804              	.LLST10:
+ 2805 01a9 A0000000 		.4byte	.LVL18
+ 2806 01ad A4000000 		.4byte	.LVL19
+ 2807 01b1 0200     		.2byte	0x2
+ 2808 01b3 30       		.byte	0x30
+ 2809 01b4 9F       		.byte	0x9f
+ 2810 01b5 A4000000 		.4byte	.LVL19
+ 2811 01b9 62010000 		.4byte	.LVL34
+ 2812 01bd 0100     		.2byte	0x1
+ 2813 01bf 55       		.byte	0x55
+ 2814 01c0 00000000 		.4byte	0
+ 2815 01c4 00000000 		.4byte	0
+ 2816              	.LLST11:
+ 2817 01c8 AE000000 		.4byte	.LVL20
+ 2818 01cc 0A010000 		.4byte	.LVL24
+ 2819 01d0 0100     		.2byte	0x1
+ 2820 01d2 54       		.byte	0x54
+ 2821 01d3 0A010000 		.4byte	.LVL24
+ 2822 01d7 1E010000 		.4byte	.LVL26
+ 2823 01db 1000     		.2byte	0x10
+ 2824 01dd 75       		.byte	0x75
+ 2825 01de 00       		.sleb128 0
+ 2826 01df 32       		.byte	0x32
+ 2827 01e0 24       		.byte	0x24
+ 2828 01e1 91       		.byte	0x91
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 57
+
+
+ 2829 01e2 00       		.sleb128 0
+ 2830 01e3 22       		.byte	0x22
+ 2831 01e4 0A       		.byte	0xa
+ 2832 01e5 9C0D     		.2byte	0xd9c
+ 2833 01e7 1C       		.byte	0x1c
+ 2834 01e8 06       		.byte	0x6
+ 2835 01e9 78       		.byte	0x78
+ 2836 01ea 00       		.sleb128 0
+ 2837 01eb 22       		.byte	0x22
+ 2838 01ec 9F       		.byte	0x9f
+ 2839 01ed 00000000 		.4byte	0
+ 2840 01f1 00000000 		.4byte	0
+ 2841              	.LLST12:
+ 2842 01f5 B8000000 		.4byte	.LVL21
+ 2843 01f9 1E010000 		.4byte	.LVL26
+ 2844 01fd 0100     		.2byte	0x1
+ 2845 01ff 56       		.byte	0x56
+ 2846 0200 00000000 		.4byte	0
+ 2847 0204 00000000 		.4byte	0
+ 2848              	.LLST13:
+ 2849 0208 EA000000 		.4byte	.LVL23
+ 2850 020c 1C010000 		.4byte	.LVL25
+ 2851 0210 0100     		.2byte	0x1
+ 2852 0212 52       		.byte	0x52
+ 2853 0213 00000000 		.4byte	0
+ 2854 0217 00000000 		.4byte	0
+ 2855              	.LLST14:
+ 2856 021b 2A010000 		.4byte	.LVL27
+ 2857 021f 62010000 		.4byte	.LVL34
+ 2858 0223 0100     		.2byte	0x1
+ 2859 0225 50       		.byte	0x50
+ 2860 0226 00000000 		.4byte	0
+ 2861 022a 00000000 		.4byte	0
+ 2862              	.LLST15:
+ 2863 022e 2A010000 		.4byte	.LVL27
+ 2864 0232 56010000 		.4byte	.LVL31
+ 2865 0236 0100     		.2byte	0x1
+ 2866 0238 51       		.byte	0x51
+ 2867 0239 58010000 		.4byte	.LVL32
+ 2868 023d 5E010000 		.4byte	.LVL33
+ 2869 0241 0100     		.2byte	0x1
+ 2870 0243 51       		.byte	0x51
+ 2871 0244 00000000 		.4byte	0
+ 2872 0248 00000000 		.4byte	0
+ 2873              	.LLST16:
+ 2874 024c DA010000 		.4byte	.LVL35
+ 2875 0250 DE010000 		.4byte	.LVL36
+ 2876 0254 0200     		.2byte	0x2
+ 2877 0256 30       		.byte	0x30
+ 2878 0257 9F       		.byte	0x9f
+ 2879 0258 DE010000 		.4byte	.LVL36
+ 2880 025c 18020000 		.4byte	.LFE66
+ 2881 0260 0100     		.2byte	0x1
+ 2882 0262 50       		.byte	0x50
+ 2883 0263 00000000 		.4byte	0
+ 2884 0267 00000000 		.4byte	0
+ 2885              	.LLST17:
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 58
+
+
+ 2886 026b 00000000 		.4byte	.LVL40
+ 2887 026f 09000000 		.4byte	.LVL41-1
+ 2888 0273 0100     		.2byte	0x1
+ 2889 0275 50       		.byte	0x50
+ 2890 0276 09000000 		.4byte	.LVL41-1
+ 2891 027a 1A000000 		.4byte	.LVL44
+ 2892 027e 0400     		.2byte	0x4
+ 2893 0280 F3       		.byte	0xf3
+ 2894 0281 01       		.uleb128 0x1
+ 2895 0282 50       		.byte	0x50
+ 2896 0283 9F       		.byte	0x9f
+ 2897 0284 1A000000 		.4byte	.LVL44
+ 2898 0288 21000000 		.4byte	.LVL45-1
+ 2899 028c 0100     		.2byte	0x1
+ 2900 028e 50       		.byte	0x50
+ 2901 028f 21000000 		.4byte	.LVL45-1
+ 2902 0293 32000000 		.4byte	.LVL48
+ 2903 0297 0400     		.2byte	0x4
+ 2904 0299 F3       		.byte	0xf3
+ 2905 029a 01       		.uleb128 0x1
+ 2906 029b 50       		.byte	0x50
+ 2907 029c 9F       		.byte	0x9f
+ 2908 029d 32000000 		.4byte	.LVL48
+ 2909 02a1 39000000 		.4byte	.LVL49-1
+ 2910 02a5 0100     		.2byte	0x1
+ 2911 02a7 50       		.byte	0x50
+ 2912 02a8 39000000 		.4byte	.LVL49-1
+ 2913 02ac 48000000 		.4byte	.LVL52
+ 2914 02b0 0400     		.2byte	0x4
+ 2915 02b2 F3       		.byte	0xf3
+ 2916 02b3 01       		.uleb128 0x1
+ 2917 02b4 50       		.byte	0x50
+ 2918 02b5 9F       		.byte	0x9f
+ 2919 02b6 48000000 		.4byte	.LVL52
+ 2920 02ba 4F000000 		.4byte	.LVL53-1
+ 2921 02be 0100     		.2byte	0x1
+ 2922 02c0 50       		.byte	0x50
+ 2923 02c1 4F000000 		.4byte	.LVL53-1
+ 2924 02c5 60000000 		.4byte	.LVL56
+ 2925 02c9 0400     		.2byte	0x4
+ 2926 02cb F3       		.byte	0xf3
+ 2927 02cc 01       		.uleb128 0x1
+ 2928 02cd 50       		.byte	0x50
+ 2929 02ce 9F       		.byte	0x9f
+ 2930 02cf 60000000 		.4byte	.LVL56
+ 2931 02d3 67000000 		.4byte	.LVL57-1
+ 2932 02d7 0100     		.2byte	0x1
+ 2933 02d9 50       		.byte	0x50
+ 2934 02da 67000000 		.4byte	.LVL57-1
+ 2935 02de 76000000 		.4byte	.LVL60
+ 2936 02e2 0400     		.2byte	0x4
+ 2937 02e4 F3       		.byte	0xf3
+ 2938 02e5 01       		.uleb128 0x1
+ 2939 02e6 50       		.byte	0x50
+ 2940 02e7 9F       		.byte	0x9f
+ 2941 02e8 76000000 		.4byte	.LVL60
+ 2942 02ec 7A000000 		.4byte	.LVL61
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 59
+
+
+ 2943 02f0 0100     		.2byte	0x1
+ 2944 02f2 50       		.byte	0x50
+ 2945 02f3 7A000000 		.4byte	.LVL61
+ 2946 02f7 9C000000 		.4byte	.LFE67
+ 2947 02fb 0400     		.2byte	0x4
+ 2948 02fd F3       		.byte	0xf3
+ 2949 02fe 01       		.uleb128 0x1
+ 2950 02ff 50       		.byte	0x50
+ 2951 0300 9F       		.byte	0x9f
+ 2952 0301 00000000 		.4byte	0
+ 2953 0305 00000000 		.4byte	0
+ 2954              	.LLST18:
+ 2955 0309 00000000 		.4byte	.LVL62
+ 2956 030d 09000000 		.4byte	.LVL63-1
+ 2957 0311 0100     		.2byte	0x1
+ 2958 0313 50       		.byte	0x50
+ 2959 0314 09000000 		.4byte	.LVL63-1
+ 2960 0318 1A000000 		.4byte	.LVL66
+ 2961 031c 0400     		.2byte	0x4
+ 2962 031e F3       		.byte	0xf3
+ 2963 031f 01       		.uleb128 0x1
+ 2964 0320 50       		.byte	0x50
+ 2965 0321 9F       		.byte	0x9f
+ 2966 0322 1A000000 		.4byte	.LVL66
+ 2967 0326 21000000 		.4byte	.LVL67-1
+ 2968 032a 0100     		.2byte	0x1
+ 2969 032c 50       		.byte	0x50
+ 2970 032d 21000000 		.4byte	.LVL67-1
+ 2971 0331 32000000 		.4byte	.LVL70
+ 2972 0335 0400     		.2byte	0x4
+ 2973 0337 F3       		.byte	0xf3
+ 2974 0338 01       		.uleb128 0x1
+ 2975 0339 50       		.byte	0x50
+ 2976 033a 9F       		.byte	0x9f
+ 2977 033b 32000000 		.4byte	.LVL70
+ 2978 033f 39000000 		.4byte	.LVL71-1
+ 2979 0343 0100     		.2byte	0x1
+ 2980 0345 50       		.byte	0x50
+ 2981 0346 39000000 		.4byte	.LVL71-1
+ 2982 034a 4A000000 		.4byte	.LVL74
+ 2983 034e 0400     		.2byte	0x4
+ 2984 0350 F3       		.byte	0xf3
+ 2985 0351 01       		.uleb128 0x1
+ 2986 0352 50       		.byte	0x50
+ 2987 0353 9F       		.byte	0x9f
+ 2988 0354 4A000000 		.4byte	.LVL74
+ 2989 0358 51000000 		.4byte	.LVL75-1
+ 2990 035c 0100     		.2byte	0x1
+ 2991 035e 50       		.byte	0x50
+ 2992 035f 51000000 		.4byte	.LVL75-1
+ 2993 0363 62000000 		.4byte	.LVL78
+ 2994 0367 0400     		.2byte	0x4
+ 2995 0369 F3       		.byte	0xf3
+ 2996 036a 01       		.uleb128 0x1
+ 2997 036b 50       		.byte	0x50
+ 2998 036c 9F       		.byte	0x9f
+ 2999 036d 62000000 		.4byte	.LVL78
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 60
+
+
+ 3000 0371 69000000 		.4byte	.LVL79-1
+ 3001 0375 0100     		.2byte	0x1
+ 3002 0377 50       		.byte	0x50
+ 3003 0378 69000000 		.4byte	.LVL79-1
+ 3004 037c 7A000000 		.4byte	.LVL82
+ 3005 0380 0400     		.2byte	0x4
+ 3006 0382 F3       		.byte	0xf3
+ 3007 0383 01       		.uleb128 0x1
+ 3008 0384 50       		.byte	0x50
+ 3009 0385 9F       		.byte	0x9f
+ 3010 0386 7A000000 		.4byte	.LVL82
+ 3011 038a 7E000000 		.4byte	.LVL83
+ 3012 038e 0100     		.2byte	0x1
+ 3013 0390 50       		.byte	0x50
+ 3014 0391 7E000000 		.4byte	.LVL83
+ 3015 0395 A8000000 		.4byte	.LFE68
+ 3016 0399 0400     		.2byte	0x4
+ 3017 039b F3       		.byte	0xf3
+ 3018 039c 01       		.uleb128 0x1
+ 3019 039d 50       		.byte	0x50
+ 3020 039e 9F       		.byte	0x9f
+ 3021 039f 00000000 		.4byte	0
+ 3022 03a3 00000000 		.4byte	0
+ 3023              	.LLST19:
+ 3024 03a7 00000000 		.4byte	.LVL84
+ 3025 03ab 16000000 		.4byte	.LVL87
+ 3026 03af 0100     		.2byte	0x1
+ 3027 03b1 50       		.byte	0x50
+ 3028 03b2 16000000 		.4byte	.LVL87
+ 3029 03b6 2C020000 		.4byte	.LFE69
+ 3030 03ba 0400     		.2byte	0x4
+ 3031 03bc F3       		.byte	0xf3
+ 3032 03bd 01       		.uleb128 0x1
+ 3033 03be 50       		.byte	0x50
+ 3034 03bf 9F       		.byte	0x9f
+ 3035 03c0 00000000 		.4byte	0
+ 3036 03c4 00000000 		.4byte	0
+ 3037              	.LLST20:
+ 3038 03c8 00000000 		.4byte	.LVL84
+ 3039 03cc 16000000 		.4byte	.LVL87
+ 3040 03d0 0100     		.2byte	0x1
+ 3041 03d2 51       		.byte	0x51
+ 3042 03d3 16000000 		.4byte	.LVL87
+ 3043 03d7 2C020000 		.4byte	.LFE69
+ 3044 03db 0400     		.2byte	0x4
+ 3045 03dd F3       		.byte	0xf3
+ 3046 03de 01       		.uleb128 0x1
+ 3047 03df 51       		.byte	0x51
+ 3048 03e0 9F       		.byte	0x9f
+ 3049 03e1 00000000 		.4byte	0
+ 3050 03e5 00000000 		.4byte	0
+ 3051              	.LLST21:
+ 3052 03e9 00000000 		.4byte	.LVL84
+ 3053 03ed 14000000 		.4byte	.LVL86
+ 3054 03f1 0100     		.2byte	0x1
+ 3055 03f3 52       		.byte	0x52
+ 3056 03f4 14000000 		.4byte	.LVL86
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 61
+
+
+ 3057 03f8 1C020000 		.4byte	.LVL156
+ 3058 03fc 0100     		.2byte	0x1
+ 3059 03fe 57       		.byte	0x57
+ 3060 03ff 1C020000 		.4byte	.LVL156
+ 3061 0403 2C020000 		.4byte	.LFE69
+ 3062 0407 0400     		.2byte	0x4
+ 3063 0409 F3       		.byte	0xf3
+ 3064 040a 01       		.uleb128 0x1
+ 3065 040b 52       		.byte	0x52
+ 3066 040c 9F       		.byte	0x9f
+ 3067 040d 00000000 		.4byte	0
+ 3068 0411 00000000 		.4byte	0
+ 3069              	.LLST22:
+ 3070 0415 00000000 		.4byte	.LVL84
+ 3071 0419 16000000 		.4byte	.LVL87
+ 3072 041d 0100     		.2byte	0x1
+ 3073 041f 53       		.byte	0x53
+ 3074 0420 16000000 		.4byte	.LVL87
+ 3075 0424 1C020000 		.4byte	.LVL156
+ 3076 0428 0100     		.2byte	0x1
+ 3077 042a 59       		.byte	0x59
+ 3078 042b 1C020000 		.4byte	.LVL156
+ 3079 042f 2C020000 		.4byte	.LFE69
+ 3080 0433 0400     		.2byte	0x4
+ 3081 0435 F3       		.byte	0xf3
+ 3082 0436 01       		.uleb128 0x1
+ 3083 0437 53       		.byte	0x53
+ 3084 0438 9F       		.byte	0x9f
+ 3085 0439 00000000 		.4byte	0
+ 3086 043d 00000000 		.4byte	0
+ 3087              	.LLST23:
+ 3088 0441 00000000 		.4byte	.LVL84
+ 3089 0445 16000000 		.4byte	.LVL87
+ 3090 0449 0200     		.2byte	0x2
+ 3091 044b 91       		.byte	0x91
+ 3092 044c 00       		.sleb128 0
+ 3093 044d 16000000 		.4byte	.LVL87
+ 3094 0451 AA000000 		.4byte	.LVL105
+ 3095 0455 0100     		.2byte	0x1
+ 3096 0457 56       		.byte	0x56
+ 3097 0458 AA000000 		.4byte	.LVL105
+ 3098 045c B4000000 		.4byte	.LVL106
+ 3099 0460 0200     		.2byte	0x2
+ 3100 0462 31       		.byte	0x31
+ 3101 0463 9F       		.byte	0x9f
+ 3102 0464 B4000000 		.4byte	.LVL106
+ 3103 0468 D8000000 		.4byte	.LVL111
+ 3104 046c 0100     		.2byte	0x1
+ 3105 046e 56       		.byte	0x56
+ 3106 046f D8000000 		.4byte	.LVL111
+ 3107 0473 E2000000 		.4byte	.LVL112
+ 3108 0477 0200     		.2byte	0x2
+ 3109 0479 33       		.byte	0x33
+ 3110 047a 9F       		.byte	0x9f
+ 3111 047b E2000000 		.4byte	.LVL112
+ 3112 047f 12010000 		.4byte	.LVL119
+ 3113 0483 0100     		.2byte	0x1
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 62
+
+
+ 3114 0485 56       		.byte	0x56
+ 3115 0486 12010000 		.4byte	.LVL119
+ 3116 048a 1C010000 		.4byte	.LVL120
+ 3117 048e 0200     		.2byte	0x2
+ 3118 0490 32       		.byte	0x32
+ 3119 0491 9F       		.byte	0x9f
+ 3120 0492 1C010000 		.4byte	.LVL120
+ 3121 0496 3C010000 		.4byte	.LVL125
+ 3122 049a 0100     		.2byte	0x1
+ 3123 049c 56       		.byte	0x56
+ 3124 049d 3C010000 		.4byte	.LVL125
+ 3125 04a1 46010000 		.4byte	.LVL126
+ 3126 04a5 0200     		.2byte	0x2
+ 3127 04a7 30       		.byte	0x30
+ 3128 04a8 9F       		.byte	0x9f
+ 3129 04a9 46010000 		.4byte	.LVL126
+ 3130 04ad 76010000 		.4byte	.LVL133
+ 3131 04b1 0100     		.2byte	0x1
+ 3132 04b3 56       		.byte	0x56
+ 3133 04b4 76010000 		.4byte	.LVL133
+ 3134 04b8 80010000 		.4byte	.LVL134
+ 3135 04bc 0200     		.2byte	0x2
+ 3136 04be 33       		.byte	0x33
+ 3137 04bf 9F       		.byte	0x9f
+ 3138 04c0 80010000 		.4byte	.LVL134
+ 3139 04c4 A0010000 		.4byte	.LVL139
+ 3140 04c8 0100     		.2byte	0x1
+ 3141 04ca 56       		.byte	0x56
+ 3142 04cb A0010000 		.4byte	.LVL139
+ 3143 04cf AA010000 		.4byte	.LVL140
+ 3144 04d3 0200     		.2byte	0x2
+ 3145 04d5 31       		.byte	0x31
+ 3146 04d6 9F       		.byte	0x9f
+ 3147 04d7 AA010000 		.4byte	.LVL140
+ 3148 04db DA010000 		.4byte	.LVL147
+ 3149 04df 0100     		.2byte	0x1
+ 3150 04e1 56       		.byte	0x56
+ 3151 04e2 DA010000 		.4byte	.LVL147
+ 3152 04e6 E4010000 		.4byte	.LVL148
+ 3153 04ea 0200     		.2byte	0x2
+ 3154 04ec 30       		.byte	0x30
+ 3155 04ed 9F       		.byte	0x9f
+ 3156 04ee E4010000 		.4byte	.LVL148
+ 3157 04f2 04020000 		.4byte	.LVL153
+ 3158 04f6 0100     		.2byte	0x1
+ 3159 04f8 56       		.byte	0x56
+ 3160 04f9 04020000 		.4byte	.LVL153
+ 3161 04fd 0C020000 		.4byte	.LVL154
+ 3162 0501 0200     		.2byte	0x2
+ 3163 0503 32       		.byte	0x32
+ 3164 0504 9F       		.byte	0x9f
+ 3165 0505 0C020000 		.4byte	.LVL154
+ 3166 0509 1C020000 		.4byte	.LVL156
+ 3167 050d 0100     		.2byte	0x1
+ 3168 050f 56       		.byte	0x56
+ 3169 0510 00000000 		.4byte	0
+ 3170 0514 00000000 		.4byte	0
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 63
+
+
+ 3171              	.LLST24:
+ 3172 0518 0C000000 		.4byte	.LVL85
+ 3173 051c 16000000 		.4byte	.LVL87
+ 3174 0520 0300     		.2byte	0x3
+ 3175 0522 09       		.byte	0x9
+ 3176 0523 FF       		.byte	0xff
+ 3177 0524 9F       		.byte	0x9f
+ 3178 0525 16000000 		.4byte	.LVL87
+ 3179 0529 2E000000 		.4byte	.LVL90
+ 3180 052d 0100     		.2byte	0x1
+ 3181 052f 52       		.byte	0x52
+ 3182 0530 2E000000 		.4byte	.LVL90
+ 3183 0534 6C000000 		.4byte	.LVL98
+ 3184 0538 0100     		.2byte	0x1
+ 3185 053a 54       		.byte	0x54
+ 3186 053b 6C000000 		.4byte	.LVL98
+ 3187 053f 92000000 		.4byte	.LVL101
+ 3188 0543 0100     		.2byte	0x1
+ 3189 0545 52       		.byte	0x52
+ 3190 0546 92000000 		.4byte	.LVL101
+ 3191 054a 98000000 		.4byte	.LVL103
+ 3192 054e 0300     		.2byte	0x3
+ 3193 0550 72       		.byte	0x72
+ 3194 0551 02       		.sleb128 2
+ 3195 0552 9F       		.byte	0x9f
+ 3196 0553 98000000 		.4byte	.LVL103
+ 3197 0557 9B000000 		.4byte	.LVL104-1
+ 3198 055b 0100     		.2byte	0x1
+ 3199 055d 50       		.byte	0x50
+ 3200 055e AA000000 		.4byte	.LVL105
+ 3201 0562 B4000000 		.4byte	.LVL106
+ 3202 0566 0200     		.2byte	0x2
+ 3203 0568 30       		.byte	0x30
+ 3204 0569 9F       		.byte	0x9f
+ 3205 056a B4000000 		.4byte	.LVL106
+ 3206 056e C0000000 		.4byte	.LVL107
+ 3207 0572 0100     		.2byte	0x1
+ 3208 0574 52       		.byte	0x52
+ 3209 0575 C0000000 		.4byte	.LVL107
+ 3210 0579 C6000000 		.4byte	.LVL109
+ 3211 057d 0300     		.2byte	0x3
+ 3212 057f 72       		.byte	0x72
+ 3213 0580 02       		.sleb128 2
+ 3214 0581 9F       		.byte	0x9f
+ 3215 0582 C6000000 		.4byte	.LVL109
+ 3216 0586 C9000000 		.4byte	.LVL110-1
+ 3217 058a 0100     		.2byte	0x1
+ 3218 058c 50       		.byte	0x50
+ 3219 058d D8000000 		.4byte	.LVL111
+ 3220 0591 E2000000 		.4byte	.LVL112
+ 3221 0595 0200     		.2byte	0x2
+ 3222 0597 30       		.byte	0x30
+ 3223 0598 9F       		.byte	0x9f
+ 3224 0599 E2000000 		.4byte	.LVL112
+ 3225 059d FA000000 		.4byte	.LVL115
+ 3226 05a1 0100     		.2byte	0x1
+ 3227 05a3 52       		.byte	0x52
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 64
+
+
+ 3228 05a4 FA000000 		.4byte	.LVL115
+ 3229 05a8 00010000 		.4byte	.LVL117
+ 3230 05ac 0300     		.2byte	0x3
+ 3231 05ae 72       		.byte	0x72
+ 3232 05af 02       		.sleb128 2
+ 3233 05b0 9F       		.byte	0x9f
+ 3234 05b1 00010000 		.4byte	.LVL117
+ 3235 05b5 03010000 		.4byte	.LVL118-1
+ 3236 05b9 0100     		.2byte	0x1
+ 3237 05bb 50       		.byte	0x50
+ 3238 05bc 12010000 		.4byte	.LVL119
+ 3239 05c0 1C010000 		.4byte	.LVL120
+ 3240 05c4 0200     		.2byte	0x2
+ 3241 05c6 30       		.byte	0x30
+ 3242 05c7 9F       		.byte	0x9f
+ 3243 05c8 1C010000 		.4byte	.LVL120
+ 3244 05cc 24010000 		.4byte	.LVL121
+ 3245 05d0 0100     		.2byte	0x1
+ 3246 05d2 52       		.byte	0x52
+ 3247 05d3 24010000 		.4byte	.LVL121
+ 3248 05d7 2A010000 		.4byte	.LVL123
+ 3249 05db 0300     		.2byte	0x3
+ 3250 05dd 72       		.byte	0x72
+ 3251 05de 02       		.sleb128 2
+ 3252 05df 9F       		.byte	0x9f
+ 3253 05e0 2A010000 		.4byte	.LVL123
+ 3254 05e4 2D010000 		.4byte	.LVL124-1
+ 3255 05e8 0100     		.2byte	0x1
+ 3256 05ea 50       		.byte	0x50
+ 3257 05eb 3C010000 		.4byte	.LVL125
+ 3258 05ef 46010000 		.4byte	.LVL126
+ 3259 05f3 0200     		.2byte	0x2
+ 3260 05f5 30       		.byte	0x30
+ 3261 05f6 9F       		.byte	0x9f
+ 3262 05f7 46010000 		.4byte	.LVL126
+ 3263 05fb 5E010000 		.4byte	.LVL129
+ 3264 05ff 0100     		.2byte	0x1
+ 3265 0601 52       		.byte	0x52
+ 3266 0602 5E010000 		.4byte	.LVL129
+ 3267 0606 64010000 		.4byte	.LVL131
+ 3268 060a 0300     		.2byte	0x3
+ 3269 060c 72       		.byte	0x72
+ 3270 060d 02       		.sleb128 2
+ 3271 060e 9F       		.byte	0x9f
+ 3272 060f 64010000 		.4byte	.LVL131
+ 3273 0613 67010000 		.4byte	.LVL132-1
+ 3274 0617 0100     		.2byte	0x1
+ 3275 0619 50       		.byte	0x50
+ 3276 061a 76010000 		.4byte	.LVL133
+ 3277 061e 80010000 		.4byte	.LVL134
+ 3278 0622 0200     		.2byte	0x2
+ 3279 0624 30       		.byte	0x30
+ 3280 0625 9F       		.byte	0x9f
+ 3281 0626 80010000 		.4byte	.LVL134
+ 3282 062a 88010000 		.4byte	.LVL135
+ 3283 062e 0100     		.2byte	0x1
+ 3284 0630 52       		.byte	0x52
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 65
+
+
+ 3285 0631 88010000 		.4byte	.LVL135
+ 3286 0635 8E010000 		.4byte	.LVL137
+ 3287 0639 0300     		.2byte	0x3
+ 3288 063b 72       		.byte	0x72
+ 3289 063c 02       		.sleb128 2
+ 3290 063d 9F       		.byte	0x9f
+ 3291 063e 8E010000 		.4byte	.LVL137
+ 3292 0642 91010000 		.4byte	.LVL138-1
+ 3293 0646 0100     		.2byte	0x1
+ 3294 0648 50       		.byte	0x50
+ 3295 0649 A0010000 		.4byte	.LVL139
+ 3296 064d AA010000 		.4byte	.LVL140
+ 3297 0651 0200     		.2byte	0x2
+ 3298 0653 30       		.byte	0x30
+ 3299 0654 9F       		.byte	0x9f
+ 3300 0655 AA010000 		.4byte	.LVL140
+ 3301 0659 C2010000 		.4byte	.LVL143
+ 3302 065d 0100     		.2byte	0x1
+ 3303 065f 52       		.byte	0x52
+ 3304 0660 C2010000 		.4byte	.LVL143
+ 3305 0664 C8010000 		.4byte	.LVL145
+ 3306 0668 0300     		.2byte	0x3
+ 3307 066a 72       		.byte	0x72
+ 3308 066b 02       		.sleb128 2
+ 3309 066c 9F       		.byte	0x9f
+ 3310 066d C8010000 		.4byte	.LVL145
+ 3311 0671 CB010000 		.4byte	.LVL146-1
+ 3312 0675 0100     		.2byte	0x1
+ 3313 0677 50       		.byte	0x50
+ 3314 0678 DA010000 		.4byte	.LVL147
+ 3315 067c E4010000 		.4byte	.LVL148
+ 3316 0680 0200     		.2byte	0x2
+ 3317 0682 30       		.byte	0x30
+ 3318 0683 9F       		.byte	0x9f
+ 3319 0684 E4010000 		.4byte	.LVL148
+ 3320 0688 EC010000 		.4byte	.LVL149
+ 3321 068c 0100     		.2byte	0x1
+ 3322 068e 52       		.byte	0x52
+ 3323 068f EC010000 		.4byte	.LVL149
+ 3324 0693 F2010000 		.4byte	.LVL151
+ 3325 0697 0300     		.2byte	0x3
+ 3326 0699 72       		.byte	0x72
+ 3327 069a 02       		.sleb128 2
+ 3328 069b 9F       		.byte	0x9f
+ 3329 069c F2010000 		.4byte	.LVL151
+ 3330 06a0 F5010000 		.4byte	.LVL152-1
+ 3331 06a4 0100     		.2byte	0x1
+ 3332 06a6 50       		.byte	0x50
+ 3333 06a7 04020000 		.4byte	.LVL153
+ 3334 06ab 0C020000 		.4byte	.LVL154
+ 3335 06af 0200     		.2byte	0x2
+ 3336 06b1 30       		.byte	0x30
+ 3337 06b2 9F       		.byte	0x9f
+ 3338 06b3 0C020000 		.4byte	.LVL154
+ 3339 06b7 2C020000 		.4byte	.LFE69
+ 3340 06bb 0100     		.2byte	0x1
+ 3341 06bd 52       		.byte	0x52
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 66
+
+
+ 3342 06be 00000000 		.4byte	0
+ 3343 06c2 00000000 		.4byte	0
+ 3344              	.LLST25:
+ 3345 06c6 0C000000 		.4byte	.LVL85
+ 3346 06ca 16000000 		.4byte	.LVL87
+ 3347 06ce 0300     		.2byte	0x3
+ 3348 06d0 09       		.byte	0x9
+ 3349 06d1 FF       		.byte	0xff
+ 3350 06d2 9F       		.byte	0x9f
+ 3351 06d3 16000000 		.4byte	.LVL87
+ 3352 06d7 5E000000 		.4byte	.LVL97
+ 3353 06db 0100     		.2byte	0x1
+ 3354 06dd 58       		.byte	0x58
+ 3355 06de 6C000000 		.4byte	.LVL98
+ 3356 06e2 1C020000 		.4byte	.LVL156
+ 3357 06e6 0100     		.2byte	0x1
+ 3358 06e8 58       		.byte	0x58
+ 3359 06e9 00000000 		.4byte	0
+ 3360 06ed 00000000 		.4byte	0
+ 3361              	.LLST26:
+ 3362 06f1 0C000000 		.4byte	.LVL85
+ 3363 06f5 3C000000 		.4byte	.LVL92
+ 3364 06f9 0100     		.2byte	0x1
+ 3365 06fb 50       		.byte	0x50
+ 3366 06fc 4A000000 		.4byte	.LVL94
+ 3367 0700 4C000000 		.4byte	.LVL95
+ 3368 0704 0100     		.2byte	0x1
+ 3369 0706 50       		.byte	0x50
+ 3370 0707 6C000000 		.4byte	.LVL98
+ 3371 070b 84000000 		.4byte	.LVL99
+ 3372 070f 0100     		.2byte	0x1
+ 3373 0711 50       		.byte	0x50
+ 3374 0712 84000000 		.4byte	.LVL99
+ 3375 0716 8A000000 		.4byte	.LVL100
+ 3376 071a 0100     		.2byte	0x1
+ 3377 071c 55       		.byte	0x55
+ 3378 071d 8A000000 		.4byte	.LVL100
+ 3379 0721 98000000 		.4byte	.LVL103
+ 3380 0725 0100     		.2byte	0x1
+ 3381 0727 50       		.byte	0x50
+ 3382 0728 AA000000 		.4byte	.LVL105
+ 3383 072c B4000000 		.4byte	.LVL106
+ 3384 0730 0100     		.2byte	0x1
+ 3385 0732 55       		.byte	0x55
+ 3386 0733 B4000000 		.4byte	.LVL106
+ 3387 0737 C6000000 		.4byte	.LVL109
+ 3388 073b 0100     		.2byte	0x1
+ 3389 073d 50       		.byte	0x50
+ 3390 073e D8000000 		.4byte	.LVL111
+ 3391 0742 E2000000 		.4byte	.LVL112
+ 3392 0746 0100     		.2byte	0x1
+ 3393 0748 55       		.byte	0x55
+ 3394 0749 E2000000 		.4byte	.LVL112
+ 3395 074d EC000000 		.4byte	.LVL113
+ 3396 0751 0100     		.2byte	0x1
+ 3397 0753 50       		.byte	0x50
+ 3398 0754 EC000000 		.4byte	.LVL113
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 67
+
+
+ 3399 0758 F2000000 		.4byte	.LVL114
+ 3400 075c 0100     		.2byte	0x1
+ 3401 075e 55       		.byte	0x55
+ 3402 075f F2000000 		.4byte	.LVL114
+ 3403 0763 00010000 		.4byte	.LVL117
+ 3404 0767 0100     		.2byte	0x1
+ 3405 0769 50       		.byte	0x50
+ 3406 076a 12010000 		.4byte	.LVL119
+ 3407 076e 1C010000 		.4byte	.LVL120
+ 3408 0772 0100     		.2byte	0x1
+ 3409 0774 55       		.byte	0x55
+ 3410 0775 1C010000 		.4byte	.LVL120
+ 3411 0779 2A010000 		.4byte	.LVL123
+ 3412 077d 0100     		.2byte	0x1
+ 3413 077f 50       		.byte	0x50
+ 3414 0780 3C010000 		.4byte	.LVL125
+ 3415 0784 46010000 		.4byte	.LVL126
+ 3416 0788 0100     		.2byte	0x1
+ 3417 078a 55       		.byte	0x55
+ 3418 078b 46010000 		.4byte	.LVL126
+ 3419 078f 50010000 		.4byte	.LVL127
+ 3420 0793 0100     		.2byte	0x1
+ 3421 0795 50       		.byte	0x50
+ 3422 0796 50010000 		.4byte	.LVL127
+ 3423 079a 56010000 		.4byte	.LVL128
+ 3424 079e 0100     		.2byte	0x1
+ 3425 07a0 55       		.byte	0x55
+ 3426 07a1 56010000 		.4byte	.LVL128
+ 3427 07a5 64010000 		.4byte	.LVL131
+ 3428 07a9 0100     		.2byte	0x1
+ 3429 07ab 50       		.byte	0x50
+ 3430 07ac 76010000 		.4byte	.LVL133
+ 3431 07b0 80010000 		.4byte	.LVL134
+ 3432 07b4 0100     		.2byte	0x1
+ 3433 07b6 55       		.byte	0x55
+ 3434 07b7 80010000 		.4byte	.LVL134
+ 3435 07bb 8E010000 		.4byte	.LVL137
+ 3436 07bf 0100     		.2byte	0x1
+ 3437 07c1 50       		.byte	0x50
+ 3438 07c2 A0010000 		.4byte	.LVL139
+ 3439 07c6 AA010000 		.4byte	.LVL140
+ 3440 07ca 0100     		.2byte	0x1
+ 3441 07cc 55       		.byte	0x55
+ 3442 07cd AA010000 		.4byte	.LVL140
+ 3443 07d1 B4010000 		.4byte	.LVL141
+ 3444 07d5 0100     		.2byte	0x1
+ 3445 07d7 50       		.byte	0x50
+ 3446 07d8 B4010000 		.4byte	.LVL141
+ 3447 07dc BA010000 		.4byte	.LVL142
+ 3448 07e0 0100     		.2byte	0x1
+ 3449 07e2 55       		.byte	0x55
+ 3450 07e3 BA010000 		.4byte	.LVL142
+ 3451 07e7 C8010000 		.4byte	.LVL145
+ 3452 07eb 0100     		.2byte	0x1
+ 3453 07ed 50       		.byte	0x50
+ 3454 07ee DA010000 		.4byte	.LVL147
+ 3455 07f2 E4010000 		.4byte	.LVL148
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 68
+
+
+ 3456 07f6 0100     		.2byte	0x1
+ 3457 07f8 55       		.byte	0x55
+ 3458 07f9 E4010000 		.4byte	.LVL148
+ 3459 07fd F2010000 		.4byte	.LVL151
+ 3460 0801 0100     		.2byte	0x1
+ 3461 0803 50       		.byte	0x50
+ 3462 0804 04020000 		.4byte	.LVL153
+ 3463 0808 0C020000 		.4byte	.LVL154
+ 3464 080c 0100     		.2byte	0x1
+ 3465 080e 55       		.byte	0x55
+ 3466 080f 0C020000 		.4byte	.LVL154
+ 3467 0813 2C020000 		.4byte	.LFE69
+ 3468 0817 0100     		.2byte	0x1
+ 3469 0819 50       		.byte	0x50
+ 3470 081a 00000000 		.4byte	0
+ 3471 081e 00000000 		.4byte	0
+ 3472              	.LLST27:
+ 3473 0822 0C000000 		.4byte	.LVL85
+ 3474 0826 3F000000 		.4byte	.LVL93-1
+ 3475 082a 0100     		.2byte	0x1
+ 3476 082c 51       		.byte	0x51
+ 3477 082d 4A000000 		.4byte	.LVL94
+ 3478 0831 4F000000 		.4byte	.LVL96-1
+ 3479 0835 0100     		.2byte	0x1
+ 3480 0837 51       		.byte	0x51
+ 3481 0838 6C000000 		.4byte	.LVL98
+ 3482 083c 84000000 		.4byte	.LVL99
+ 3483 0840 0100     		.2byte	0x1
+ 3484 0842 51       		.byte	0x51
+ 3485 0843 84000000 		.4byte	.LVL99
+ 3486 0847 8A000000 		.4byte	.LVL100
+ 3487 084b 0100     		.2byte	0x1
+ 3488 084d 5A       		.byte	0x5a
+ 3489 084e 8A000000 		.4byte	.LVL100
+ 3490 0852 9B000000 		.4byte	.LVL104-1
+ 3491 0856 0100     		.2byte	0x1
+ 3492 0858 51       		.byte	0x51
+ 3493 0859 AA000000 		.4byte	.LVL105
+ 3494 085d B4000000 		.4byte	.LVL106
+ 3495 0861 0100     		.2byte	0x1
+ 3496 0863 5A       		.byte	0x5a
+ 3497 0864 B4000000 		.4byte	.LVL106
+ 3498 0868 C9000000 		.4byte	.LVL110-1
+ 3499 086c 0100     		.2byte	0x1
+ 3500 086e 51       		.byte	0x51
+ 3501 086f D8000000 		.4byte	.LVL111
+ 3502 0873 E2000000 		.4byte	.LVL112
+ 3503 0877 0100     		.2byte	0x1
+ 3504 0879 5A       		.byte	0x5a
+ 3505 087a E2000000 		.4byte	.LVL112
+ 3506 087e EC000000 		.4byte	.LVL113
+ 3507 0882 0100     		.2byte	0x1
+ 3508 0884 51       		.byte	0x51
+ 3509 0885 EC000000 		.4byte	.LVL113
+ 3510 0889 F2000000 		.4byte	.LVL114
+ 3511 088d 0100     		.2byte	0x1
+ 3512 088f 5A       		.byte	0x5a
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 69
+
+
+ 3513 0890 F2000000 		.4byte	.LVL114
+ 3514 0894 03010000 		.4byte	.LVL118-1
+ 3515 0898 0100     		.2byte	0x1
+ 3516 089a 51       		.byte	0x51
+ 3517 089b 12010000 		.4byte	.LVL119
+ 3518 089f 1C010000 		.4byte	.LVL120
+ 3519 08a3 0100     		.2byte	0x1
+ 3520 08a5 5A       		.byte	0x5a
+ 3521 08a6 1C010000 		.4byte	.LVL120
+ 3522 08aa 2D010000 		.4byte	.LVL124-1
+ 3523 08ae 0100     		.2byte	0x1
+ 3524 08b0 51       		.byte	0x51
+ 3525 08b1 3C010000 		.4byte	.LVL125
+ 3526 08b5 46010000 		.4byte	.LVL126
+ 3527 08b9 0100     		.2byte	0x1
+ 3528 08bb 5A       		.byte	0x5a
+ 3529 08bc 46010000 		.4byte	.LVL126
+ 3530 08c0 50010000 		.4byte	.LVL127
+ 3531 08c4 0100     		.2byte	0x1
+ 3532 08c6 51       		.byte	0x51
+ 3533 08c7 50010000 		.4byte	.LVL127
+ 3534 08cb 56010000 		.4byte	.LVL128
+ 3535 08cf 0100     		.2byte	0x1
+ 3536 08d1 5A       		.byte	0x5a
+ 3537 08d2 56010000 		.4byte	.LVL128
+ 3538 08d6 67010000 		.4byte	.LVL132-1
+ 3539 08da 0100     		.2byte	0x1
+ 3540 08dc 51       		.byte	0x51
+ 3541 08dd 76010000 		.4byte	.LVL133
+ 3542 08e1 80010000 		.4byte	.LVL134
+ 3543 08e5 0100     		.2byte	0x1
+ 3544 08e7 5A       		.byte	0x5a
+ 3545 08e8 80010000 		.4byte	.LVL134
+ 3546 08ec 91010000 		.4byte	.LVL138-1
+ 3547 08f0 0100     		.2byte	0x1
+ 3548 08f2 51       		.byte	0x51
+ 3549 08f3 A0010000 		.4byte	.LVL139
+ 3550 08f7 AA010000 		.4byte	.LVL140
+ 3551 08fb 0100     		.2byte	0x1
+ 3552 08fd 5A       		.byte	0x5a
+ 3553 08fe AA010000 		.4byte	.LVL140
+ 3554 0902 B4010000 		.4byte	.LVL141
+ 3555 0906 0100     		.2byte	0x1
+ 3556 0908 51       		.byte	0x51
+ 3557 0909 B4010000 		.4byte	.LVL141
+ 3558 090d BA010000 		.4byte	.LVL142
+ 3559 0911 0100     		.2byte	0x1
+ 3560 0913 5A       		.byte	0x5a
+ 3561 0914 BA010000 		.4byte	.LVL142
+ 3562 0918 CB010000 		.4byte	.LVL146-1
+ 3563 091c 0100     		.2byte	0x1
+ 3564 091e 51       		.byte	0x51
+ 3565 091f DA010000 		.4byte	.LVL147
+ 3566 0923 E4010000 		.4byte	.LVL148
+ 3567 0927 0100     		.2byte	0x1
+ 3568 0929 5A       		.byte	0x5a
+ 3569 092a E4010000 		.4byte	.LVL148
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 70
+
+
+ 3570 092e F5010000 		.4byte	.LVL152-1
+ 3571 0932 0100     		.2byte	0x1
+ 3572 0934 51       		.byte	0x51
+ 3573 0935 04020000 		.4byte	.LVL153
+ 3574 0939 0C020000 		.4byte	.LVL154
+ 3575 093d 0100     		.2byte	0x1
+ 3576 093f 5A       		.byte	0x5a
+ 3577 0940 0C020000 		.4byte	.LVL154
+ 3578 0944 2C020000 		.4byte	.LFE69
+ 3579 0948 0100     		.2byte	0x1
+ 3580 094a 51       		.byte	0x51
+ 3581 094b 00000000 		.4byte	0
+ 3582 094f 00000000 		.4byte	0
+ 3583              	.LLST28:
+ 3584 0953 0C000000 		.4byte	.LVL85
+ 3585 0957 16000000 		.4byte	.LVL87
+ 3586 095b 0200     		.2byte	0x2
+ 3587 095d 30       		.byte	0x30
+ 3588 095e 9F       		.byte	0x9f
+ 3589 095f 16000000 		.4byte	.LVL87
+ 3590 0963 2E000000 		.4byte	.LVL90
+ 3591 0967 0100     		.2byte	0x1
+ 3592 0969 54       		.byte	0x54
+ 3593 096a 6C000000 		.4byte	.LVL98
+ 3594 096e 1C020000 		.4byte	.LVL156
+ 3595 0972 0100     		.2byte	0x1
+ 3596 0974 54       		.byte	0x54
+ 3597 0975 00000000 		.4byte	0
+ 3598 0979 00000000 		.4byte	0
+ 3599              	.LLST29:
+ 3600 097d 1C000000 		.4byte	.LVL88
+ 3601 0981 0E020000 		.4byte	.LVL155
+ 3602 0985 0100     		.2byte	0x1
+ 3603 0987 55       		.byte	0x55
+ 3604 0988 00000000 		.4byte	0
+ 3605 098c 00000000 		.4byte	0
+ 3606              	.LLST30:
+ 3607 0990 24000000 		.4byte	.LVL89
+ 3608 0994 0E020000 		.4byte	.LVL155
+ 3609 0998 0100     		.2byte	0x1
+ 3610 099a 5A       		.byte	0x5a
+ 3611 099b 00000000 		.4byte	0
+ 3612 099f 00000000 		.4byte	0
+ 3613              		.section	.debug_aranges,"",%progbits
+ 3614 0000 44000000 		.4byte	0x44
+ 3615 0004 0200     		.2byte	0x2
+ 3616 0006 00000000 		.4byte	.Ldebug_info0
+ 3617 000a 04       		.byte	0x4
+ 3618 000b 00       		.byte	0
+ 3619 000c 0000     		.2byte	0
+ 3620 000e 0000     		.2byte	0
+ 3621 0010 00000000 		.4byte	.LFB64
+ 3622 0014 0C000000 		.4byte	.LFE64-.LFB64
+ 3623 0018 00000000 		.4byte	.LFB65
+ 3624 001c 1C000000 		.4byte	.LFE65-.LFB65
+ 3625 0020 00000000 		.4byte	.LFB66
+ 3626 0024 18020000 		.4byte	.LFE66-.LFB66
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 71
+
+
+ 3627 0028 00000000 		.4byte	.LFB67
+ 3628 002c 9C000000 		.4byte	.LFE67-.LFB67
+ 3629 0030 00000000 		.4byte	.LFB68
+ 3630 0034 A8000000 		.4byte	.LFE68-.LFB68
+ 3631 0038 00000000 		.4byte	.LFB69
+ 3632 003c 2C020000 		.4byte	.LFE69-.LFB69
+ 3633 0040 00000000 		.4byte	0
+ 3634 0044 00000000 		.4byte	0
+ 3635              		.section	.debug_ranges,"",%progbits
+ 3636              	.Ldebug_ranges0:
+ 3637 0000 16000000 		.4byte	.LBB3
+ 3638 0004 3C000000 		.4byte	.LBE3
+ 3639 0008 3E000000 		.4byte	.LBB4
+ 3640 000c 42000000 		.4byte	.LBE4
+ 3641 0010 00000000 		.4byte	0
+ 3642 0014 00000000 		.4byte	0
+ 3643 0018 2A010000 		.4byte	.LBB10
+ 3644 001c 56010000 		.4byte	.LBE10
+ 3645 0020 58010000 		.4byte	.LBB11
+ 3646 0024 5C010000 		.4byte	.LBE11
+ 3647 0028 00000000 		.4byte	0
+ 3648 002c 00000000 		.4byte	0
+ 3649 0030 0C000000 		.4byte	.LBB13
+ 3650 0034 0E000000 		.4byte	.LBE13
+ 3651 0038 14000000 		.4byte	.LBB15
+ 3652 003c 2C020000 		.4byte	.LBE15
+ 3653 0040 00000000 		.4byte	0
+ 3654 0044 00000000 		.4byte	0
+ 3655 0048 00000000 		.4byte	.LFB64
+ 3656 004c 0C000000 		.4byte	.LFE64
+ 3657 0050 00000000 		.4byte	.LFB65
+ 3658 0054 1C000000 		.4byte	.LFE65
+ 3659 0058 00000000 		.4byte	.LFB66
+ 3660 005c 18020000 		.4byte	.LFE66
+ 3661 0060 00000000 		.4byte	.LFB67
+ 3662 0064 9C000000 		.4byte	.LFE67
+ 3663 0068 00000000 		.4byte	.LFB68
+ 3664 006c A8000000 		.4byte	.LFE68
+ 3665 0070 00000000 		.4byte	.LFB69
+ 3666 0074 2C020000 		.4byte	.LFE69
+ 3667 0078 00000000 		.4byte	0
+ 3668 007c 00000000 		.4byte	0
+ 3669              		.section	.debug_line,"",%progbits
+ 3670              	.Ldebug_line0:
+ 3671 0000 5C030000 		.section	.debug_str,"MS",%progbits,1
+ 3671      02005101 
+ 3671      00000201 
+ 3671      FB0E0D00 
+ 3671      01010101 
+ 3672              	.LASF44:
+ 3673 0000 67657444 		.ascii	"getDistance_V\000"
+ 3673      69737461 
+ 3673      6E63655F 
+ 3673      5600
+ 3674              	.LASF31:
+ 3675 000e 74617267 		.ascii	"targetX\000"
+ 3675      65745800 
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 72
+
+
+ 3676              	.LASF32:
+ 3677 0016 74617267 		.ascii	"targetY\000"
+ 3677      65745900 
+ 3678              	.LASF19:
+ 3679 001e 4E4F5254 		.ascii	"NORTH\000"
+ 3679      4800
+ 3680              	.LASF2:
+ 3681 0024 73686F72 		.ascii	"short int\000"
+ 3681      7420696E 
+ 3681      7400
+ 3682              	.LASF59:
+ 3683 002e 726F626F 		.ascii	"robot_direction\000"
+ 3683      745F6469 
+ 3683      72656374 
+ 3683      696F6E00 
+ 3684              	.LASF24:
+ 3685 003e 4E6F6465 		.ascii	"Node\000"
+ 3685      00
+ 3686              	.LASF9:
+ 3687 0043 6C6F6E67 		.ascii	"long double\000"
+ 3687      20646F75 
+ 3687      626C6500 
+ 3688              	.LASF41:
+ 3689 004f 69735661 		.ascii	"isValidCell\000"
+ 3689      6C696443 
+ 3689      656C6C00 
+ 3690              	.LASF47:
+ 3691 005b 73746172 		.ascii	"start_row\000"
+ 3691      745F726F 
+ 3691      7700
+ 3692              	.LASF51:
+ 3693 0065 63757272 		.ascii	"current_direction\000"
+ 3693      656E745F 
+ 3693      64697265 
+ 3693      6374696F 
+ 3693      6E00
+ 3694              	.LASF37:
+ 3695 0077 6D696E43 		.ascii	"minCost\000"
+ 3695      6F737400 
+ 3696              	.LASF48:
+ 3697 007f 73746172 		.ascii	"start_column\000"
+ 3697      745F636F 
+ 3697      6C756D6E 
+ 3697      00
+ 3698              	.LASF65:
+ 3699 008c 67657443 		.ascii	"getCurrentDirection\000"
+ 3699      75727265 
+ 3699      6E744469 
+ 3699      72656374 
+ 3699      696F6E00 
+ 3700              	.LASF58:
+ 3701 00a0 6D6F7665 		.ascii	"movementArray\000"
+ 3701      6D656E74 
+ 3701      41727261 
+ 3701      7900
+ 3702              	.LASF26:
+ 3703 00ae 70617265 		.ascii	"parent\000"
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 73
+
+
+ 3703      6E7400
+ 3704              	.LASF35:
+ 3705 00b5 74656D70 		.ascii	"tempPath\000"
+ 3705      50617468 
+ 3705      00
+ 3706              	.LASF14:
+ 3707 00be 666C6F61 		.ascii	"float\000"
+ 3707      7400
+ 3708              	.LASF6:
+ 3709 00c4 6C6F6E67 		.ascii	"long long int\000"
+ 3709      206C6F6E 
+ 3709      6720696E 
+ 3709      7400
+ 3710              	.LASF4:
+ 3711 00d2 6C6F6E67 		.ascii	"long int\000"
+ 3711      20696E74 
+ 3711      00
+ 3712              	.LASF40:
+ 3713 00db 6E657743 		.ascii	"newCost\000"
+ 3713      6F737400 
+ 3714              	.LASF29:
+ 3715 00e3 73746172 		.ascii	"startX\000"
+ 3715      745800
+ 3716              	.LASF30:
+ 3717 00ea 73746172 		.ascii	"startY\000"
+ 3717      745900
+ 3718              	.LASF1:
+ 3719 00f1 756E7369 		.ascii	"unsigned char\000"
+ 3719      676E6564 
+ 3719      20636861 
+ 3719      7200
+ 3720              	.LASF21:
+ 3721 00ff 534F5554 		.ascii	"SOUTH\000"
+ 3721      4800
+ 3722              	.LASF45:
+ 3723 0105 64696A6B 		.ascii	"dijkstra\000"
+ 3723      73747261 
+ 3723      00
+ 3724              	.LASF20:
+ 3725 010e 45415354 		.ascii	"EAST\000"
+ 3725      00
+ 3726              	.LASF0:
+ 3727 0113 7369676E 		.ascii	"signed char\000"
+ 3727      65642063 
+ 3727      68617200 
+ 3728              	.LASF7:
+ 3729 011f 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 3729      206C6F6E 
+ 3729      6720756E 
+ 3729      7369676E 
+ 3729      65642069 
+ 3730              	.LASF56:
+ 3731 0136 6E657874 		.ascii	"next_column\000"
+ 3731      5F636F6C 
+ 3731      756D6E00 
+ 3732              	.LASF34:
+ 3733 0142 63757272 		.ascii	"currentNode\000"
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 74
+
+
+ 3733      656E744E 
+ 3733      6F646500 
+ 3734              	.LASF55:
+ 3735 014e 6E657874 		.ascii	"next_row\000"
+ 3735      5F726F77 
+ 3735      00
+ 3736              	.LASF8:
+ 3737 0157 756E7369 		.ascii	"unsigned int\000"
+ 3737      676E6564 
+ 3737      20696E74 
+ 3737      00
+ 3738              	.LASF36:
+ 3739 0164 63757272 		.ascii	"current\000"
+ 3739      656E7400 
+ 3740              	.LASF33:
+ 3741 016c 67726964 		.ascii	"grid\000"
+ 3741      00
+ 3742              	.LASF38:
+ 3743 0171 6E657758 		.ascii	"newX\000"
+ 3743      00
+ 3744              	.LASF53:
+ 3745 0176 63757272 		.ascii	"current_row\000"
+ 3745      656E745F 
+ 3745      726F7700 
+ 3746              	.LASF27:
+ 3747 0182 43656C6C 		.ascii	"Cell\000"
+ 3747      00
+ 3748              	.LASF16:
+ 3749 0187 64697374 		.ascii	"distance\000"
+ 3749      616E6365 
+ 3749      00
+ 3750              	.LASF11:
+ 3751 0190 63686172 		.ascii	"char\000"
+ 3751      00
+ 3752              	.LASF25:
+ 3753 0195 636F7374 		.ascii	"cost\000"
+ 3753      00
+ 3754              	.LASF13:
+ 3755 019a 696E7433 		.ascii	"int32_t\000"
+ 3755      325F7400 
+ 3756              	.LASF3:
+ 3757 01a2 73686F72 		.ascii	"short unsigned int\000"
+ 3757      7420756E 
+ 3757      7369676E 
+ 3757      65642069 
+ 3757      6E7400
+ 3758              	.LASF28:
+ 3759 01b5 5F426F6F 		.ascii	"_Bool\000"
+ 3759      6C00
+ 3760              	.LASF43:
+ 3761 01bb 73746570 		.ascii	"stepCount\000"
+ 3761      436F756E 
+ 3761      7400
+ 3762              	.LASF22:
+ 3763 01c5 57455354 		.ascii	"WEST\000"
+ 3763      00
+ 3764              	.LASF50:
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 75
+
+
+ 3765 01ca 74617267 		.ascii	"target_column\000"
+ 3765      65745F63 
+ 3765      6F6C756D 
+ 3765      6E00
+ 3766              	.LASF5:
+ 3767 01d8 6C6F6E67 		.ascii	"long unsigned int\000"
+ 3767      20756E73 
+ 3767      69676E65 
+ 3767      6420696E 
+ 3767      7400
+ 3768              	.LASF15:
+ 3769 01ea 646F7562 		.ascii	"double\000"
+ 3769      6C6500
+ 3770              	.LASF63:
+ 3771 01f1 66756E63 		.ascii	"functions.c\000"
+ 3771      74696F6E 
+ 3771      732E6300 
+ 3772              	.LASF39:
+ 3773 01fd 6E657759 		.ascii	"newY\000"
+ 3773      00
+ 3774              	.LASF64:
+ 3775 0202 433A5C55 		.ascii	"C:\\Users\\dulan\\OneDrive\\Desktop\\ENGGEN\\2023_s"
+ 3775      73657273 
+ 3775      5C64756C 
+ 3775      616E5C4F 
+ 3775      6E654472 
+ 3776 022f 656D325C 		.ascii	"em2\\303\\COMPSYS303\\301backup\\Dulanya\\5_points\\"
+ 3776      3330335C 
+ 3776      434F4D50 
+ 3776      53595333 
+ 3776      30335C33 
+ 3777 025d 3330315F 		.ascii	"301_15_path_following\\Additional_HD.cydsn\000"
+ 3777      31355F70 
+ 3777      6174685F 
+ 3777      666F6C6C 
+ 3777      6F77696E 
+ 3778              	.LASF46:
+ 3779 0287 6765744D 		.ascii	"getMovementArray\000"
+ 3779      6F76656D 
+ 3779      656E7441 
+ 3779      72726179 
+ 3779      00
+ 3780              	.LASF12:
+ 3781 0298 5F5F696E 		.ascii	"__int32_t\000"
+ 3781      7433325F 
+ 3781      7400
+ 3782              	.LASF61:
+ 3783 02a2 70617468 		.ascii	"path\000"
+ 3783      00
+ 3784              	.LASF18:
+ 3785 02a7 4D6F7665 		.ascii	"Movement\000"
+ 3785      6D656E74 
+ 3785      00
+ 3786              	.LASF60:
+ 3787 02b0 70617468 		.ascii	"pathLength\000"
+ 3787      4C656E67 
+ 3787      746800
+ARM GAS  C:\Users\dulan\AppData\Local\Temp\ccFlylwi.s 			page 76
+
+
+ 3788              	.LASF10:
+ 3789 02bb 73697A65 		.ascii	"sizetype\000"
+ 3789      74797065 
+ 3789      00
+ 3790              	.LASF23:
+ 3791 02c4 526F626F 		.ascii	"RobotDirection\000"
+ 3791      74446972 
+ 3791      65637469 
+ 3791      6F6E00
+ 3792              	.LASF49:
+ 3793 02d3 74617267 		.ascii	"target_row\000"
+ 3793      65745F72 
+ 3793      6F7700
+ 3794              	.LASF52:
+ 3795 02de 706F7369 		.ascii	"position\000"
+ 3795      74696F6E 
+ 3795      00
+ 3796              	.LASF17:
+ 3797 02e7 7475726E 		.ascii	"turnDirection\000"
+ 3797      44697265 
+ 3797      6374696F 
+ 3797      6E00
+ 3798              	.LASF57:
+ 3799 02f5 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 3799      52784275 
+ 3799      66666572 
+ 3799      00
+ 3800              	.LASF62:
+ 3801 0302 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 3801      43313120 
+ 3801      352E342E 
+ 3801      31203230 
+ 3801      31363036 
+ 3802 0335 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m3 -mthumb -g -O"
+ 3802      20726576 
+ 3802      6973696F 
+ 3802      6E203233 
+ 3802      37373135 
+ 3803 0368 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 3803      66756E63 
+ 3803      74696F6E 
+ 3803      2D736563 
+ 3803      74696F6E 
+ 3804              	.LASF54:
+ 3805 0390 63757272 		.ascii	"current_column\000"
+ 3805      656E745F 
+ 3805      636F6C75 
+ 3805      6D6E00
+ 3806              	.LASF42:
+ 3807 039f 67657444 		.ascii	"getDistance_H\000"
+ 3807      69737461 
+ 3807      6E63655F 
+ 3807      4800
+ 3808              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran
